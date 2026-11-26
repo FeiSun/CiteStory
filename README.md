@@ -131,7 +131,8 @@ before you publish it.
 
 The citation history cut into a record that turns once a year, with every citing paper a cut in the groove.
 Play it, drag it round by hand, or drag the needle across the years. With sound on, each cited paper has a
-fixed note on a D Lydian scale, and a cut plays the notes of the papers it cites. A busy year sounds busy.
+fixed note on a D Lydian scale, chosen so that the most-cited papers form a chord. A cut plays the notes of
+the papers it cites, and cuts that pass together sound together: a busy year sounds fuller, not faster.
 
 There is also an index page that links all eight and states the totals.
 

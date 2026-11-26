@@ -283,21 +283,42 @@ dark in both themes.
 **Sound.**
 - Nothing is created until you press Sound: the page is silent by default, and the audio context starts
   inside that click, as browsers require.
-- Each of the owner's papers has a fixed note. The notes are sixteen pitches of D Lydian between D4 and
-  F♯6 (G♯4 is left out). The most-cited paper has the lowest note, and the notes repeat every sixteen
-  papers.
-- A cut plays the notes of the papers it cites, up to three, strummed 24 ms apart.
-- A paper that cites one of the owner's papers rings like a bell (a triangle wave with a little FM). One
-  that cites several is plucked like a string (Karplus–Strong), so the accent colour has a sound too.
-- The sound is panned by the longitude of the citing city.
-- A low D swells into the reverb at each new year.
-- At most about sixteen notes a second. In busy years most cuts pass silently and density is heard as
-  texture, not as noise.
+- Each of the owner's papers has a fixed note, one of sixteen pitches of D Lydian between D4 and G♯6. The
+  notes are handed out by consonance, most-cited paper first: the top three papers play D, A and F♯ (the
+  D major triad), the next two add E and B (the pentatonic), then come C♯ and G♯, the note that makes the
+  scale Lydian. Papers 8 to 16 repeat that order an octave up. Every later paper shares those nine upper
+  notes and plays at 0.7 of the level. The papers heard most therefore sound settled together, and a
+  rarely cited paper is heard as colour on top. In the example data the first sixteen papers receive 80%
+  of the citations.
+- Cuts that pass the needle within one step of 125 ms sound together, as one chord. The first cut after
+  a silence sounds at once and starts the grid, so a lone cut is heard exactly as it passes and a busy
+  stretch becomes a steady pulse of eight steps a second.
+- A step plays two layers. Bells (a triangle wave with a little FM) play the papers cited most by the
+  step's cuts that cite one paper. Plucked strings (Karplus–Strong) play the papers cited most by its
+  cuts that cite several. Each layer has at most three notes, strummed 24 ms apart, and a paper needs at
+  least 35% of the leading paper's count to be included.
+- The two layers are balanced by the share of the step's cuts that cite several papers (an equal-power
+  crossfade). A single cut is therefore all bell or all string, as the accent colour says, and in a busy
+  step the strings are as loud as co-citation is common. The ripple on the record takes its colour from
+  the same share.
+- The number of cuts in a step sets how loud and bright it is, on a log scale that tops out at 128 cuts:
+  the level runs from 0.4 to 1, the bell's FM depth and filter open, and the notes get shorter. Density
+  is heard as fullness, not as speed. In the example data a step holds from one cut to about 200.
+- With a paper chosen, every step plays only that paper's note; the bell and string balance still follows
+  the cuts.
+- The sound is panned by the longitude of the citing city, averaged over the cuts of the step.
+- A low D (D2 with D3 above it, which small speakers can play) swells into the reverb at each new year.
+- A move of more than 400 cuts at once, such as a click on the slider, plays only the cut it lands on.
 - Turning the record by hand changes the pitch with the speed, from 0.7 to 1.5 times.
-- Reverb, a short echo and a limiter keep it soft.
+- The echo is three steps long, so it falls on the grid. A limiter sits at the end as protection: in a
+  measured playback of the example data it reduced the level by at most 0.3 dB.
 
-**Dropped.** A six-colour palette in which colour was the paper's index modulo six, so no colour identified a
-paper. A spectrum display, a noise floor, technical labels and a glass panel, all decoration.
+**Dropped.** One note per cut with a cap of sixteen notes a second: playback lingers on the busy years, yet
+from 2020 on almost every step held more cuts than the cap let through, so the growth could not be heard,
+and which cut sounded depended on where the cap's window happened to fall. Notes handed out in scale order,
+repeating every sixteen papers, which put the three most-cited papers a tone apart. A six-colour palette in
+which colour was the paper's index modulo six, so no colour identified a paper. A spectrum display, a noise
+floor, technical labels and a glass panel, all decoration.
 
 ## Tried and dropped
 
