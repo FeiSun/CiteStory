@@ -1,0 +1,10 @@
+.DS_Store
+__pycache__/
+.env
+update.log
+
+# Profiles hold personal data (snapshots, saved Scholar pages with account details). Only the example is shared.
+profiles/*
+!profiles/example/
+profiles/example/*
+!profiles/example/profile.json

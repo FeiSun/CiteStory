@@ -1,0 +1,1044 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where the Citations Came From</title>
+<meta name="description" content="An editorial scrollytelling piece on the geography of papers citing one researcher's work.">
+<script>
+(function(){var t=null;try{t=localStorage.getItem('theme')}catch(e){}
+if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);})();
+</script>
+<style>
+:root{
+  --serif:"Iowan Old Style","Iowan Old Style BT",ui-serif,"New York",Charter,"Palatino Linotype",Palatino,Georgia,serif;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  --bg:#f5f0e6; --bg-2:#ece5d6; --card:#fbf8f2; --ink:#1f1b16; --ink-2:#554d43; --ink-3:#6a6256;
+  --rule:#d8cfbe; --sea:#efe9dd; --land:#e2d9c6; --land-line:#cbbfa8; --grat:#e3dccd;
+  --dot:#1d5566; --accent:#b8401f; --accent-soft:#e9b8a3; --sel:#f1c9b6;
+  --pa:#1d5566; --pb:#a86e0c; --pc:#7b3d6c;
+  --c-asia:#1d5566; --c-na:#c0782b; --c-eu:#72987a; --c-af:#8c4568; --c-sa:#4b6ea6; --c-oc:#a39348; --c-ot:#9b9284;
+  --t-asia:#fbf8f2; --t-na:#1f1b16; --t-eu:#1f1b16; --t-af:#fbf8f2; --t-sa:#fbf8f2; --t-oc:#1f1b16; --t-ot:#1f1b16;
+  --shadow:0 1px 0 rgba(40,30,20,.04),0 8px 30px -12px rgba(40,30,20,.18);
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#121418; --bg-2:#1a1d23; --card:#181b21; --ink:#ede6d7; --ink-2:#b7ae9e; --ink-3:#9a9387;
+  --rule:#2d3139; --sea:#161a20; --land:#252a32; --land-line:#353b45; --grat:#1d2128;
+  --dot:#7cc3c6; --accent:#f08c5f; --accent-soft:#6e3a26; --sel:#4a2f25;
+  --pa:#7cc3c6; --pb:#e6b85c; --pc:#cf95c5;
+  --c-asia:#6fb6bb; --c-na:#e39d55; --c-eu:#93bd94; --c-af:#cf86a9; --c-sa:#86a6dc; --c-oc:#d2c27a; --c-ot:#8d877c; --t-asia:#121418; --t-na:#121418; --t-eu:#121418; --t-af:#121418; --t-sa:#121418; --t-oc:#121418; --t-ot:#121418;
+  --shadow:0 1px 0 rgba(0,0,0,.2),0 10px 30px -12px rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#121418; --bg-2:#1a1d23; --card:#181b21; --ink:#ede6d7; --ink-2:#b7ae9e; --ink-3:#9a9387;
+    --rule:#2d3139; --sea:#161a20; --land:#252a32; --land-line:#353b45; --grat:#1d2128;
+    --dot:#7cc3c6; --accent:#f08c5f; --accent-soft:#6e3a26; --sel:#4a2f25;
+    --pa:#7cc3c6; --pb:#e6b85c; --pc:#cf95c5;
+    --c-asia:#6fb6bb; --c-na:#e39d55; --c-eu:#93bd94; --c-af:#cf86a9; --c-sa:#86a6dc; --c-oc:#d2c27a; --c-ot:#8d877c; --t-asia:#121418; --t-na:#121418; --t-eu:#121418; --t-af:#121418; --t-sa:#121418; --t-oc:#121418; --t-ot:#121418;
+    --shadow:0 1px 0 rgba(0,0,0,.2),0 10px 30px -12px rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html{scrollbar-color:var(--rule) var(--bg);-webkit-text-size-adjust:100%}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--rule);border-radius:6px;border:3px solid var(--bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-3)}
+::selection{background:var(--sel);color:var(--ink)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);font-size:18px;line-height:1.6;
+  font-variant-numeric:tabular-nums lining-nums;overflow-x:hidden;transition:background-color .3s,color .3s}
+a{color:inherit;text-decoration-color:var(--accent);text-underline-offset:.18em;text-decoration-thickness:1px}
+a:hover{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+button,input,select{font:inherit;color:inherit}
+.sans{font-family:var(--sans)}
+.num{font-variant-numeric:tabular-nums lining-nums}
+
+/* theme toggle */
+.theme-btn{position:fixed;top:14px;right:14px;z-index:30;width:40px;height:40px;border-radius:50%;
+  border:1px solid var(--rule);background:var(--card);color:var(--ink);display:grid;place-items:center;cursor:pointer;box-shadow:var(--shadow)}
+.theme-btn:hover{border-color:var(--ink-3)}
+.theme-btn{transition:opacity .2s}.theme-btn.tucked{opacity:0;pointer-events:none}
+.theme-btn.home{right:62px}
+.theme-btn svg{width:18px;height:18px}
+.theme-btn .i-sun{display:none}
+:root[data-theme="dark"] .theme-btn .i-sun{display:block}
+:root[data-theme="dark"] .theme-btn .i-moon{display:none}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .theme-btn .i-sun{display:block}
+  :root:not([data-theme="light"]) .theme-btn .i-moon{display:none}
+}
+
+/* hero */
+.hero{max-width:1180px;margin:0 auto;padding:clamp(72px,14vh,150px) 24px clamp(48px,9vh,96px)}
+.hero h1{font-weight:500;font-size:clamp(44px,7.6vw,104px);line-height:.98;letter-spacing:-.022em;margin:0 0 34px;max-width:12ch}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.dek{font-size:clamp(20px,2.1vw,25px);line-height:1.45;color:var(--ink-2);max-width:62ch;margin:0}
+.dek strong{color:var(--ink);font-weight:600}
+.byline{font-family:var(--sans);font-size:13px;color:var(--ink-3);margin-top:34px;display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+.byline .scroll-cue{display:inline-flex;align-items:center;gap:8px}
+.byline svg{width:14px;height:14px}
+
+/* scrolly */
+.scrolly{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.55fr);border-top:1px solid var(--rule)}
+.steps{position:relative;z-index:1;padding:0 clamp(20px,3.5vw,56px) 30vh}
+.graphic{position:sticky;top:0;height:100vh;height:100svh;z-index:0;border-left:1px solid var(--rule);background:var(--sea);overflow:hidden}
+.step{min-height:88vh;display:flex;flex-direction:column;justify-content:center;padding:6vh 0}
+.step:first-child{min-height:70vh}
+.step .card{max-width:34rem;opacity:.7;transition:opacity .45s}
+.step.is-active .card{opacity:1}
+.step.chap-start{padding-top:14vh}
+.step.chap-start .card{border-top:1px solid var(--rule);padding-top:26px}
+.step h2{font-weight:500;font-size:clamp(28px,2.7vw,38px);line-height:1.12;letter-spacing:-.012em;margin:0 0 16px}
+.step p{margin:0 0 14px;font-size:clamp(17px,1.3vw,19.5px);line-height:1.62;color:var(--ink-2)}
+.step p strong{color:var(--ink);font-weight:600}
+.step p .sw{display:inline-block;width:.62em;height:.62em;border-radius:50%;margin:0 .22em 0 .08em;vertical-align:.04em}
+.step p q{font-style:italic;quotes:"\201C" "\201D"}
+
+.g-head{position:absolute;left:22px;top:18px;right:118px;z-index:3;pointer-events:none}
+.g-title{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink);letter-spacing:.01em;transition:opacity .3s;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.g-sub{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.g-sub{font-family:var(--sans);font-size:12px;color:var(--ink-3);margin-top:2px}
+.graphic canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#sBase,#sOver{pointer-events:none}
+.tip.s-tip{white-space:normal;width:max-content;max-width:290px;padding:8px 11px;z-index:5}
+.tip.s-tip b{display:block;font-family:var(--serif);font-size:14px;font-weight:600;line-height:1.3}
+.tip.s-tip .m{margin-top:3px;opacity:.8}
+.tip.s-tip.below{transform:translate(-50%,14px)}
+.rail{position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:3;display:flex;flex-direction:column;gap:0}
+.rail button{width:24px;height:24px;border:0;background:none;padding:0;cursor:pointer;display:grid;place-items:center}
+.rail button::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ink-3);opacity:.35;transition:opacity .2s,transform .25s,background .2s}
+.rail button:hover::before{opacity:.8}
+.rail button[aria-current]::before{opacity:1;background:var(--accent);transform:scale(1.45)}
+
+/* explore */
+.explore{border-top:1px solid var(--rule);padding:clamp(56px,10vh,110px) 24px 40px;max-width:1440px;margin:0 auto}
+.sec-head{max-width:1180px;margin:0 auto 34px}
+.sec-head h2{font-weight:500;font-size:clamp(34px,4.4vw,58px);line-height:1.02;letter-spacing:-.018em;margin:0 0 16px}
+.sec-head p{color:var(--ink-2);max-width:64ch;margin:0;font-size:19px}
+.ex-grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:0;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--card);box-shadow:var(--shadow)}
+.ex-map{position:relative;min-height:620px;background:var(--sea);border-right:1px solid var(--rule)}
+.ex-map canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:pan-x pan-y}
+.ex-map canvas.dragging{cursor:grabbing}
+.ex-map canvas.pan{touch-action:none}
+.zoom{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--card);z-index:2}
+.zoom button{width:36px;height:36px;border:0;background:transparent;cursor:pointer;display:grid;place-items:center;color:var(--ink-2)}
+.zoom button+button{border-top:1px solid var(--rule)}
+.zoom button:hover{color:var(--ink);background:var(--bg-2)}
+.zoom svg{width:16px;height:16px}
+.tip{position:absolute;z-index:4;pointer-events:none;background:var(--ink);color:var(--bg);font-family:var(--sans);font-size:12.5px;line-height:1.35;
+  padding:6px 9px;border-radius:4px;white-space:nowrap;opacity:0;transform:translate(-50%,calc(-100% - 12px));transition:opacity .12s}
+.tip.on{opacity:1}
+.tip b{font-weight:600}
+.ex-side{display:flex;flex-direction:column;min-height:0;max-height:760px;font-family:var(--sans)}
+.ctrls{padding:16px 18px;border-bottom:1px solid var(--rule);display:grid;gap:12px}
+.field{display:grid;gap:5px}
+.field label{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.field input{width:100%;border:1px solid var(--rule);background:var(--bg);border-radius:5px;padding:8px 10px;font-size:14px;font-family:var(--sans)}
+.field .pk-trigger{border:1px solid var(--rule);background:var(--bg);border-radius:5px;padding:8px 10px;font-size:14px;font-family:var(--sans);color:var(--ink)}
+.field .pk-trigger:hover{border-color:var(--ink-3)}
+:root{--pk-bg:var(--card);--pk-ink:var(--ink);--pk-muted:var(--ink-3);--pk-line:var(--rule);--pk-hover:var(--bg-2);--pk-accent:var(--accent);--pk-shade:rgba(20,14,8,.35)}
+.sel-wrap{position:relative}
+.sel-wrap svg{position:absolute;right:10px;top:50%;width:12px;height:12px;transform:translateY(-50%);pointer-events:none;color:var(--ink-3)}
+.city-list{list-style:none;margin:0;padding:6px 8px;overflow:auto;flex:0 0 auto;max-height:260px;border-bottom:1px solid var(--rule)}
+.city-list button{width:100%;display:grid;grid-template-columns:1fr auto;gap:10px;text-align:left;border:0;background:transparent;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:13.5px}
+.city-list button:hover{background:var(--bg-2)}
+.city-list button.more{display:block;margin:4px 0 0;color:var(--ink-3)}
+.city-list button[aria-pressed="true"]{background:var(--sel)}
+.city-list .cn{color:var(--ink-3);font-weight:400}
+.city-list .c{font-weight:600;color:var(--ink-2)}
+.empty{padding:10px;color:var(--ink-3);font-size:13px}
+.detail{padding:18px 18px 22px;overflow:auto;flex:1;min-height:180px}
+.detail h3{font-family:var(--serif);font-weight:500;font-size:28px;line-height:1.1;margin:0 0 4px}
+.detail .meta{font-size:13px;color:var(--ink-3);margin:0 0 16px}
+.detail h4{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:18px 0 8px;font-weight:600}
+.detail ul{list-style:none;margin:0;padding:0}
+.detail .insts li{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:3px 0;border-bottom:1px solid var(--bg-2)}
+.detail .insts span:last-child{font-weight:600;color:var(--ink-2)}
+.detail .papers li{padding:8px 0;border-bottom:1px solid var(--bg-2)}
+.detail .papers a{font-family:var(--serif);font-size:15.5px;line-height:1.35;display:block}
+.detail .papers .pm{font-size:12px;color:var(--ink-3);margin-top:3px;overflow-wrap:anywhere}
+.more{margin-top:12px;border:1px solid var(--rule);background:var(--bg);border-radius:5px;padding:7px 12px;font-size:13px;cursor:pointer}
+.more:hover{border-color:var(--ink-3)}
+.hint{color:var(--ink-3);font-size:14px;margin:0}
+
+/* about */
+.foot{max-width:1180px;margin:0 auto;padding:28px 24px 56px;border-top:1px solid var(--rule);font-family:var(--sans);font-size:13px;color:var(--ink-3)}
+.about{max-width:1180px;margin:0 auto;padding:clamp(56px,9vh,96px) 24px 72px;display:grid;grid-template-columns:200px minmax(0,68ch);gap:24px 48px}
+.about h2{font-weight:500;font-size:26px;line-height:1.15;margin:0}
+.about p{margin:0 0 14px;color:var(--ink-2);font-size:17px}
+.about p strong{color:var(--ink);font-weight:600}
+
+@media (max-width:1100px){.ex-grid{grid-template-columns:minmax(0,1fr) 320px}}
+@media (max-width:860px){
+  body{font-size:17px}
+  .scrolly{display:flex;flex-direction:column}
+  .graphic{order:-1;position:sticky;top:0;height:54vh;height:54svh;border-left:0;border-bottom:1px solid var(--rule);z-index:2}
+  .steps{padding:0 18px 24vh}
+  .step{min-height:66vh;justify-content:flex-start;padding:4vh 0 0}
+  .step.chap-start{padding-top:4vh}
+  .step:first-child{min-height:60vh}
+  .step .card{background:var(--card);border:1px solid var(--rule);padding:18px 18px 6px;border-radius:6px;box-shadow:var(--shadow);opacity:1}
+  .step h2{font-size:25px}
+  .g-head{left:16px;top:12px;right:64px}
+  .rail{display:none}
+  .theme-btn{position:absolute;top:10px;right:10px;width:36px;height:36px}
+  .theme-btn.home{right:54px}
+  .ex-grid{grid-template-columns:minmax(0,1fr)}
+  .ex-map{min-height:0;aspect-ratio:1.55;border-right:0;border-bottom:1px solid var(--rule)}
+  .ex-side{max-height:none}
+  .explore{padding-left:16px;padding-right:16px}
+  .about{grid-template-columns:minmax(0,1fr);padding-left:18px;padding-right:18px}
+  .hero{padding-left:18px;padding-right:18px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:0s!important;animation-duration:0s!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<a class="theme-btn home" href="index.html" aria-label="All views" title="All views"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.75 11.25 12 4.5l8.25 6.75M6 9.75V19.5h4.5v-5.25h3v5.25H18V9.75"/></svg></a>
+<button class="theme-btn" id="themeBtn" type="button" aria-label="Switch theme">
+  <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+  <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
+</button>
+
+<header class="hero">
+  <h1>Where the citations <em>came from</em></h1>
+  <p class="dek" id="dek"></p>
+  <div class="byline"><span id="snap"></span><span class="scroll-cue"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5v10M3.5 8.5 8 13l4.5-4.5"/></svg>Scroll to begin</span></div>
+</header>
+
+<main>
+<section class="scrolly" aria-label="Story">
+  <div class="steps" id="steps"></div>
+  <div class="graphic" id="graphic">
+    <canvas id="sBase" aria-hidden="true"></canvas>
+    <canvas id="sDots" role="img" aria-label="Each dot is one citing paper; the step text beside it gives the numbers."></canvas>
+    <canvas id="sOver" aria-hidden="true"></canvas>
+    <div class="g-head" aria-hidden="true"><div class="g-title" id="gTitle"></div><div class="g-sub" id="gSub"></div></div>
+    <div class="tip s-tip" id="sTip" role="presentation"></div>
+    <nav class="rail" id="rail" aria-label="Story steps"></nav>
+  </div>
+</section>
+
+<section class="explore" id="explore" aria-labelledby="exTitle">
+  <div class="sec-head">
+    <h2 id="exTitle">Every city on the map</h2>
+    <p id="exDek"></p>
+  </div>
+  <div class="ex-grid">
+    <div class="ex-map" id="exMap">
+      <canvas id="exCanvas" role="img" aria-label="Map of citing cities; the city list beside it selects the same cities."></canvas>
+      <div class="tip" id="tip" role="presentation"></div>
+      <div class="zoom">
+        <button type="button" id="zIn" aria-label="Zoom in"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg></button>
+        <button type="button" id="zOut" aria-label="Zoom out"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3 8h10"/></svg></button>
+        <button type="button" id="zReset" aria-label="Reset view"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6V2.5H6M13.5 6V2.5H10M2.5 10v3.5H6M13.5 10v3.5H10"/></svg></button>
+      </div>
+    </div>
+    <div class="ex-side">
+      <div class="ctrls">
+        <div class="field"><label for="paperSel">Paper</label>
+          <button type="button" id="paperSel"></button>
+        </div>
+        <div class="field"><label for="citySearch">City</label><input id="citySearch" type="search" placeholder="City, country or region" autocomplete="off"></div>
+      </div>
+      <ul class="city-list" id="cityList" aria-label="Cities"></ul>
+      <div class="detail" id="detail" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<section class="about" aria-labelledby="aboutTitle">
+  <h2 id="aboutTitle">About the data</h2>
+  <div id="aboutBody"></div>
+</section>
+</main>
+<footer class="foot"><a href="index.html">All views</a></footer>
+
+<!--PAPER_PICKER-->
+<script src="data.js"></script>
+<script>
+(function(){
+'use strict';
+var D=window.CITATION_DATA;
+if(!D){document.getElementById('dek').textContent='The data file (data.js) could not be loaded.';return;}
+
+/* ---------- helpers ---------- */
+var NF=new Intl.NumberFormat('en-US');
+function fmt(n){return NF.format(Math.round(n));}
+function pct(a,b){return b?Math.round(100*a/b)+'%':'0%';}
+function $(id){return document.getElementById(id);}
+function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
+var SVGNS='http://www.w3.org/2000/svg';
+function sv(tag,attrs){var e=document.createElementNS(SVGNS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);return e;}
+function norm(s){return String(s||'').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu,'');}
+function listJoin(a){if(a.length<2)return a.join('');return a.slice(0,-1).join(', ')+' and '+a[a.length-1];}
+function safeUrl(u){try{var x=new URL(u);if(x.protocol==='http:'||x.protocol==='https:')return x.href;}catch(e){}return null;}
+function workUrl(w){return (w.doi&&safeUrl(w.doi))||(/^W\d+$/.test(w.id)?'https://openalex.org/'+w.id:null);}
+var RM=window.matchMedia('(prefers-reduced-motion: reduce)');
+function hav(la1,lo1,la2,lo2){var r=Math.PI/180,a=Math.sin((la2-la1)*r/2),b=Math.sin((lo2-lo1)*r/2);
+  var h=a*a+Math.cos(la1*r)*Math.cos(la2*r)*b*b;return 2*6371.0088*Math.asin(Math.min(1,Math.sqrt(h)));}
+
+/* ---------- data model ---------- */
+var ASOF=new Date(D.manifest&&D.manifest.as_of||Date.now());
+var ASOF_Y=ASOF.getUTCFullYear();
+var asofText=ASOF.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});
+var OWNER=D.owner||'the author';
+// Fallback for codes missing from the shared country table.
+var COUNTRY_FIX={MO:{name:'Macao',continent:'Asia'}};
+var CONTS=['Asia','North America','Europe','Africa','South America','Oceania','Other'];
+var CONT_VAR={'Asia':'--c-asia','North America':'--c-na','Europe':'--c-eu','Africa':'--c-af','South America':'--c-sa','Oceania':'--c-oc','Other':'--c-ot'};
+var NAME_FULL={'Dem. Rep. Congo':'Democratic Republic of the Congo','Bosnia and Herz.':'Bosnia and Herzegovina','Cayman Is.':'Cayman Islands','Central African Rep.':'Central African Republic','Dominican Rep.':'Dominican Republic','Eq. Guinea':'Equatorial Guinea','S. Sudan':'South Sudan','Solomon Is.':'Solomon Islands'};
+function fullName(n){return NAME_FULL[n]||String(n).replace(/\bIs\.$/,'Islands').replace(/\bRep\./,'Republic');}
+function country(iso){var c=D.countries&&D.countries[iso];if(!c&&COUNTRY_FIX[iso])return COUNTRY_FIX[iso];
+  var cont=c&&c.continent;if(CONTS.indexOf(cont)<0)cont='Other';return {name:fullName((c&&c.name)||iso),continent:cont};}
+
+var CITIES=D.cities, NC=CITIES.length, cityIdx={};
+CITIES.forEach(function(c,i){cityIdx[c.id]=i;});
+var TGT={};D.targets.forEach(function(t){TGT[t.id]=t;});
+var GROUPS={},GLIST=[];
+D.targets.forEach(function(t){var g=t.key||norm(t.title)||t.id;if(!GROUPS[g]){GROUPS[g]={key:g,title:t.title,year:t.publication_year,n:0,placed:0};GLIST.push(GROUPS[g]);}
+  var G=GROUPS[g];if(t.publication_year&&(!G.year||t.publication_year<G.year))G.year=t.publication_year;});
+var INST=D.institutions||{};
+
+var W=D.works.map(function(w){
+  var y=w.year;if(y!=null&&y>ASOF_Y)y=ASOF_Y;
+  var ci=[];(w.cities||[]).forEach(function(id){var i=cityIdx[id];if(i!=null&&ci.indexOf(i)<0)ci.push(i);});
+  var gs=[];(w.targets||[]).forEach(function(t){var T=TGT[t];if(T){var g=T.key||norm(T.title)||T.id;if(gs.indexOf(g)<0)gs.push(g);}});
+  var cs={},ks={};ci.forEach(function(i){var iso=CITIES[i].country;cs[iso]=1;ks[country(iso).continent]=1;});
+  var inst={};(w.inst||[]).forEach(function(x){inst[x]=1;});
+  return {raw:w,yr:y,date:w.date||'',ci:ci,gs:gs,countries:Object.keys(cs),conts:Object.keys(ks),inst:Object.keys(inst)};
+});
+W.forEach(function(w){w.gs.forEach(function(g){GROUPS[g].n++;if(w.ci.length)GROUPS[g].placed++;});});
+GLIST.sort(function(a,b){return b.n-a.n;});
+var WBYID={};W.forEach(function(w){WBYID[w.raw.id]=w;});
+var CITY_WORKS=CITIES.map(function(c){return (c.works||[]).map(function(id){return WBYID[id];}).filter(Boolean);});
+
+function counts(pred){var a=new Float32Array(NC);for(var k=0;k<W.length;k++){var w=W[k];if(!pred||pred(w))for(var j=0;j<w.ci.length;j++)a[w.ci[j]]++;}return a;}
+function countryTally(pred){var t={};W.forEach(function(w){if(pred&&!pred(w))return;w.countries.forEach(function(c){t[c]=(t[c]||0)+1;});});return t;}
+function nz(a){var n=0;for(var i=0;i<a.length;i++)if(a[i]>0)n++;return n;}
+function quoted(t){return '\u201C'+t+'\u201D';}
+
+/* ---------- facts (all computed) ---------- */
+var F={};
+F.total=W.length;
+F.placed=W.filter(function(w){return w.ci.length;}).length;
+F.unplaced=F.total-F.placed;
+F.ALL=counts();
+F.cities=nz(F.ALL);
+F.countryT=countryTally();
+F.countries=Object.keys(F.countryT).length;
+var dated=W.filter(function(w){return w.yr!=null;});
+F.undated=F.total-dated.length;
+F.y0=dated.reduce(function(m,w){return Math.min(m,w.yr);},Infinity);
+F.years=[];for(var y=F.y0;y<=ASOF_Y;y++)F.years.push(y);
+F.perYear=F.years.map(function(y){return dated.filter(function(w){return w.yr===y;}).length;});
+// first year
+F.first=dated.filter(function(w){return w.yr===F.y0;}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
+(function(){var gc={};F.first.forEach(function(w){w.gs.forEach(function(g){gc[g]=(gc[g]||0)+1;});});
+  var best=Object.keys(gc).sort(function(a,b){return gc[b]-gc[a];})[0];F.firstPaper=GROUPS[best];F.firstPaperN=gc[best]||0;
+  var placed=F.first.filter(function(w){return w.ci.length;});F.firstPlaced=placed.length;
+  var kc={};placed.forEach(function(w){w.conts.forEach(function(k){kc[k]=(kc[k]||0)+1;});});
+  F.firstCont=Object.keys(kc).sort(function(a,b){return kc[b]-kc[a];})[0];F.firstContN=kc[F.firstCont]||0;
+  var names=[],seen={};placed.forEach(function(w){w.ci.forEach(function(i){if(!seen[i]){seen[i]=1;names.push(i);}});});F.firstCities=names;})();
+// before the takeoff
+// the takeoff: the year before the sharpest rise, counting only rises to at least 5% of the busiest year
+F.split=(function(){var peak=Math.max.apply(null,F.perYear.concat([0])),best=-1,bestR=0;
+  for(var i=0;i+1<F.years.length&&F.years[i+1]<=ASOF_Y;i++){var r=F.perYear[i+1]/Math.max(1,F.perYear[i]);if(F.perYear[i+1]>=peak*0.05&&r>bestR){bestR=r;best=i;}}
+  return best<0?F.y0-1:F.years[best];})();
+F.slow=F.split>F.y0&&F.years.length>=4;     // at least two slow years before it, or the chapter is left out
+F.pre=counts(function(w){return w.yr!=null&&w.yr<=F.split;});
+F.preWorks=dated.filter(function(w){return w.yr<=F.split;}).length;
+F.preCountries=Object.keys(countryTally(function(w){return w.yr!=null&&w.yr<=F.split;})).length;
+F.preMax=Math.max.apply(null,F.perYear.filter(function(_,i){return F.years[i]<=F.split;}).concat([0]));
+F.postWorks=dated.filter(function(w){return w.yr>F.split;}).length;
+function yc(y){var i=F.years.indexOf(y);return i<0?0:F.perYear[i];}
+// papers
+var HOME_ISO=D.home.country;
+F.P=GLIST.filter(function(G){return G.n>0;}).slice(0,3).map(function(G,k){
+  var a=counts(function(w){return w.gs.indexOf(G.key)>=0;});
+  var ct=countryTally(function(w){return w.gs.indexOf(G.key)>=0;});
+  return {G:G,counts:a,cities:nz(a),countries:Object.keys(ct).length,cn:ct[HOME_ISO]||0,col:['--pa','--pb','--pc'][k]};
+});
+// continents
+F.contYear={};CONTS.forEach(function(k){F.contYear[k]=F.years.map(function(){return 0;});});
+F.contTot={};CONTS.forEach(function(k){F.contTot[k]=0;});
+W.forEach(function(w){w.conts.forEach(function(k){F.contTot[k]++;if(w.yr!=null)F.contYear[k][w.yr-F.y0]++;});});
+F.contsUsed=CONTS.filter(function(k){return F.contTot[k]>0;});
+F.contRank=F.contsUsed.slice().sort(function(a,b){return F.contTot[b]-F.contTot[a];});
+function shareBetween(keys,lo,hi){var a=0,t=0;F.years.forEach(function(y,i){if(y<lo||y>hi)return;F.contsUsed.forEach(function(k){var v=F.contYear[k][i];t+=v;if(keys.indexOf(k)>=0)a+=v;});});return pct(a,t);}
+// home
+(function(){var h=D.home||{};var best=-1;CITIES.forEach(function(c,i){if(c.name===h.label&&c.country===h.country&&(best<0||c.count>CITIES[best].count))best=i;});
+  F.homeExact=best>=0;     // false: no citing paper from the home city; the nearest citing city stands in on maps only
+  if(best<0){var dm=Infinity;CITIES.forEach(function(c,i){var d=hav(h.lat,h.lon,c.lat,c.lon);if(d<dm){dm=d;best=i;}});}
+  F.home=best;F.homeN=F.ALL[best];
+  var cn=[];CITIES.forEach(function(c,i){if(c.country===CITIES[best].country&&i!==best)cn.push(i);});
+  cn.sort(function(a,b){return F.ALL[b]-F.ALL[a];});F.homePeers=cn.slice(0,3);
+  F.homeCountryN=F.countryT[CITIES[best].country]||0;})();
+// institutions
+(function(){var ic={};W.forEach(function(w){w.inst.forEach(function(x){ic[x]=(ic[x]||0)+1;});});
+  F.instCount=Object.keys(ic).length;
+  F.instTop=Object.keys(ic).sort(function(a,b){return ic[b]-ic[a];}).slice(0,10).map(function(x){return {id:x,name:(INST[x]&&INST[x].display_name)||x,n:ic[x]};});})();
+// farthest
+(function(){var h=D.home;var ds=[];CITIES.forEach(function(c,i){if(F.ALL[i]>0)ds.push({i:i,d:hav(h.lat,h.lon,c.lat,c.lon)});});
+  ds.sort(function(a,b){return b.d-a.d;});F.far=ds.slice(0,10);
+  var kc={};F.far.forEach(function(x){var k=country(CITIES[x.i].country).continent;kc[k]=(kc[k]||0)+1;});
+  F.farCont=Object.keys(kc).sort(function(a,b){return kc[b]-kc[a];})[0];F.farContN=kc[F.farCont];
+  F.farAnti=F.far.length?Math.PI*6371.0088-F.far[0].d:0;})();
+// countries seen once
+F.once=Object.keys(F.countryT).filter(function(k){return F.countryT[k]===1;}).sort(function(a,b){return country(a).name<country(b).name?-1:1;});
+F.onceCounts=counts(function(w){return w.countries.some(function(c){return F.countryT[c]===1;});});
+(function(){var a=new Float32Array(NC);var set={};F.once.forEach(function(c){set[c]=1;});for(var i=0;i<NC;i++)if(set[CITIES[i].country])a[i]=F.ALL[i];F.onceCounts=a;})();
+
+/* ---------- projection: Equal Earth, centred on 10°E ---------- */
+var L0=10,A1=1.340264,A2=-0.081106,A3=0.000893,A4=0.003796,MM=Math.sqrt(3)/2;
+function rel(lon){var r=((lon-L0)%360+540)%360-180;return r;}
+function proj(lr,lat){var l=lr*Math.PI/180,p=Math.max(-90,Math.min(90,lat))*Math.PI/180;
+  var t=Math.asin(MM*Math.sin(p)),t2=t*t,t6=t2*t2*t2;
+  return [l*Math.cos(t)/(MM*(A1+3*A2*t2+t6*(7*A3+9*A4*t2))),-t*(A1+A2*t2+t6*(A3+A4*t2))];}
+var CX=new Float32Array(NC),CY=new Float32Array(NC);
+CITIES.forEach(function(c,i){var p=proj(rel(c.lon),c.lat);CX[i]=p[0];CY[i]=p[1];});
+var LAND=new Path2D(),LANDISO={};
+(function(){
+  (D.land||[]).forEach(function(f){
+    var P=LANDISO[f.iso]||(LANDISO[f.iso]=new Path2D());
+    f.polygons.forEach(function(poly){poly.forEach(function(ring){
+      if(!ring.length)return;var un=[],prev=null,mn=Infinity,mx=-Infinity;
+      for(var k=0;k<ring.length;k++){var r=rel(ring[k][0]);if(prev!=null){while(r-prev>180)r-=360;while(r-prev<-180)r+=360;}prev=r;un.push(r);if(r<mn)mn=r;if(r>mx)mx=r;}
+      var offs=[0];if(mx>180)offs.push(-360);if(mn<-180)offs.push(360);
+      offs.forEach(function(o){for(var k=0;k<ring.length;k++){var p=proj(un[k]+o,ring[k][1]);if(k===0){LAND.moveTo(p[0],p[1]);P.moveTo(p[0],p[1]);}else{LAND.lineTo(p[0],p[1]);P.lineTo(p[0],p[1]);}}LAND.closePath();P.closePath();});
+    });});
+  });
+})();
+var OUTLINE=new Path2D(),GRAT=new Path2D();
+(function(){var k,p;for(k=-90;k<=90;k+=2){p=proj(180,k);k===-90?OUTLINE.moveTo(p[0],p[1]):OUTLINE.lineTo(p[0],p[1]);}
+  for(k=90;k>=-90;k-=2){p=proj(-180,k);OUTLINE.lineTo(p[0],p[1]);}OUTLINE.closePath();
+  for(var lon=-180;lon<=180;lon+=30){for(k=-90;k<=90;k+=3){p=proj(lon,k);k===-90?GRAT.moveTo(p[0],p[1]):GRAT.lineTo(p[0],p[1]);}}
+  for(var lat=-60;lat<=60;lat+=30){for(k=-180;k<=180;k+=4){p=proj(k,lat);k===-180?GRAT.moveTo(p[0],p[1]):GRAT.lineTo(p[0],p[1]);}}})();
+function bboxOf(lon0,lat0,lon1,lat1){var x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  for(var i=0;i<=12;i++)for(var j=0;j<=12;j++){var lon=lon0+(lon1-lon0)*i/12,lat=lat0+(lat1-lat0)*j/12;
+    var p=proj(lon1-lon0>=359?-180+360*i/12:rel(lon),lat);if(p[0]<x0)x0=p[0];if(p[0]>x1)x1=p[0];if(p[1]<y0)y0=p[1];if(p[1]>y1)y1=p[1];}
+  return [x0,y0,x1,y1];}
+var VIEWS={world:bboxOf(-180,-56,180,80),europe:bboxOf(-11,36,32,61),eastasia:bboxOf(98,17,134,44)};
+// great-circle arcs from home
+function arc(la1,lo1,la2,lo2){var r=Math.PI/180;function v(la,lo){return [Math.cos(la*r)*Math.cos(lo*r),Math.cos(la*r)*Math.sin(lo*r),Math.sin(la*r)];}
+  var a=v(la1,lo1),b=v(la2,lo2),d=Math.acos(Math.max(-1,Math.min(1,a[0]*b[0]+a[1]*b[1]+a[2]*b[2]))),pts=[],segs=[];
+  for(var k=0;k<=96;k++){var t=k/96,s1=Math.sin((1-t)*d)/Math.sin(d),s2=Math.sin(t*d)/Math.sin(d);
+    var x=s1*a[0]+s2*b[0],y=s1*a[1]+s2*b[1],z=s1*a[2]+s2*b[2];var lat=Math.atan2(z,Math.sqrt(x*x+y*y))/r,lon=Math.atan2(y,x)/r;
+    var lr=rel(lon);if(pts.length&&Math.abs(lr-pts[pts.length-1].lr)>180){segs.push(pts);pts=[];}var p=proj(lr,lat);pts.push({lr:lr,x:p[0],y:p[1]});}
+  segs.push(pts);return segs;}
+
+/* ---------- theme ---------- */
+var COL={};
+function hexRgb(h){h=h.trim().replace('#','');if(h.length===3)h=h.replace(/./g,'$&$&');var n=parseInt(h,16);return [(n>>16)&255,(n>>8)&255,n&255];}
+function readColors(){var cs=getComputedStyle(document.documentElement);
+  ['--bg','--ink','--ink-2','--ink-3','--sea','--land','--land-line','--grat','--dot','--accent','--accent-soft','--pa','--pb','--pc','--rule','--card','--c-asia','--c-na','--c-eu','--c-af','--c-sa','--c-oc','--c-ot'].forEach(function(k){COL[k]=hexRgb(cs.getPropertyValue(k)||'#888');});}
+function rgba(c,a){return 'rgba('+c[0]+','+c[1]+','+c[2]+','+(a==null?1:a)+')';}
+function lerpC(a,b,t){return [a[0]+(b[0]-a[0])*t|0,a[1]+(b[1]-a[1])*t|0,a[2]+(b[2]-a[2])*t|0];}
+readColors();
+
+/* ---------- map view ---------- */
+function ease(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
+function MapView(canvas,opts){
+  this.c=canvas;this.ctx=canvas.getContext('2d');this.opts=opts||{};this.W=1;this.H=1;this.dpr=1;
+  this.r=new Float32Array(NC);this.r0=new Float32Array(NC);this.r1=new Float32Array(NC);
+  this.h=new Float32Array(NC);this.h0=new Float32Array(NC);this.h1=new Float32Array(NC);
+  this.cnt=new Float32Array(NC);this.order=[];
+  this.colKey='--dot';this.col0=null;this.bbox=VIEWS.world;this.view=null;this.v0=null;this.v1=null;
+  this.iso=null;this.isoA=0;this.labels=[];this.arcs=[];this.t=1;this.raf=0;this.sel=-1;this.hover=-1;this.userView=false;
+  var self=this;new ResizeObserver(function(){self.resize();}).observe(canvas.parentNode);
+}
+MapView.prototype.fit=function(b){var pad=Math.min(this.W,this.H)*0.035+8,top=this.opts.top||0;
+  var s=Math.min((this.W-2*pad)/(b[2]-b[0]),(this.H-2*pad-top)/(b[3]-b[1]));
+  return {cx:(b[0]+b[2])/2,cy:(b[1]+b[3])/2-top/2/s,s:s};};
+MapView.prototype.worldS=function(){return this.fit(VIEWS.world).s;};
+MapView.prototype.resize=function(){var r=this.c.getBoundingClientRect();if(!r.width||!r.height)return;
+  this.W=r.width;this.H=r.height;this.dpr=Math.min(2,window.devicePixelRatio||1);
+  this.c.width=Math.round(this.W*this.dpr);this.c.height=Math.round(this.H*this.dpr);
+  if(!this.userView){this.view=this.fit(this.bbox);if(this.t<1)this.v1=this.view;}
+  if(!this.view)this.view=this.fit(this.bbox);
+  this.computeRadii(this.r1);this.sortOrder();if(this.t>=1)this.r.set(this.r1);this.draw();};
+MapView.prototype.rUnit=function(s){var base=Math.max(0.26,Math.min(0.62,Math.sqrt(this.W*this.H)/1500));return base*Math.pow((s||this.view.s)/this.worldS(),0.38);};
+MapView.prototype.computeRadii=function(out){var tv=this.v1||this.view;if(!tv)return;var u=this.rUnit(tv.s);
+  for(var i=0;i<NC;i++){var c=this.cnt[i];out[i]=c>0?Math.max(2,Math.sqrt(c)*u):0;}};
+/* state: {counts, color, bbox, highlight:[i], iso:[codes], labels:[{i,text}], arcs:[[segs]]} */
+MapView.prototype.set=function(st,animate){
+  this.cnt=st.counts;this.bbox=st.bbox||VIEWS.world;this.userView=false;
+  this.r0.set(this.r);this.h0.set(this.h);this.v0=this.view?{cx:this.view.cx,cy:this.view.cy,s:this.view.s}:null;
+  this.col0=this.colNow||COL[st.color||'--dot'];this.colKey=st.color||'--dot';
+  this.v1=this.W>1?this.fit(this.bbox):null;this.computeRadii(this.r1);
+  this.h1.fill(0);(st.highlight||[]).forEach(function(i){this.h1[i]=1;},this);
+  this.isoPrev=this.iso;this.isoPrevA=this.isoA;this.iso=st.iso||null;
+  this.labels=st.labels||[];this.arcs=st.arcs||[];
+  this.sortOrder();
+  if(!animate||RM.matches||!this.v0){this.t=1;this.finish();this.draw();return;}
+  this.t=0;this.start=performance.now();this.dur=1000;this.loop();};
+MapView.prototype.sortOrder=function(){var o=[];for(var i=0;i<NC;i++)if(this.r1[i]>0||this.r0[i]>0)o.push(i);var r1=this.r1;o.sort(function(a,b){return r1[b]-r1[a];});this.order=o;};
+MapView.prototype.finish=function(){this.r.set(this.r1);this.h.set(this.h1);if(this.v1)this.view=this.v1;this.v1=null;this.colNow=COL[this.colKey];this.isoA=this.iso?1:0;this.isoPrev=null;};
+MapView.prototype.loop=function(){var self=this;if(this.raf)return;
+  this.raf=requestAnimationFrame(function f(now){self.raf=0;var t=Math.min(1,(now-self.start)/self.dur);self.t=t;var e=ease(t);
+    for(var i=0;i<NC;i++){self.r[i]=self.r0[i]+(self.r1[i]-self.r0[i])*e;self.h[i]=self.h0[i]+(self.h1[i]-self.h0[i])*e;}
+    if(self.v0&&self.v1){self.view={cx:self.v0.cx+(self.v1.cx-self.v0.cx)*e,cy:self.v0.cy+(self.v1.cy-self.v0.cy)*e,s:Math.exp(Math.log(self.v0.s)+(Math.log(self.v1.s)-Math.log(self.v0.s))*e)};}
+    self.colNow=lerpC(self.col0,COL[self.colKey],e);self.isoA=e;
+    if(t>=1)self.finish();self.draw();if(t<1)self.raf=requestAnimationFrame(f);});};
+MapView.prototype.toScreen=function(i){var v=this.view;return [this.W/2+(CX[i]-v.cx)*v.s,this.H/2+(CY[i]-v.cy)*v.s];};
+MapView.prototype.draw=function(){
+  var ctx=this.ctx,v=this.view,d=this.dpr;if(!v||this.W<2)return;
+  ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,this.c.width,this.c.height);
+  var tx=this.W/2-v.cx*v.s,ty=this.H/2-v.cy*v.s;
+  ctx.setTransform(d*v.s,0,0,d*v.s,d*tx,d*ty);
+  ctx.fillStyle=rgba(COL['--bg'],.55);ctx.fill(OUTLINE);
+  ctx.save();ctx.clip(OUTLINE);
+  ctx.lineWidth=0.7/v.s;ctx.strokeStyle=rgba(COL['--grat']);ctx.stroke(GRAT);
+  ctx.fillStyle=rgba(COL['--land']);ctx.fill(LAND,'nonzero');
+  var hl=function(list,a){if(!list||a<=0)return;ctx.fillStyle=rgba(COL['--accent-soft'],a);list.forEach(function(k){if(LANDISO[k])ctx.fill(LANDISO[k]);});};
+  if(this.isoPrev&&this.isoPrev!==this.iso)hl(this.isoPrev,(1-this.isoA)*(this.isoPrevA||1));
+  hl(this.iso,this.isoA);
+  ctx.strokeStyle=rgba(COL['--land-line']);ctx.lineWidth=0.6/v.s;ctx.stroke(LAND);
+  ctx.restore();
+  ctx.strokeStyle=rgba(COL['--land-line']);ctx.lineWidth=1/v.s;ctx.stroke(OUTLINE);
+  ctx.setTransform(d,0,0,d,0,0);
+  // arcs
+  if(this.arcs.length){var prog=ease(this.t);ctx.lineWidth=1.3;ctx.strokeStyle=rgba(COL['--accent'],.85);ctx.setLineDash([]);
+    this.arcs.forEach(function(segs){var total=0;segs.forEach(function(s){total+=s.length;});var lim=Math.floor(total*prog),c=0;
+      segs.forEach(function(s){ctx.beginPath();for(var k=0;k<s.length&&c<lim;k++,c++){var x=tx+s[k].x*v.s,y=ty+s[k].y*v.s;k?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();});});}
+  // dots
+  var col=this.colNow||COL[this.colKey],acc=COL['--accent'],bg=COL['--bg'];
+  ctx.lineWidth=0.8;ctx.strokeStyle=rgba(bg,.8);
+  for(var k=0;k<this.order.length;k++){var i=this.order[k],r=this.r[i];if(r<0.3)continue;
+    var x=tx+CX[i]*v.s,y=ty+CY[i]*v.s;if(x<-r||y<-r||x>this.W+r||y>this.H+r)continue;
+    var h=this.h[i];var c=h>0?lerpC(col,acc,h):col;
+    ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=rgba(c,0.58+0.3*h);ctx.fill();if(r>2.2)ctx.stroke();}
+  // home marker
+  if(F.home>=0){var hp=this.toScreen(F.home);ctx.beginPath();ctx.arc(hp[0],hp[1],3,0,6.2832);ctx.fillStyle=rgba(acc);ctx.fill();
+    ctx.beginPath();ctx.arc(hp[0],hp[1],6.5,0,6.2832);ctx.strokeStyle=rgba(acc,.9);ctx.lineWidth=1.3;ctx.stroke();}
+  // selection / hover
+  [[this.sel,COL['--ink'],1.8],[this.hover,COL['--ink'],1.2]].forEach(function(s){if(s[0]<0)return;var p=this.toScreen(s[0]),r=Math.max(4,this.r[s[0]])+3;
+    ctx.beginPath();ctx.arc(p[0],p[1],r,0,6.2832);ctx.strokeStyle=rgba(s[1]);ctx.lineWidth=s[2];ctx.stroke();},this);
+  // labels
+  var la=this.t>=1?1:Math.max(0,(this.t-.55)/.45);
+  if(this.labels.length&&la>0){ctx.font='600 12px '+getComputedStyle(document.body).getPropertyValue('--sans');ctx.textBaseline='middle';ctx.lineJoin='round';
+    var self=this,boxes=[],obst=this.labels.map(function(L){var p=self.toScreen(L.i),r=Math.max(3,self.r[L.i]);return [p[0]-r,p[1]-r,p[0]+r,p[1]+r];});
+    function hits(b,list){for(var k=0;k<list.length;k++){var o=list[k];if(b[0]<o[2]&&b[2]>o[0]&&b[1]<o[3]&&b[3]>o[1])return true;}return false;}
+    this.labels.forEach(function(L,li){var p=self.toScreen(L.i),r=Math.max(3,self.r[L.i]),w=ctx.measureText(L.text).width,h=14;
+      var cands=[[p[0]+r+5,p[1]],[p[0]-r-5-w,p[1]],[p[0]-w/2,p[1]-r-10],[p[0]-w/2,p[1]+r+10]];if(L.left)cands.unshift(cands.splice(1,1)[0]);
+      var others=obst.filter(function(_,k){return k!==li;}),pick=null;
+      for(var pass=0;pass<2&&!pick;pass++)for(var c=0;c<cands.length;c++){var x=cands[c][0],y=cands[c][1],b=[x-2,y-h/2,x+w+2,y+h/2];
+        if(b[0]<4||b[2]>self.W-4||b[1]<(self.opts.top||0)+4||b[3]>self.H-4)continue;if(hits(b,boxes)||(pass===0&&hits(b,others)))continue;pick=[x,y,b];break;}
+      if(!pick)return;boxes.push(pick[2]);
+      ctx.lineWidth=3.5;ctx.strokeStyle=rgba(COL['--sea'],.92*la);ctx.strokeText(L.text,pick[0],pick[1]);ctx.fillStyle=rgba(COL['--ink'],la);ctx.fillText(L.text,pick[0],pick[1]);});}
+  // size key
+  if(this.opts.key){var u=this.rUnit(),ks=[10,100,1000],kx=18,ky=this.H-18;ctx.font='11px '+getComputedStyle(document.body).getPropertyValue('--sans');ctx.textBaseline='alphabetic';
+    var maxr=Math.sqrt(1000)*u;ctx.strokeStyle=rgba(COL['--ink-3'],.9);ctx.lineWidth=1;ctx.fillStyle=rgba(COL['--ink-3']);
+    var prevH=Infinity;ks=[1000,100,10].filter(function(n){var h=2*Math.max(1.5,Math.sqrt(n)*u);if(prevH-h<12)return false;prevH=h;return true;});
+    ks.forEach(function(n){var r=Math.max(1.5,Math.sqrt(n)*u);ctx.beginPath();ctx.arc(kx+maxr,ky-r,r,0,6.2832);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(kx+maxr,ky-2*r);ctx.lineTo(kx+2*maxr+8,ky-2*r);ctx.stroke();ctx.fillText(fmt(n),kx+2*maxr+11,ky-2*r+4);});
+    ctx.fillText('citing papers',kx,ky-2*maxr-10);}
+};
+MapView.prototype.hit=function(px,py){var v=this.view,best=-1,bd=Infinity;if(!v)return -1;
+  for(var i=0;i<NC;i++){var r=this.r[i];if(r<=0)continue;var p=this.toScreen(i),dx=p[0]-px,dy=p[1]-py,dd=Math.sqrt(dx*dx+dy*dy);
+    if(dd<=Math.max(r,4)+3){var score=dd-r*0.2;if(score<bd){bd=score;best=i;}}}return best;};
+MapView.prototype.zoomAt=function(f,px,py){var v=this.view,ws=this.worldS();var s2=Math.max(ws*0.85,Math.min(ws*60,v.s*f));
+  if(px==null){px=this.W/2;py=this.H/2;}var ux=v.cx+(px-this.W/2)/v.s,uy=v.cy+(py-this.H/2)/v.s;
+  this.view={cx:ux-(px-this.W/2)/s2,cy:uy-(py-this.H/2)/s2,s:s2};this.userView=true;this.computeRadiiNow();this.r1.set(this.r);this.draw();};
+MapView.prototype.computeRadiiNow=function(){var u=this.rUnit();for(var i=0;i<NC;i++){var c=this.cnt[i];this.r[i]=c>0?Math.max(2,Math.sqrt(c)*u):0;}};
+
+/* ---------- copy ---------- */
+function P(parts){var p=el('p');parts.forEach(function(x){if(typeof x==='string')p.appendChild(document.createTextNode(x));
+  else if(x.b!=null)p.appendChild(el('strong',null,x.b));else if(x.q!=null)p.appendChild(el('q',null,x.q));
+  else if(x.sw){var s=el('span','sw');s.style.background='var('+x.sw+')';s.setAttribute('aria-hidden','true');p.appendChild(s);}});return p;}
+var P1=F.P[0],P2=F.P[1],P3=F.P[2];
+function cnShare(p){return pct(p.cn,p.G.placed);}
+var homeC=CITIES[F.home],homeCountry=country(homeC.country).name;
+var firstCityNames=F.firstCities.filter(function(i){return country(CITIES[i].country).continent===F.firstCont;}).map(function(i){return CITIES[i].name;});
+var takeYears=F.years.filter(function(y){return y>F.split;});
+var farC=F.far.length?CITIES[F.far[0].i]:null;
+function homeShare(p){return p.G.placed?p.cn/p.G.placed:0;}
+// a map view around the given cities, at least minLon × minLat degrees
+function geoBox(idx,minLon,minLat){var x0=180,x1=-180,y0=90,y1=-90;idx.forEach(function(i){var c=CITIES[i];x0=Math.min(x0,c.lon);x1=Math.max(x1,c.lon);y0=Math.min(y0,c.lat);y1=Math.max(y1,c.lat);});
+  if(!idx.length)return VIEWS.world;var cx=(x0+x1)/2,cy=(y0+y1)/2,hw=Math.max(minLon,(x1-x0)*1.2)/2,hh=Math.max(minLat,(y1-y0)*1.25)/2;
+  return bboxOf(Math.max(-180,cx-hw),Math.max(-56,cy-hh),Math.min(180,cx+hw),Math.min(80,cy+hh));}
+var firstIdx=F.firstCities.filter(function(i){return country(CITIES[i].country).continent===F.firstCont;});
+var homeIdx=[F.home].concat(F.homePeers);
+var homeLargest=F.ALL[F.home]>=Math.max.apply(null,Array.prototype.slice.call(F.ALL));
+var peakIdx=F.perYear.indexOf(Math.max.apply(null,F.perYear));
+
+var dek=$('dek');[OWNER+'’s work has been cited by ',{b:fmt(F.total)},' papers since '+F.y0+'. Their authors worked in ',{b:fmt(F.cities)},' cities across ',{b:fmt(F.countries)},' countries and regions. This is how that map filled in, one year and one paper at a time.']
+  .forEach(function(x){dek.appendChild(typeof x==='string'?document.createTextNode(x):el('strong',null,x.b));});
+$('snap').textContent='Data snapshot '+asofText;
+
+/* ---------- dots: one per citing paper, split by city, continent or institution ---------- */
+var CITY_LIST=CITIES.map(function(){return [];});
+W.forEach(function(w,k){for(var j=0;j<w.ci.length;j++)CITY_LIST[w.ci[j]].push(k);});
+function dkey(w){return w.date||(w.yr!=null?String(w.yr):'9999');}
+function byDate(a,b){var x=dkey(W[a]),y=dkey(W[b]);return x<y?-1:x>y?1:a-b;}
+CITY_LIST.forEach(function(l){l.sort(byDate);});
+// big cities first so small ones are drawn on top of their neighbours
+var CITY_ORDER=[];for(var ci0=0;ci0<NC;ci0++)if(CITY_LIST[ci0].length)CITY_ORDER.push(ci0);
+CITY_ORDER.sort(function(a,b){return CITY_LIST[b].length-CITY_LIST[a].length;});
+F.mapDots=0;CITY_ORDER.forEach(function(c){F.mapDots+=CITY_LIST[c].length;});
+var DATED=[];W.forEach(function(w,k){if(w.yr!=null)DATED.push(k);});DATED.sort(byDate);
+F.unplacedDated=DATED.filter(function(k){return !W[k].ci.length;}).length;
+var INST_RANK={};F.instTop.forEach(function(x,r){INST_RANK[x.id]=r;});
+var QB=8192;while(QB<NC+32)QB*=2;
+var Q_PAPER=QB-1,Q_CONT=NC+1,Q_INST=NC+16; // key = paper*QB + qualifier; a city index is below NC
+function isDark(){var t=document.documentElement.getAttribute('data-theme');return t?t==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;}
+function C(k){var c=COL[k]||[128,128,128];return [c[0]/255,c[1]/255,c[2]/255];}
+
+/* ---------- copy ---------- */
+var STEPS=[
+ {chap:['I','Beginnings'],h:'Each dot is a citing paper',
+  text:[P(['Every citing paper is placed at the cities of its authors’ institutions, one dot in each. A city’s dots spiral out from its centre, oldest first, so a cluster’s area grows with its count.'+(F.homeExact?' The highlighted cluster is home, '+homeC.name+'.':'')]),
+        P(['A paper written across several cities appears in each, so the map holds ',{b:fmt(F.mapDots)},' dots for ',{b:fmt(F.placed)},' papers. Another ',{b:fmt(F.unplaced)},' list no affiliation and have no place on the map.'])],
+  g:['All citing cities',fmt(F.mapDots)+' dots, one per paper in each of its cities'],
+  f:{kind:'map',hl:[F.home]}},
+ F.firstPlaced>0&&{h:'The first citations came from '+F.firstCont,
+  text:[P(['The first citations arrived in ',{b:String(F.y0)},'. That year ',{b:fmt(F.first.length)},' papers cited the work, ',{b:fmt(F.firstPaperN)},' of them ',{q:F.firstPaper.title},' (',String(F.firstPaper.year),').']),
+        P(['Of the ',{b:fmt(F.firstPlaced)},' that can be placed, ',{b:fmt(F.firstContN)},' had authors in ',F.firstCont,': ',listJoin(firstCityNames),'.'])],
+  g:['Cities citing in '+F.y0,fmt(F.first.length)+' papers'],
+  f:{kind:'map',bbox:geoBox(firstIdx,40,24),pick:function(w){return w.yr===F.y0?2:0;},labels:firstIdx.map(function(i){return {i:i,text:CITIES[i].name};})}},
+ F.slow&&{h:'The slow years, '+F.y0+'–'+F.split,
+  text:[P(['By the end of ',String(F.split),', ',{b:fmt(F.preWorks)},' papers had cited the work, from ',{b:fmt(nz(F.pre))},' cities in ',{b:fmt(F.preCountries)},' countries and regions.']),
+        P(['No single year before ',String(F.split+1),' brought more than ',{b:fmt(F.preMax)},' citing papers.'])],
+  g:['Cities citing through '+F.split,fmt(F.preWorks)+' papers'],
+  f:{kind:'map',pick:function(w){return w.yr!=null&&w.yr<=F.split?1:0;}}},
+ F.slow&&{chap:['II','The breakout'],h:'Then it took off',
+  text:[P([String(F.split)+' brought ',{b:fmt(yc(F.split))},' citing papers. ',String(F.split+1)+' brought ',{b:fmt(yc(F.split+1))},(function(){var up=0,n=0;for(var i=1;i<takeYears.length;i++){if(takeYears[i]>=ASOF_Y)continue;n++;if(yc(takeYears[i])>yc(takeYears[i-1]))up++;}return !n?'':up===n?(n===1?', and the full year since topped it':', and every full year since has topped the one before it'):!up?(n===1?', and the full year since did not top it':', but no full year since has topped the one before it'):', and '+up+' of the '+n+' full years since have topped the one before';}())+'.']),
+        P([{b:pct(F.postWorks,dated.length)},' of all dated citing papers appeared from ',String(F.split+1),' on. ',String(F.years[peakIdx]),' has the most so far: ',{b:fmt(F.perYear[peakIdx])},(F.years[peakIdx]===ASOF_Y?', with the year not yet over when the data was taken on '+asofText+'.':'.')]),
+        P(['Here each paper is a single dot, however many cities it came from, and the ',{b:fmt(F.unplacedDated)},' with no listed affiliation join in.'])],
+  g:['Citing papers per year','One dot per paper'+(F.undated?'; '+fmt(F.undated)+' undated papers not shown':'')],
+  f:{kind:'years'}},
+ P1&&{chap:F.slow?null:['II','The papers'],h:'The paper that changed the map',
+  text:[P([{sw:P1.col},{q:P1.G.title},', published in ',String(P1.G.year),', is cited by ',{b:fmt(P1.G.n)},' papers: ',{b:pct(P1.G.n,F.total)},' of everything here.']),
+        P(['They come from ',{b:fmt(P1.cities)},' cities in ',{b:fmt(P1.countries)},' countries and regions.'])],
+  g:['Cities citing '+quoted(P1.G.title),fmt(P1.G.n)+' papers'],
+  f:{kind:'map',color:P1.col,pick:function(w){return w.gs.indexOf(P1.G.key)>=0?1:0;}}},
+ P2&&{h:(P2.G.n<P1.G.n?'Fewer citations, ':'As many citations, ')+(P2.countries>P1.countries?'more':P2.countries===P1.countries?'as many':'fewer')+' countries',
+  text:[P([{sw:P2.col},{q:P2.G.title},' (',String(P2.G.year),') has ',{b:fmt(P2.G.n)},' citing papers, ',pct(P2.G.n,P1.G.n),' as many as the paper above.']),
+        P(['Yet they come from ',{b:fmt(P2.countries)},' countries and regions, against ',{b:fmt(P1.countries)},' for the paper above, and ',{b:fmt(P2.cities)},' cities.'])],
+  g:['Cities citing '+quoted(P2.G.title),fmt(P2.G.n)+' papers'],
+  f:{kind:'map',color:P2.col,pick:function(w){return w.gs.indexOf(P2.G.key)>=0?1:0;}}},
+ P3&&{h:homeShare(P3)>Math.max(homeShare(P1),homeShare(P2))?'Some papers stay closer to home':'Close to home, paper by paper',
+  text:[P([{sw:P3.col},{q:P3.G.title},' (',String(P3.G.year),') is cited by ',{b:fmt(P3.G.n)},' papers from ',{b:fmt(P3.countries)},' countries and regions.']),
+        P([{b:cnShare(P3)},' of its placed citing papers have an author in ',homeCountry,', against ',cnShare(P1),' and ',cnShare(P2),' for the two papers above.'])],
+  g:['Cities citing '+quoted(P3.G.title),fmt(P3.G.n)+' papers'],
+  f:{kind:'map',color:P3.col,pick:function(w){return w.gs.indexOf(P3.G.key)>=0?1:0;}}},
+ F.contRank.length>=3&&{chap:['III','Continents'],h:F.contRank[0]+' carries the weight',
+  text:[P([{sw:CONT_VAR[F.contRank[0]]},F.contRank[0]+' accounts for ',{b:fmt(F.contTot[F.contRank[0]])},' of the ',fmt(F.placed),' placed papers (',pct(F.contTot[F.contRank[0]],F.placed),'). ',
+          {sw:CONT_VAR[F.contRank[1]]},F.contRank[1]+' follows with ',{b:fmt(F.contTot[F.contRank[1]])},', then ',{sw:CONT_VAR[F.contRank[2]]},F.contRank[2]+' with ',{b:fmt(F.contTot[F.contRank[2]])},'.']),
+        P(['A paper with authors on two continents counts once on each, so its dot splits in two.'])],
+  g:['Citing papers per year, by continent','A paper on two continents counts on each, so stacks run higher than the years chart'],f:{kind:'area'}},
+ F.slow&&{h:(parseInt(shareBetween(['Europe','North America'],F.y0,F.split),10)>parseInt(shareBetween(['Europe','North America'],F.split+1,ASOF_Y),10)?'Europe and North America, a shrinking share':'Europe and North America hold their share'),
+  text:[P(['Through ',String(F.split),', Europe and North America made up ',{b:shareBetween(['Europe','North America'],F.y0,F.split)},' of the yearly continent tallies. Since ',String(F.split+1),', ',{b:shareBetween(['Europe','North America'],F.split+1,ASOF_Y)},'.']),
+        P(['Asia’s share: ',{b:shareBetween(['Asia'],F.y0,F.split)},' before, ',{b:shareBetween(['Asia'],F.split+1,ASOF_Y)},' after.'])],
+  g:['Share of each year’s tally, by continent','Every year stretched to the same height'],f:{kind:'share'}},
+ F.homeExact&&{chap:['IV','Near and far'],h:homeLargest?'The largest cluster is home':'Home, '+homeC.name,
+  text:[P([{b:fmt(F.homeN)},' citing papers have an author in ',homeC.name,', where ',OWNER,' works at the ',D.home.name,': ',pct(F.homeN,F.placed),' of all placed papers.']),
+        P([F.homePeers.length?listJoin(F.homePeers.map(function(i){return CITIES[i].name+' ('+fmt(F.ALL[i])+')';}))+' follow. ':'','In all, ',{b:fmt(F.homeCountryN)},' papers have an author in ',homeCountry,'.'])],
+  g:[homeCountry,'All citing papers'],
+  f:{kind:'map',bbox:geoBox(homeIdx,30,18),hl:[F.home],labels:homeIdx.map(function(i){return {i:i,text:CITIES[i].name};})}},
+ F.instTop.length>=3&&{h:'Labs and universities',
+  text:[P([F.instTop[0].name+' has the most citing papers, ',{b:fmt(F.instTop[0].n)},(F.instTop[1].n>=0.9*F.instTop[0].n?', just ahead of ':', ahead of '),F.instTop[1].name,' (',fmt(F.instTop[1].n),') and ',F.instTop[2].name,' (',fmt(F.instTop[2].n),').']),
+        P(['A paper counts once for each institution among its authors; ',{b:fmt(F.instCount)},' institutions appear in all.'])],
+  g:['Top institutions','One dot per paper with an author there'],f:{kind:'labs'}},
+ farC&&{h:'Almost the other side of the world',
+  text:[P(['The farthest citing city is ',{b:farC.name},', ',country(farC.country).name,', ',{b:fmt(F.far[0].d)+' km'},' from ',D.home.label,'. That is about ',fmt(Math.round(F.farAnti/10)*10),' km from the point exactly opposite on the globe.']),
+        P([F.farContN===F.far.length?(F.far.length===1?'The farthest city is in ':'All '+(F.far.length===10?'ten':F.far.length)+' farthest cities are in '):String(F.farContN)+' of the '+(F.far.length===10?'ten':F.far.length)+' farthest cities are in ',F.farCont,'.'])],
+  g:['The farthest cities','Great circles from '+D.home.label],
+  f:(function(){var h=D.home,far=F.far.slice(0,5).map(function(x){return x.i;});
+    return {kind:'map',hl:far,pick:function(w,c){return far.indexOf(c)>=0?2:1;},
+      labels:[{i:F.far[0].i,text:CITIES[F.far[0].i].name}].concat(F.homeExact?[{i:F.home,text:homeC.name}]:[]),
+      arcs:far.map(function(i){var c=CITIES[i];return arc(h.lat,h.lon,c.lat,c.lon);})};})()},
+ F.once.length>0&&{h:fmt(F.once.length)+' places, one paper each',
+  text:[P(['Some places appear only once. ',{b:fmt(F.once.length)},' countries and regions have exactly one citing paper: ',listJoin(F.once.map(function(c){return country(c).name;})),'.'])],
+  g:['Countries and regions with a single citing paper',''],
+  f:{kind:'map',iso:F.once,pick:function(w,c){return F.once.indexOf(CITIES[c].country)>=0?2:0;}}},
+ {chap:['V','The whole picture'],h:'Everything, together',
+  text:[P([{b:fmt(F.placed)},' placed papers, ',{b:fmt(F.cities)},' cities, ',{b:fmt(F.countries)},' countries and regions. Below, the same map opens up: pick any city to see its institutions and the papers written there.'])],
+  g:['All citing cities',fmt(F.mapDots)+' dots'],
+  f:{kind:'map',hl:[F.home]}}
+].filter(Boolean);   // a step whose facts the record lacks (too few papers, no slow years) is left out
+
+/* ---------- build steps ---------- */
+var stepsEl=$('steps'),rail=$('rail');
+STEPS.forEach(function(s,k){var st=el('section','step');st.dataset.i=k;var c=el('div','card');
+  if(s.chap&&k>0)st.classList.add('chap-start');
+  c.appendChild(el('h2',null,s.h));s.text.forEach(function(p){c.appendChild(p);});
+  if(k===STEPS.length-1){var a=el('a',null,'Open the explorer');a.href='#explore';var p=el('p');p.appendChild(a);c.appendChild(p);}
+  st.appendChild(c);stepsEl.appendChild(st);
+  var b=el('button');b.type='button';b.setAttribute('aria-label',(k+1)+'. '+s.h);b.title=s.h;
+  b.addEventListener('click',function(){st.scrollIntoView({block:'center',behavior:RM.matches?'auto':'smooth'});});rail.appendChild(b);});
+
+/* ---------- stage ---------- */
+var G=$('graphic'),baseC=$('sBase'),dotC=$('sDots'),overC=$('sOver'),sTip=$('sTip');
+var bctx=baseC.getContext('2d'),octx=overC.getContext('2d');
+var SW=1,SH=1,DPR=1,TOP=50;
+function sizeCanvases(){var r=G.getBoundingClientRect();SW=Math.max(1,r.width);SH=Math.max(1,r.height);DPR=Math.min(2,window.devicePixelRatio||1);
+  [baseC,dotC,overC].forEach(function(c){c.width=Math.round(SW*DPR);c.height=Math.round(SH*DPR);});}
+function fitCam(b){var pad=Math.min(SW,SH)*0.035+8,s=Math.min((SW-2*pad)/(b[2]-b[0]),(SH-2*pad-TOP)/(b[3]-b[1]));return {cx:(b[0]+b[2])/2,cy:(b[1]+b[3])/2-TOP/2/s,s:s};}
+function plotBox(){var l=Math.max(46,SW*0.07),r=Math.max(24,SW*0.05),t=TOP+36,b=42;return {x:l,y:t,w:Math.max(120,SW-l-r),h:Math.max(120,SH-t-b)};}
+var SANS=getComputedStyle(document.body).getPropertyValue('--sans');
+
+/* WebGL points, with a 2D fallback */
+var R=(function(){
+  var gl=null;try{gl=dotC.getContext('webgl',{alpha:true,premultipliedAlpha:true,antialias:false});}catch(e){}
+  if(gl){
+    var sh=function(t,src){var s=gl.createShader(t);gl.shaderSource(s,src);gl.compileShader(s);return s;};
+    var p=gl.createProgram();
+    gl.attachShader(p,sh(gl.VERTEX_SHADER,'attribute vec2 aP;attribute vec4 aC;attribute float aS;uniform vec2 uV;uniform float uD;varying vec4 vC;varying float vS;'+
+      'void main(){gl_Position=vec4(aP.x/uV.x*2.0-1.0,1.0-aP.y/uV.y*2.0,0.0,1.0);float s=aS*uD;gl_PointSize=max(s,1.5);vS=max(s,1.5);vC=vec4(aC.rgb,aC.a*max(0.7,min(1.0,s*s/2.25)));}'));
+    gl.attachShader(p,sh(gl.FRAGMENT_SHADER,'precision mediump float;varying vec4 vC;varying float vS;'+
+      'void main(){float r=length(gl_PointCoord*2.0-1.0);float a=vC.a*(1.0-smoothstep(1.0-2.0/vS,1.0,r));if(a<0.004)discard;gl_FragColor=vec4(vC.rgb*a,a);}'));
+    gl.linkProgram(p);
+    if(gl.getProgramParameter(p,gl.LINK_STATUS)){
+      gl.useProgram(p);var buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+      var lP=gl.getAttribLocation(p,'aP'),lC=gl.getAttribLocation(p,'aC'),lS=gl.getAttribLocation(p,'aS');
+      [lP,lC,lS].forEach(function(l){gl.enableVertexAttribArray(l);});
+      gl.vertexAttribPointer(lP,2,gl.FLOAT,false,28,0);gl.vertexAttribPointer(lC,4,gl.FLOAT,false,28,8);gl.vertexAttribPointer(lS,1,gl.FLOAT,false,28,24);
+      var uV=gl.getUniformLocation(p,'uV'),uD=gl.getUniformLocation(p,'uD');
+      gl.enable(gl.BLEND);gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+      return function(b,n){gl.viewport(0,0,dotC.width,dotC.height);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.uniform2f(uV,SW,SH);gl.uniform1f(uD,DPR);gl.bufferData(gl.ARRAY_BUFFER,b.subarray(0,n*7),gl.DYNAMIC_DRAW);gl.drawArrays(gl.POINTS,0,n);};}
+    var fresh=dotC.cloneNode(false);dotC.parentNode.replaceChild(fresh,dotC);dotC=fresh;   // a canvas that had a WebGL context cannot give a 2D one
+  }
+  var ctx=dotC.getContext('2d');
+  return function(b,n){ctx.setTransform(DPR,0,0,DPR,0,0);ctx.clearRect(0,0,SW,SH);
+    for(var i=0;i<n;i++){var o=i*7,a=b[o+5];if(a<0.01)continue;var s=Math.max(1,b[o+6]);ctx.globalAlpha=a;
+      ctx.fillStyle='rgb('+(b[o+2]*255|0)+','+(b[o+3]*255|0)+','+(b[o+4]*255|0)+')';ctx.fillRect(b[o]-s/2,b[o+1]-s/2,s,s);}ctx.globalAlpha=1;};
+})();
+
+/* a formation: target place, colour, opacity and size of every dot */
+function Form(n){return {n:n,key:new Int32Array(n),k:new Int32Array(n),q:new Int32Array(n),map:new Uint8Array(n),
+  ux:new Float32Array(n),uy:new Float32Array(n),ox:new Float32Array(n),oy:new Float32Array(n),
+  col:new Float32Array(n*3),a:new Float32Array(n),s:new Float32Array(n),cam:null,land:1,iso:null,over:null,kind:''};}
+function put(f,n,k,q,col,a,s){f.key[n]=k*QB+q;f.k[n]=k;f.q[n]=q;f.col[n*3]=col[0];f.col[n*3+1]=col[1];f.col[n*3+2]=col[2];f.a[n]=a;f.s[n]=s;}
+
+function buildMap(sp){var cam=fitCam(sp.bbox||VIEWS.world),zr=Math.sqrt(cam.s/fitCam(VIEWS.world).s);
+  var step=Math.max(0.5,Math.min(1.2,Math.sqrt(SW*SH)/1000))*zr,dot=Math.max(1.5,Math.min(5,step*1.6)),dark=isDark();
+  var f=Form(F.mapDots);f.kind='map';f.cam=cam;f.land=1;f.iso=sp.iso||null;f.step=step;
+  var cN=C(sp.color||'--dot'),cH=C('--accent'),cD=C('--ink-3'),aN=dark?0.85:0.8,aD=dark?0.09:0.11,n=0;
+  var hls=sp.hl||[];// highlighted cities last, so they sit on top of their neighbours
+  CITY_ORDER.filter(function(c){return hls.indexOf(c)<0;}).concat(hls.filter(function(c){return CITY_LIST[c].length;})).forEach(function(c){var L=CITY_LIST[c],hl=hls.indexOf(c)>=0;
+    for(var r=0;r<L.length;r++){var k=L[r],v=sp.pick?sp.pick(W[k],c):1,rad=step*Math.sqrt(r),ang=r*2.399963;
+      f.map[n]=1;f.ux[n]=CX[c];f.uy[n]=CY[c];f.ox[n]=Math.cos(ang)*rad;f.oy[n]=Math.sin(ang)*rad;
+      if(v===0)put(f,n,k,c,cD,aD,dot*0.7);else put(f,n,k,c,(hl||v===2)?cH:cN,hl&&v!==2?aN*0.6:aN,v===2?dot*1.5:dot);n++;}});
+  f.over={kind:'map',labels:sp.labels||[],arcs:sp.arcs||[],step:step};return f;}
+
+function buildYears(){var P=plotBox(),ny=F.years.length,slot=P.w/ny,bw=slot*0.74;
+  var by=F.years.map(function(){return [];});DATED.forEach(function(k){by[W[k].yr-F.y0].push(k);});
+  var mx=Math.max.apply(null,by.map(function(l){return l.length;}))||1;
+  var cols=Math.max(2,Math.round(Math.sqrt(mx*bw/P.h))),rows=Math.ceil(mx/cols),px=bw/cols,py=P.h/rows,dot=Math.max(1,Math.min(5,Math.min(px,py)*0.86));
+  var f=Form(DATED.length);f.kind='years';f.land=0.04;var pre=C('--ink-3'),post=C('--dot'),n=0;
+  by.forEach(function(l,yi){var x0=P.x+yi*slot+(slot-bw)/2,col=F.years[yi]<=F.split?pre:post;
+    l.forEach(function(k,j){f.ox[n]=x0+(j%cols+0.5)*px;f.oy[n]=P.y+P.h-(Math.floor(j/cols)+0.5)*py;put(f,n,k,Q_PAPER,col,0.92,dot);n++;});});
+  f.over={kind:'years',P:P,slot:slot,cols:cols,py:py,n:by.map(function(l){return l.length;})};return f;}
+
+function buildConts(share){var P=plotBox(),ny=F.years.length,K=F.contsUsed,order=F.contRank;
+  var lists=F.years.map(function(){return K.map(function(){return [];});});
+  DATED.forEach(function(k){var w=W[k];w.conts.forEach(function(ct){lists[w.yr-F.y0][K.indexOf(ct)].push(k);});});
+  var tot=lists.map(function(l){return l.reduce(function(s,a){return s+a.length;},0);}),mx=Math.max.apply(null,tot)||1,N=tot.reduce(function(s,v){return s+v;},0);
+  // stacked bands per year, the largest continent at the bottom
+  var bounds=lists.map(function(l,i){var y=P.y+P.h,b={};order.forEach(function(ct){var c=l[K.indexOf(ct)].length,h=share?(tot[i]?P.h*c/tot[i]:0):P.h*c/mx;b[ct]=[y-h,y];y-=h;});return b;});
+  var dot=Math.max(1.2,Math.min(4.5,Math.sqrt(P.w*P.h/Math.max(1,N))*0.62));
+  var f=Form(N);f.kind=share?'share':'area';f.land=0.04;var n=0;
+  var SMALL=30;// in the share chart a year with fewer tallies than this is too small to read as a share
+  lists.forEach(function(l,i){var fa=share&&tot[i]<SMALL?0.3:0.9;order.forEach(function(ct){var a=l[K.indexOf(ct)],m=a.length,col=C(CONT_VAR[ct]),qi=Q_CONT+K.indexOf(ct);
+    a.forEach(function(k,j){var u=i+(m>1?((j+0.5)/m-0.5)*0.84:0);if(u<0)u=-u;if(u>ny-1)u=2*(ny-1)-u;// the first and last years fold back inside the axis
+      var i0=Math.max(0,Math.min(ny-2,Math.floor(u))),t=u-i0;
+      var A=bounds[i0][ct],B=bounds[Math.min(ny-1,i0+1)][ct],top=A[0]+(B[0]-A[0])*t,bot=A[1]+(B[1]-A[1])*t;
+      var v=(j*0.6180339887+((k*0.7548776662)%1)*0.37)%1;
+      f.ox[n]=P.x+u/Math.max(1,ny-1)*P.w;f.oy[n]=top+(0.05+0.9*v)*Math.max(0,bot-top);put(f,n,k,qi,col,fa,dot);n++;});});});
+  var i1=0;if(share)while(i1<ny-1&&tot[i1]<SMALL)i1++;
+  f.over={kind:f.kind,P:P,bounds:bounds,order:order,ny:ny,mx:mx,share:share,i1:i1};return f;}
+
+function buildLabs(){var P=plotBox(),T=F.instTop,lists=T.map(function(){return [];});
+  W.forEach(function(w,k){w.inst.forEach(function(x){var r=INST_RANK[x];if(r!=null)lists[r].push(k);});});
+  lists.forEach(function(l){l.sort(byDate);});
+  var narrow=SW<520,nameW=narrow?0:Math.min(330,P.w*0.45),x0=P.x+nameW,maxLen=Math.max(60,P.x+P.w-x0-40),rowH=P.h/T.length,thick=Math.min(22,rowH*(narrow?0.4:0.56));
+  var mx=lists[0].length||1,pitch=Math.sqrt(maxLen*thick/mx),rows=Math.max(1,Math.round(thick/pitch));pitch=Math.min(thick/rows,maxLen/Math.ceil(mx/rows));
+  var dot=Math.max(1,Math.min(5,pitch*0.84)),N=lists.reduce(function(s,l){return s+l.length;},0);
+  var f=Form(N);f.kind='labs';f.land=0.04;var n=0,cN=C('--dot'),ends=[];
+  lists.forEach(function(l,r){var ym=P.y+(r+0.5)*rowH+(narrow?rowH*0.18:0),col=cN;
+    l.forEach(function(k,j){f.ox[n]=x0+(Math.floor(j/rows)+0.5)*pitch;f.oy[n]=ym-rows*pitch/2+(j%rows+0.5)*pitch;put(f,n,k,Q_INST+r,col,0.92,dot);n++;});
+    ends.push(x0+Math.ceil(l.length/rows)*pitch);});
+  f.over={kind:'labs',P:P,x0:x0,rowH:rowH,ends:ends,narrow:narrow,thick:thick,n:lists.map(function(l){return l.length;})};return f;}
+
+function buildForm(s){var sp=s.f;
+  if(sp.kind==='map')return buildMap(sp);if(sp.kind==='years')return buildYears();
+  if(sp.kind==='area')return buildConts(false);if(sp.kind==='share')return buildConts(true);return buildLabs();}
+
+/* ---------- transitions: dots are matched by key; a dot with no match splits from, or merges into, a dot of the same paper ---------- */
+var LIVE=null,BUF=new Float32Array(7*4096),lastCam=null,raf=0;
+function ensureBuf(n){if(BUF.length<n*7)BUF=new Float32Array(n*7*1.25|0);}
+function Live(n){return {n:n,key:new Int32Array(n),k:new Int32Array(n),
+  fm:new Uint8Array(n),fux:new Float32Array(n),fuy:new Float32Array(n),fox:new Float32Array(n),foy:new Float32Array(n),fc:new Float32Array(n*3),fa:new Float32Array(n),fs:new Float32Array(n),
+  tm:new Uint8Array(n),tux:new Float32Array(n),tuy:new Float32Array(n),tox:new Float32Array(n),toy:new Float32Array(n),tc:new Float32Array(n*3),ta:new Float32Array(n),ts:new Float32Array(n),
+  st:new Float32Array(n),t0:0,dur:0,p:1,form:null,prevOver:null,cam0:null,cam1:null,land0:1,land1:1,iso0:null,iso1:null};}
+function camAt(L,e){var a=L.cam0,b=L.cam1;if(!a||!b)return b||a;return {cx:a.cx+(b.cx-a.cx)*e,cy:a.cy+(b.cy-a.cy)*e,s:Math.exp(Math.log(a.s)+(Math.log(b.s)-Math.log(a.s))*e)};}
+function hash(k){var x=Math.sin(k*12.9898)*43758.5453;return x-Math.floor(x);}
+/* current state of every dot (mid-flight dots are frozen in screen space) */
+function snapshot(){var L=LIVE;if(!L)return null;var f=Form(L.n);f.cam=camAt(L,ease(L.p));
+  if(L.p>=1){for(var i=0;i<L.n;i++){f.key[i]=L.key[i];f.k[i]=L.k[i];f.map[i]=L.tm[i];f.ux[i]=L.tux[i];f.uy[i]=L.tuy[i];f.ox[i]=L.tox[i];f.oy[i]=L.toy[i];
+      f.col[i*3]=L.tc[i*3];f.col[i*3+1]=L.tc[i*3+1];f.col[i*3+2]=L.tc[i*3+2];f.a[i]=L.ta[i];f.s[i]=L.ts[i];}return f;}
+  fill(L,L.p,f.cam);
+  for(var j=0;j<L.n;j++){f.key[j]=L.key[j];f.k[j]=L.k[j];f.map[j]=0;f.ox[j]=BUF[j*7];f.oy[j]=BUF[j*7+1];
+    f.col[j*3]=BUF[j*7+2];f.col[j*3+1]=BUF[j*7+3];f.col[j*3+2]=BUF[j*7+4];f.a[j]=BUF[j*7+5];f.s[j]=BUF[j*7+6];}return f;}
+function go(B,animate){
+  var A=snapshot(),prevOver=LIVE&&LIVE.form?LIVE.form.over:null,iso0=LIVE?LIVE.iso1:null,land0=LIVE?(LIVE.land0+(LIVE.land1-LIVE.land0)*ease(LIVE.p)):B.land;
+  var cam0=A&&A.cam?A.cam:(B.cam||lastCam),cam1=B.cam||cam0;if(B.cam)lastCam=B.cam;
+  if(!A||!animate||RM.matches){A=null;}
+  var pairs=[],i,j;
+  if(A){var aKey=new Map(),aPaper=new Map(),bPaper=new Map(),used=new Uint8Array(A.n);
+    for(i=0;i<A.n;i++){aKey.set(A.key[i],i);if(A.a[i]>0.05&&!aPaper.has(A.k[i]))aPaper.set(A.k[i],i);}
+    for(j=0;j<B.n;j++)if(!bPaper.has(B.k[j]))bPaper.set(B.k[j],j);
+    for(j=0;j<B.n;j++){i=aKey.get(B.key[j]);if(i!=null){used[i]=1;pairs.push(i,j,0);}else{i=aPaper.get(B.k[j]);pairs.push(i!=null?i:-1,j,i!=null?1:2);}}
+    for(i=0;i<A.n;i++)if(!used[i]&&A.a[i]>0.004){j=bPaper.get(A.k[i]);pairs.push(i,j!=null?j:-1,j!=null?3:4);}}
+  else for(j=0;j<B.n;j++)pairs.push(-1,j,5);
+  var n=pairs.length/3,L=Live(n);ensureBuf(n);
+  var toChart=A&&(!B.cam||!A.cam||A.map[0]===0),spread=toChart?0.32:0.12;
+  for(var p=0;p<n;p++){var ai=pairs[p*3],bj=pairs[p*3+1],m=pairs[p*3+2];
+    var src=ai>=0?A:B,si=ai>=0?ai:bj,dst=bj>=0?B:A,di=bj>=0?bj:ai;
+    L.key[p]=(m===3||m===4)?A.key[ai]:B.key[bj];L.k[p]=src.k[si];
+    L.fm[p]=src.map[si];L.fux[p]=src.ux[si];L.fuy[p]=src.uy[si];L.fox[p]=src.ox[si];L.foy[p]=src.oy[si];
+    L.tm[p]=dst.map[di];L.tux[p]=dst.ux[di];L.tuy[p]=dst.uy[di];L.tox[p]=dst.ox[di];L.toy[p]=dst.oy[di];
+    for(var c=0;c<3;c++){L.fc[p*3+c]=src.col[si*3+c];L.tc[p*3+c]=(m===3||m===4)?A.col[ai*3+c]:B.col[bj*3+c];}
+    L.fa[p]=m===2?0:src.a[si];L.ta[p]=(m===3||m===4)?0:B.a[bj];
+    L.fs[p]=src.s[si];L.ts[p]=(m===3||m===4)?A.s[ai]:B.s[bj];
+    if(m===2||m===5){L.fm[p]=L.tm[p];L.fux[p]=L.tux[p];L.fuy[p]=L.tuy[p];L.fox[p]=L.tox[p];L.foy[p]=L.toy[p];}
+    // sweep from west to east when leaving or entering the map
+    var fx=L.fm[p]?SW/2+(L.fux[p]-cam0.cx)*cam0.s+L.fox[p]:L.fox[p];
+    L.st[p]=toChart?spread*(0.65*Math.max(0,Math.min(1,fx/SW))+0.35*hash(L.k[p])):spread*hash(L.k[p]);}
+  L.form=B;L.prevOver=prevOver;L.cam0=cam0;L.cam1=cam1;L.land0=A?land0:B.land;L.land1=B.land;L.iso0=A?iso0:null;L.iso1=B.iso;
+  L.t0=performance.now();L.dur=A?(toChart?1700:1150):0;L.p=L.dur?0:1;L.spread=spread;
+  LIVE=L;hideTip();hover=-1;grid=null;
+  if(!raf)raf=requestAnimationFrame(frame);}
+function fill(L,p,cam){var sp=L.spread||0.2;
+  for(var i=0;i<L.n;i++){var lt=Math.max(0,Math.min(1,(p-L.st[i])/(1-sp))),q=ease(lt),o=i*7;
+    var x0=L.fm[i]?SW/2+(L.fux[i]-cam.cx)*cam.s+L.fox[i]:L.fox[i],y0=L.fm[i]?SH/2+(L.fuy[i]-cam.cy)*cam.s+L.foy[i]:L.foy[i];
+    var x1=L.tm[i]?SW/2+(L.tux[i]-cam.cx)*cam.s+L.tox[i]:L.tox[i],y1=L.tm[i]?SH/2+(L.tuy[i]-cam.cy)*cam.s+L.toy[i]:L.toy[i];
+    var dx=x1-x0,dy=y1-y0,x=x0+dx*q,y=y0+dy*q;
+    if(q>0&&q<1){var d=Math.sqrt(dx*dx+dy*dy);if(d>24){var lift=Math.sin(Math.PI*q)*Math.min(d*0.12,46)*(L.k[i]&1?1:-1);x-=dy/d*lift;y+=dx/d*lift;}}
+    BUF[o]=x;BUF[o+1]=y;BUF[o+2]=L.fc[i*3]+(L.tc[i*3]-L.fc[i*3])*q;BUF[o+3]=L.fc[i*3+1]+(L.tc[i*3+1]-L.fc[i*3+1])*q;BUF[o+4]=L.fc[i*3+2]+(L.tc[i*3+2]-L.fc[i*3+2])*q;
+    BUF[o+5]=L.fa[i]+(L.ta[i]-L.fa[i])*q;BUF[o+6]=L.fs[i]+(L.ts[i]-L.fs[i])*q;}}
+function frame(now){raf=0;var L=LIVE;if(!L)return;
+  var p=L.dur?Math.min(1,(now-L.t0)/L.dur):1;L.p=p;var e=ease(p),cam=camAt(L,e);fill(L,p,cam);
+  R(BUF,L.n);drawBase(cam,L.land0+(L.land1-L.land0)*e,L);drawOver(p,cam);
+  if(p<1)raf=requestAnimationFrame(frame);else settle();}
+function settle(){var L=LIVE;// drop dots that faded out, keep the rest at their targets
+  var B=L.form,keep=Live(B.n);
+  for(var j=0;j<B.n;j++){keep.key[j]=B.key[j];keep.k[j]=B.k[j];keep.tm[j]=B.map[j];keep.tux[j]=B.ux[j];keep.tuy[j]=B.uy[j];keep.tox[j]=B.ox[j];keep.toy[j]=B.oy[j];
+    keep.tc[j*3]=B.col[j*3];keep.tc[j*3+1]=B.col[j*3+1];keep.tc[j*3+2]=B.col[j*3+2];keep.ta[j]=B.a[j];keep.ts[j]=B.s[j];}
+  keep.fm.set(keep.tm);keep.fux.set(keep.tux);keep.fuy.set(keep.tuy);keep.fox.set(keep.tox);keep.foy.set(keep.toy);keep.fc.set(keep.tc);keep.fa.set(keep.ta);keep.fs.set(keep.ts);
+  keep.form=B;keep.cam0=keep.cam1=L.cam1;keep.land0=keep.land1=B.land;keep.iso1=B.iso;keep.p=1;LIVE=keep;
+  var cam=L.cam1;for(var i=0;i<B.n;i++){var o=i*7;BUF[o]=B.map[i]?SW/2+(B.ux[i]-cam.cx)*cam.s+B.ox[i]:B.ox[i];BUF[o+1]=B.map[i]?SH/2+(B.uy[i]-cam.cy)*cam.s+B.oy[i]:B.oy[i];
+    BUF[o+2]=B.col[i*3];BUF[o+3]=B.col[i*3+1];BUF[o+4]=B.col[i*3+2];BUF[o+5]=B.a[i];BUF[o+6]=B.s[i];}
+  R(BUF,B.n);drawBase(cam,B.land,keep);drawOver(1,cam);buildGrid();}
+
+/* ---------- base map ---------- */
+function drawBase(cam,landA,L){var ctx=bctx;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,baseC.width,baseC.height);if(!cam||landA<0.004)return;
+  var tx=SW/2-cam.cx*cam.s,ty=SH/2-cam.cy*cam.s;ctx.globalAlpha=landA;ctx.setTransform(DPR*cam.s,0,0,DPR*cam.s,DPR*tx,DPR*ty);
+  ctx.fillStyle=rgba(COL['--bg'],.55);ctx.fill(OUTLINE);ctx.save();ctx.clip(OUTLINE);
+  ctx.lineWidth=0.7/cam.s;ctx.strokeStyle=rgba(COL['--grat']);ctx.stroke(GRAT);ctx.fillStyle=rgba(COL['--land']);ctx.fill(LAND,'nonzero');
+  var e=L.p>=1?1:ease(L.p);
+  function hl(list,a){if(!list||a<=0)return;ctx.fillStyle=rgba(COL['--accent-soft'],a);list.forEach(function(k){if(LANDISO[k])ctx.fill(LANDISO[k]);});}
+  if(L.iso0!==L.iso1)hl(L.iso0,1-e);hl(L.iso1,L.iso0===L.iso1?1:e);
+  ctx.strokeStyle=rgba(COL['--land-line']);ctx.lineWidth=0.6/cam.s;ctx.stroke(LAND);ctx.restore();
+  ctx.strokeStyle=rgba(COL['--land-line']);ctx.lineWidth=1/cam.s;ctx.stroke(OUTLINE);ctx.globalAlpha=1;}
+
+/* ---------- overlay: labels, axes, arcs ---------- */
+function txt(ctx,s,x,y,align,col,a,weight){ctx.font=(weight||'400')+' 11.5px '+SANS;ctx.textAlign=align||'left';ctx.textBaseline='middle';
+  ctx.lineJoin='round';ctx.lineWidth=3.5;ctx.strokeStyle=rgba(COL['--sea'],.9*a);ctx.strokeText(s,x,y);ctx.fillStyle=rgba(col||COL['--ink-2'],a);ctx.fillText(s,x,y);}
+function fitText(ctx,s,max){if(ctx.measureText(s).width<=max)return s;while(s.length>1&&ctx.measureText(s+'…').width>max)s=s.slice(0,-1);return s.trimEnd()+'…';}
+function drawOver(p,cam){var ctx=octx;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,overC.width,overC.height);ctx.setTransform(DPR,0,0,DPR,0,0);
+  var L=LIVE;if(L.prevOver&&p<0.3)over(ctx,L.prevOver,1-p/0.3,cam,1);
+  var a=L.dur?Math.max(0,Math.min(1,(p-0.55)/0.45)):1;if(a>0)over(ctx,L.form.over,a,cam,L.dur?ease(Math.max(0,Math.min(1,(p-0.25)/0.75))):1);
+  if(hover>=0&&p>=1){var o=hover*7,r=Math.max(4,BUF[o+6]/2+3);ctx.beginPath();ctx.arc(BUF[o],BUF[o+1],r,0,6.2832);ctx.strokeStyle=rgba(COL['--ink']);ctx.lineWidth=1.5;ctx.stroke();}}
+function over(ctx,o,a,cam,prog){
+  if(o.kind==='map'){if(!cam)return;var sx=function(i){return SW/2+(CX[i]-cam.cx)*cam.s;},sy=function(i){return SH/2+(CY[i]-cam.cy)*cam.s;};
+    if(o.arcs.length){ctx.lineWidth=1.3;ctx.strokeStyle=rgba(COL['--accent'],.85*a);
+      o.arcs.forEach(function(segs){var total=0;segs.forEach(function(s){total+=s.length;});var lim=Math.floor(total*prog),c=0;
+        segs.forEach(function(s){ctx.beginPath();for(var k=0;k<s.length&&c<lim;k++,c++){var x=SW/2+(s[k].x-cam.cx)*cam.s,y=SH/2+(s[k].y-cam.cy)*cam.s;k?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();});});}
+    var boxes=[];ctx.font='600 11.5px '+SANS;
+    o.labels.forEach(function(Lb){var x=sx(Lb.i),y=sy(Lb.i),r=Math.max(4,o.step*Math.sqrt(F.ALL[Lb.i]))+4,w=ctx.measureText(Lb.text).width;
+      var cands=[[x+r,y,'left'],[x-r,y,'right'],[x,y-r-7,'center'],[x,y+r+7,'center']],pick=null;
+      for(var c=0;c<cands.length&&!pick;c++){var cx=cands[c][0],al=cands[c][2],bx=al==='left'?cx:al==='right'?cx-w:cx-w/2,b=[bx-2,cands[c][1]-8,bx+w+2,cands[c][1]+8];
+        if(b[0]<4||b[2]>SW-4||b[1]<TOP||b[3]>SH-4)continue;if(boxes.some(function(q){return b[0]<q[2]&&b[2]>q[0]&&b[1]<q[3]&&b[3]>q[1];}))continue;pick=cands[c];boxes.push(b);}
+      if(pick)txt(ctx,Lb.text,pick[0],pick[1],pick[2],COL['--ink'],a,'600');});return;}
+  var P=o.P,i;ctx.lineWidth=1;
+  if(o.kind==='years'){var base=P.y+P.h,tk=ticks(Math.max.apply(null,o.n));
+    tk.forEach(function(v){if(!v)return;var y=base-v/o.cols*o.py;if(y<P.y-4)return;ctx.strokeStyle=rgba(COL['--rule'],.55*a);ctx.beginPath();ctx.moveTo(P.x,y);ctx.lineTo(P.x+P.w,y);ctx.stroke();txt(ctx,fmt(v),P.x-8,y,'right',COL['--ink-3'],a);});
+    ctx.strokeStyle=rgba(COL['--ink-3'],a);ctx.beginPath();ctx.moveTo(P.x,base+0.5);ctx.lineTo(P.x+P.w,base+0.5);ctx.stroke();
+    var every=o.slot<34?(o.slot<18?3:2):1;
+    F.years.forEach(function(y,yi){var x=P.x+(yi+0.5)*o.slot;if((yi%every===0&&F.years.length-1-yi>=every)||yi===F.years.length-1)txt(ctx,String(y),x,base+14,'center',COL['--ink-3'],a);
+      if(y===F.split||y===F.split+1||yi===peakIdx)txt(ctx,fmt(o.n[yi]),x,base-Math.ceil(o.n[yi]/o.cols)*o.py-10,'center',COL['--ink'],a,'600');});
+    legend(ctx,[['--ink-3','Through '+F.split],['--dot','From '+(F.split+1)]],a);return;}
+  if(o.kind==='area'||o.kind==='share'){var xs=function(u){return P.x+u/Math.max(1,o.ny-1)*P.w;},base2=P.y+P.h;
+    ctx.strokeStyle=rgba(COL['--ink-3'],.5*a);o.order.forEach(function(ct){ctx.beginPath();for(i=o.i1;i<o.ny;i++){var y=o.bounds[i][ct][0];i>o.i1?ctx.lineTo(xs(i),y):ctx.moveTo(xs(i),y);}ctx.stroke();});
+    ctx.strokeStyle=rgba(COL['--ink-3'],a);ctx.beginPath();ctx.moveTo(P.x,base2+0.5);ctx.lineTo(P.x+P.w,base2+0.5);ctx.stroke();
+    var ev=P.w/o.ny<40?(P.w/o.ny<22?4:2):1;F.years.forEach(function(y,yi){if((yi%ev===0&&o.ny-1-yi>=ev)||yi===o.ny-1)txt(ctx,String(y),xs(yi),base2+14,yi===0?'left':yi===o.ny-1?'right':'center',COL['--ink-3'],a);});
+    if(o.share)[0,50,100].forEach(function(v){txt(ctx,v+'%',P.x-8,base2-P.h*v/100,'right',COL['--ink-3'],a);});
+    else ticks(o.mx).forEach(function(v){var y=base2-P.h*v/o.mx;if(v&&y>=P.y-2)txt(ctx,fmt(v),P.x-8,y,'right',COL['--ink-3'],a);});
+    o.order.forEach(function(ct){var b=o.bounds[o.ny-1][ct],h=b[1]-b[0];if(h<15)return;txt(ctx,ct,P.x+P.w-6,(b[0]+b[1])/2,'right',COL['--ink'],a,'600');});
+    legend(ctx,o.order.map(function(ct){return [CONT_VAR[ct],ct];}),a);return;}
+  if(o.kind==='labs'){ctx.font='400 12px '+SANS;F.instTop.forEach(function(x,r){var y=P.y+(r+0.5)*o.rowH;
+      if(o.narrow){var yb=y+o.rowH*0.18;txt(ctx,fitText(ctx,x.name,P.w),P.x,yb-o.thick/2-8,'left',COL['--ink'],a,r===0?'600':'400');txt(ctx,fmt(o.n[r]),o.ends[r]+8,yb,'left',COL['--ink-2'],a,'600');return;}
+      txt(ctx,fitText(ctx,x.name,o.x0-P.x-14),o.x0-12,y,'right',COL['--ink'],a,r===0?'600':'400');txt(ctx,fmt(o.n[r]),o.ends[r]+8,y,'left',COL['--ink-2'],a,'600');});}}
+function legend(ctx,items,a){var x=plotBox().x,y=TOP+8;ctx.font='400 11.5px '+SANS;
+  items.forEach(function(L){var w=ctx.measureText(L[1]).width+28;if(x+w>SW-30){x=plotBox().x;y+=17;}
+    ctx.fillStyle=rgba(COL[L[0]],a);ctx.beginPath();ctx.arc(x+4,y,4,0,6.2832);ctx.fill();txt(ctx,L[1],x+12,y,'left',COL['--ink-2'],a);x+=w;});}
+function ticks(max){var step=Math.pow(10,Math.floor(Math.log10(Math.max(1,max))));if(max/step<3)step/=2;var t=[];for(var v=0;v<=max+1e-9;v+=step)t.push(v);return t;}
+
+/* ---------- hover: paper, place and the paper it cites ---------- */
+var hover=-1,grid=null,GC=12;
+function buildGrid(){var L=LIVE,n=L.n;grid=new Map();for(var i=0;i<n;i++){if(BUF[i*7+5]<0.3)continue;var gk=Math.floor(BUF[i*7]/GC)*4096+Math.floor(BUF[i*7+1]/GC);var a=grid.get(gk);if(a)a.push(i);else grid.set(gk,[i]);}}
+function nearest(x,y){if(!grid)return -1;var best=-1,bd=Infinity,gx=Math.floor(x/GC),gy=Math.floor(y/GC);
+  for(var a=-1;a<=1;a++)for(var b=-1;b<=1;b++){var l=grid.get((gx+a)*4096+gy+b);if(!l)continue;
+    for(var j=0;j<l.length;j++){var i=l[j],dx=BUF[i*7]-x,dy=BUF[i*7+1]-y,d=dx*dx+dy*dy,r=Math.max(5,BUF[i*7+6]);if(d<=r*r&&d<bd){bd=d;best=i;}}}
+  return best;}
+function place(f,i){var q=f.q[i],w=W[f.k[i]];
+  if(f.kind==='map'){var c=CITIES[q],cn=country(c.country).name;return c.name+(cn!==c.name?', '+cn:'');}
+  if(f.kind==='labs')return F.instTop[q-Q_INST].name;
+  if(f.kind==='area'||f.kind==='share')return F.contsUsed[q-Q_CONT];
+  if(!w.ci.length)return 'No listed affiliation';var names=w.ci.slice(0,2).map(function(c){return CITIES[c].name;});return names.join(', ')+(w.ci.length>2?' and '+(w.ci.length-2)+' more':'');}
+function showTip(i){var f=LIVE.form,w=W[f.k[i]];sTip.textContent='';
+  sTip.appendChild(el('b',null,D.detailsLoaded?(w.raw.title||'Untitled'):'Loading title…'));
+  sTip.appendChild(el('div','m',(w.yr!=null?w.yr:'Undated')+' · '+place(f,i)));
+  if(w.gs.length)sTip.appendChild(el('div','m','Cites '+quoted(GROUPS[w.gs[0]].title)+(w.gs.length>1?' and '+(w.gs.length-1)+' more':'')));
+  var x=BUF[i*7],y=BUF[i*7+1];sTip.style.left=Math.max(Math.min(150,SW/2),Math.min(SW-150,x))+'px';sTip.style.top=y+'px';sTip.classList.toggle('below',y<150);sTip.classList.add('on');}
+function hideTip(){sTip.classList.remove('on');}
+function setHover(i){if(i===hover)return;hover=i;if(i>=0)showTip(i);else hideTip();if(LIVE&&LIVE.p>=1)drawOver(1,LIVE.cam1);}
+dotC.addEventListener('pointermove',function(e){if(e.pointerType!=='mouse'||!LIVE||LIVE.p<1)return;var r=dotC.getBoundingClientRect();setHover(nearest(e.clientX-r.left,e.clientY-r.top));});
+dotC.addEventListener('pointerleave',function(e){if(e.pointerType==='mouse')setHover(-1);});
+var tap=null;
+dotC.addEventListener('pointerdown',function(e){tap=e.pointerType==='mouse'?null:{x:e.clientX,y:e.clientY,t:performance.now()};});
+dotC.addEventListener('pointerup',function(e){var t=tap;tap=null;if(!t||!LIVE||LIVE.p<1)return;
+  if(Math.abs(e.clientX-t.x)+Math.abs(e.clientY-t.y)>8||performance.now()-t.t>350)return;var r=dotC.getBoundingClientRect();setHover(nearest(e.clientX-r.left,e.clientY-r.top));});
+dotC.addEventListener('pointercancel',function(){tap=null;});
+window.addEventListener('citation-details',function(){if(hover>=0)showTip(hover);});
+
+/* ---------- scrolly ---------- */
+var gTitle=$('gTitle'),gSub=$('gSub'),cur=-1;
+function activate(k,animate){if(k===cur)return;var s=STEPS[k];cur=k;
+  stepsEl.querySelectorAll('.step').forEach(function(e,i){e.classList.toggle('is-active',i===k);});
+  rail.querySelectorAll('button').forEach(function(b,i){if(i===k)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});
+  gTitle.textContent=s.g[0];gSub.textContent=s.g[1]||'';measureTop();go(buildForm(s),animate);}
+// the stage content starts below the header, whose height depends on the title and the stage width
+function measureTop(){var h=gTitle.parentNode;TOP=Math.max(44,h.offsetTop+h.offsetHeight+4);}
+function rebuild(){if(cur<0)return;var k=cur;cur=-1;LIVE=null;lastCam=fitCam(VIEWS.world);activate(k,false);}
+var io=null;
+function setupIO(){if(io)io.disconnect();var mobile=window.matchMedia('(max-width:860px)').matches;
+  if(!mobile){io=new IntersectionObserver(function(es){var last=null;es.forEach(function(e){if(e.isIntersecting)last=e;});if(last)activate(+last.target.dataset.i,true);},{rootMargin:'-50% 0px -49% 0px'});
+    stepsEl.querySelectorAll('.step').forEach(function(e){io.observe(e);});return;}
+  /* phones: the active step is the topmost card still visible below the sticky graphic */
+  var vis={},gh=G.getBoundingClientRect().height;
+  io=new IntersectionObserver(function(es){es.forEach(function(e){var i=+e.target.parentNode.dataset.i;if(e.isIntersecting)vis[i]=1;else delete vis[i];});
+    var ks=Object.keys(vis).map(Number);if(ks.length)activate(Math.min.apply(null,ks),true);},{rootMargin:'-'+Math.round(gh+48)+'px 0px 0px 0px'});
+  stepsEl.querySelectorAll('.step .card').forEach(function(e){io.observe(e);});}
+sizeCanvases();activate(0,false);setupIO();
+window.matchMedia('(max-width:860px)').addEventListener('change',setupIO);
+var ioT=0;window.addEventListener('resize',function(){clearTimeout(ioT);ioT=setTimeout(setupIO,200);});
+var rsT=0,lastSize='';new ResizeObserver(function(){var r=G.getBoundingClientRect(),sz=Math.round(r.width)+'x'+Math.round(r.height);if(sz===lastSize)return;lastSize=sz;
+  clearTimeout(rsT);rsT=setTimeout(function(){sizeCanvases();rebuild();},120);}).observe(G);
+
+/* ---------- explore ---------- */
+var exMap=new MapView($('exCanvas'),{key:true});
+var exCounts=F.ALL,exGroup='',selCity=-1;
+(function(){var cited=GLIST.filter(function(G){return G.n>0;});
+  cited.forEach(function(G){G.yearly=F.years.map(function(){return 0;});});
+  W.forEach(function(w){if(w.yr==null)return;w.gs.forEach(function(g){var G=GROUPS[g];if(G.yearly)G.yearly[w.yr-F.y0]++;});});
+  PaperPicker({button:$('paperSel'),papers:cited,total:F.total,allLabel:'All '+cited.length+' cited papers',onSelect:function(k){exGroup=k;applyFilter();}});})();
+$('exDek').textContent='Circle area shows citing papers per city. The map covers '+fmt(F.placed)+' of '+fmt(F.total)+' citing papers; the other '+fmt(F.unplaced)+' list no affiliation.';
+function applyFilter(){exCounts=exGroup?counts(function(w){return w.gs.indexOf(exGroup)>=0;}):F.ALL;
+  var keep=exMap.view&&exMap.userView?exMap.view:null;
+  exMap.set({counts:exCounts,bbox:VIEWS.world,highlight:[F.home],color:'--dot'},false);
+  if(keep){exMap.view=keep;exMap.userView=true;exMap.computeRadiiNow();exMap.draw();}
+  if(selCity>=0&&!(exCounts[selCity]>0))selectCity(-1);else if(selCity>=0)renderDetail(selCity);
+  renderList();}
+var search=$('citySearch'),listEl=$('cityList');
+var listAll=false;
+search.addEventListener('input',function(){listAll=false;renderList();});
+function renderList(){var q=search.value.trim().toLowerCase(),ids=[];
+  for(var i=0;i<NC;i++){if(!(exCounts[i]>0))continue;if(q){var c=CITIES[i];if((c.name+' '+country(c.country).name+' '+(c.region||'')).toLowerCase().indexOf(q)<0)continue;}ids.push(i);}
+  ids.sort(function(a,b){return exCounts[b]-exCounts[a];});listEl.textContent='';
+  if(!ids.length){listEl.appendChild(el('li','empty','No matching city'));return;}
+  (listAll?ids:ids.slice(0,60)).forEach(function(i){var li=el('li'),b=el('button');b.type='button';b.dataset.i=i;b.setAttribute('aria-pressed',String(i===selCity));
+    var nm=el('span');nm.appendChild(document.createTextNode(CITIES[i].name+' '));var cnm=country(CITIES[i].country).name;if(cnm!==CITIES[i].name)nm.appendChild(el('span','cn',cnm));
+    b.appendChild(nm);b.appendChild(el('span','c',fmt(exCounts[i])));b.addEventListener('click',function(){selectCity(i);});li.appendChild(b);listEl.appendChild(li);});
+  if(!listAll&&ids.length>60){var li=el('li'),mb=el('button','more','Show all '+fmt(ids.length)+' cities');mb.type='button';
+    mb.addEventListener('click',function(){listAll=true;renderList();var nb=listEl.querySelector('li:nth-child(61) button');if(nb)nb.focus();});li.appendChild(mb);listEl.appendChild(li);}}
+var detail=$('detail');
+function renderDetail(i){detail.textContent='';
+  if(i<0){detail.appendChild(el('p','hint','Select a city on the map or in the list.'));return;}
+  var c=CITIES[i],ws=CITY_WORKS[i].filter(function(w){return !exGroup||w.gs.indexOf(exGroup)>=0;});
+  ws.sort(function(a,b){return (b.date||String(b.yr||''))<(a.date||String(a.yr||''))?-1:1;});
+  detail.appendChild(el('h3',null,c.name));
+  detail.appendChild(el('p','meta',[c.region,country(c.country).name].filter(function(x){return x&&x!==c.name;}).join(', ')+' · '+fmt(ws.length)+' citing paper'+(ws.length===1?'':'s')+(i===F.home?' · home':'')));
+  var here={};(c.institutions||[]).forEach(function(x){here[x]=0;});
+  ws.forEach(function(w){w.inst.forEach(function(x){if(x in here)here[x]++;});});
+  var il=Object.keys(here).filter(function(x){return here[x]>0;}).sort(function(a,b){return here[b]-here[a];});
+  if(il.length){detail.appendChild(el('h4',null,'Institutions'));var ul=el('ul','insts');
+    il.slice(0,8).forEach(function(x){var li=el('li');li.appendChild(el('span',null,(INST[x]&&INST[x].display_name)||x));li.appendChild(el('span',null,fmt(here[x])));ul.appendChild(li);});detail.appendChild(ul);
+    if(il.length>8)detail.appendChild(el('p','meta','and '+fmt(il.length-8)+' more'));}
+  detail.appendChild(el('h4',null,'Citing papers'));
+  if(!D.detailsLoaded){detail.appendChild(el('p','hint','Loading papers\u2026'));return;}
+  var pl=el('ul','papers');detail.appendChild(pl);var shown=0;
+  function more(){ws.slice(shown,shown+25).forEach(function(w){var li=el('li'),u=workUrl(w.raw),t=w.raw.title||'Untitled';
+      if(u){var a=el('a',null,t);a.href=u;a.target='_blank';a.rel='noopener noreferrer';li.appendChild(a);}else li.appendChild(el('span',null,t));
+      li.appendChild(el('div','pm',(w.yr!=null?w.yr:'Undated')+' · cites '+w.gs.map(function(g){return quoted(GROUPS[g].title);}).join('; ')));pl.appendChild(li);});
+    shown=Math.min(ws.length,shown+25);btn.hidden=shown>=ws.length;btn.textContent='Show more ('+fmt(ws.length-shown)+' left)';}
+  var btn=el('button','more');btn.type='button';btn.addEventListener('click',more);detail.appendChild(btn);more();}
+function selectCity(i){selCity=i;exMap.sel=i;exMap.draw();renderDetail(i);
+  listEl.querySelectorAll('button[data-i]').forEach(function(b){b.setAttribute('aria-pressed',String(+b.dataset.i===i));});}
+var exC=$('exCanvas'),tip=$('tip'),drag=null;
+/* touch: one finger scrolls the page at world view; once zoomed in it pans the map */
+function syncPan(){exC.classList.toggle('pan',!!exMap.view&&exMap.view.s>exMap.worldS()*1.02);}
+exC.addEventListener('pointerdown',function(e){if(e.pointerType==='mouse'?e.button===0:(e.isPrimary&&exC.classList.contains('pan'))){drag={x:e.clientX,y:e.clientY,cx:exMap.view.cx,cy:exMap.view.cy,moved:false};exC.setPointerCapture(e.pointerId);}
+  else drag={x:e.clientX,y:e.clientY,moved:false,touch:true};});
+exC.addEventListener('pointermove',function(e){var r=exC.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;
+  if(drag&&!drag.touch){var dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>3){drag.moved=true;exC.classList.add('dragging');}
+    if(drag.moved){exMap.view={cx:drag.cx-dx/exMap.view.s,cy:drag.cy-dy/exMap.view.s,s:exMap.view.s};exMap.userView=true;tip.classList.remove('on');exMap.draw();return;}}
+  if(e.pointerType!=='mouse')return;var h=exMap.hit(px,py);if(h!==exMap.hover){exMap.hover=h;exMap.draw();}
+  if(h>=0){tip.textContent='';var b=el('b',null,CITIES[h].name);tip.appendChild(b);tip.appendChild(document.createTextNode(' · '+fmt(exCounts[h])+' paper'+(exCounts[h]===1?'':'s')));
+    tip.style.left=px+'px';tip.style.top=py+'px';tip.classList.add('on');exC.style.cursor='pointer';}else{tip.classList.remove('on');exC.style.cursor='';}});
+exC.addEventListener('pointerup',function(e){var r=exC.getBoundingClientRect();if(drag&&!drag.moved){var h=exMap.hit(e.clientX-r.left,e.clientY-r.top);if(h>=0)selectCity(h);}
+  drag=null;exC.classList.remove('dragging');});
+exC.addEventListener('pointercancel',function(){drag=null;exC.classList.remove('dragging');});
+exC.addEventListener('pointerleave',function(){if(exMap.hover>=0){exMap.hover=-1;exMap.draw();}tip.classList.remove('on');});
+exC.addEventListener('wheel',function(e){if(!(e.ctrlKey||e.metaKey))return;e.preventDefault();var r=exC.getBoundingClientRect();exMap.zoomAt(Math.exp(-e.deltaY*0.01),e.clientX-r.left,e.clientY-r.top);syncPan();},{passive:false});
+exC.addEventListener('dblclick',function(e){var r=exC.getBoundingClientRect();exMap.zoomAt(2,e.clientX-r.left,e.clientY-r.top);syncPan();});
+$('zIn').addEventListener('click',function(){exMap.zoomAt(1.6);syncPan();});
+$('zOut').addEventListener('click',function(){exMap.zoomAt(1/1.6);syncPan();});
+$('zReset').addEventListener('click',function(){exMap.userView=false;exMap.view=exMap.fit(VIEWS.world);exMap.computeRadiiNow();exMap.draw();syncPan();});
+applyFilter();renderDetail(-1);
+window.addEventListener('citation-details',function(){if(selCity>=0)renderDetail(selCity);});
+
+/* ---------- about ---------- */
+(function(){var b=$('aboutBody');var ms=D.stats||{};
+  b.appendChild(P(['The list of ',OWNER,'’s papers comes from the Google Scholar profile (',fmt(D.scholar_count||0),' entries). ',fmt(GLIST.length),' papers were matched to OpenAlex, where preprint and proceedings versions of one paper are separate records (',fmt(D.targets.length),' records, merged here by title); ',fmt((D.unmatched||[]).length),' Scholar entries were not found. Every work OpenAlex lists as citing a matched paper is included: ',{b:fmt(F.total)},' citing papers, snapshot of ',asofText,'.']));
+  b.appendChild(P(['Papers are placed by their authors’ institutions, whose coordinates are usually a headquarters or main campus. ',{b:fmt(F.unplaced)},' citing papers list no affiliation and cannot be placed; they are counted in totals but not on the map. ',F.undated?fmt(F.undated)+' papers carry no year and are left out of the yearly charts. ':'','Papers dated after the snapshot are counted in '+ASOF_Y+'.']));
+  b.appendChild(P(['A paper counts once in each city, country, continent or institution among its authors, so those totals sum to more than the number of papers. Self-citations are included. Country names follow Natural Earth; Hong Kong, Macao and Taiwan are listed separately from mainland China.']));
+})();
+
+/* ---------- theme toggle ---------- */
+var root=document.documentElement,mq=window.matchMedia('(prefers-color-scheme: dark)');
+function effective(){var t=root.getAttribute('data-theme');return t||(mq.matches?'dark':'light');}
+function onTheme(){readColors();exMap.colNow=COL[exMap.colKey];if(exMap.t>=1)exMap.draw();rebuild();
+  $('themeBtn').setAttribute('aria-label',effective()==='dark'?'Switch to light theme':'Switch to dark theme');}
+$('themeBtn').addEventListener('click',function(){var n=effective()==='dark'?'light':'dark';root.setAttribute('data-theme',n);try{localStorage.setItem('theme',n);}catch(e){}onTheme();});
+mq.addEventListener('change',function(){if(!root.getAttribute('data-theme'))onTheme();});
+window.addEventListener('storage',function(e){if(e.key!=='theme')return;if(e.newValue==='light'||e.newValue==='dark')root.setAttribute('data-theme',e.newValue);else root.removeAttribute('data-theme');onTheme();});
+onTheme();
+})();
+/* While the pinned chart scrolls away at the end of the story, the fixed buttons would sit on its labels: hide them until it is gone. */
+(function(){var g=document.getElementById('graphic'),bs=document.querySelectorAll('.theme-btn'),raf=0;
+  function check(){raf=0;var r=g.getBoundingClientRect(),t=r.top<-2&&r.bottom>64;bs.forEach(function(b){b.classList.toggle('tucked',t);});}
+  addEventListener('scroll',function(){if(!raf)raf=requestAnimationFrame(check);},{passive:true});addEventListener('resize',check);check();})();
+</script>
+</body>
+</html>

@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="referrer" content="no-referrer">
+<title>Citation Constellation</title>
+<script src="views.js"></script>
+<!--SHELL-->
+<!--PAPER_PICKER-->
+<style>
+.sky { position: relative; height: clamp(380px, calc(100vh - 150px), 900px); }
+#sky { width: 100%; height: 100%; touch-action: none; cursor: grab; border-radius: 6px; }
+#sky.dragging { cursor: grabbing; }
+#sky.pointing { cursor: pointer; }
+.zoom { position: absolute; right: 8px; bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
+.zoom .icon-btn { background: var(--bg); }
+.sky .key { position: absolute; left: 4px; bottom: 8px; pointer-events: none; background: var(--bg); padding: 4px 10px; border-radius: 999px; }
+.rings { display: flex; align-items: flex-end; gap: 2px; height: 56px; margin-top: 4px; }
+.rings i { flex: 1; background: var(--bar-on); border-radius: 1px 1px 0 0; min-height: 1px; opacity: .85; }
+.rings i.off { background: var(--bar); opacity: .4; }
+.ring-years { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-3); margin-top: 3px; }
+@media (max-width: 820px) { .sky { height: min(100vw, 70vh); } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1>Constellation</h1>
+    <p class="lede" id="lede"></p>
+  </div>
+  <div class="tools">
+    <button type="button" class="text-btn" id="aboutBtn">About the data</button>
+    <a class="icon-btn" href="index.html" aria-label="All views" title="All views"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M2.5 7.5 8 3l5.5 4.5M4 6.5V13h3V9.5h2V13h3V6.5"/></svg></a>
+    <button type="button" class="icon-btn" id="themeBtn" aria-label="Switch theme"></button>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="stage" aria-label="Star map">
+    <div class="sky" id="skyWrap">
+      <canvas id="sky" tabindex="0" role="img" aria-label="Each cited paper is a star. The papers that cite it are dots in rings around it, one ring per year, the oldest inside. Arrow keys move, plus and minus zoom, zero resets, Escape clears the selection."></canvas>
+      <div class="key" aria-hidden="true"><span><i></i>cites one</span><span><i class="several"></i>cites several</span></div>
+      <div class="zoom">
+        <button type="button" class="icon-btn" id="zIn" aria-label="Zoom in"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3.5v9M3.5 8h9"/></svg></button>
+        <button type="button" class="icon-btn" id="zOut" aria-label="Zoom out"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 8h9"/></svg></button>
+        <button type="button" class="icon-btn" id="zFit" aria-label="Show everything"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"/></svg></button>
+      </div>
+    </div>
+    <div class="timeline">
+      <button type="button" class="play" id="playBtn" aria-label="Play"></button>
+      <div class="track">
+        <canvas id="spark" aria-hidden="true"></canvas>
+        <input type="range" id="time" aria-label="Citations through date">
+        <div class="years" aria-hidden="true"><span id="yStart"></span><span id="yEnd"></span></div>
+      </div>
+      <div class="when" id="when" aria-live="off"></div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <div class="field"><button type="button" id="paperBtn"></button></div>
+    <div class="figures">
+      <div class="fig"><div class="k">Citing papers</div><div class="v" id="fWorks"></div></div>
+      <div class="fig"><div class="k">Cite two or more</div><div class="v" id="fMulti"></div></div>
+    </div>
+
+    <section id="pairsSec" aria-labelledby="pairsH">
+      <h2 id="pairsH">Cited together</h2>
+      <ol class="rows" id="pairs"></ol>
+    </section>
+
+    <section id="detail" hidden>
+      <div class="detail-head">
+        <h2 id="dName"></h2>
+        <button type="button" class="icon-btn" id="dClose" aria-label="Close paper"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+      </div>
+      <p class="detail-sub" id="dSub"></p>
+      <div class="chips" id="dChips"></div>
+      <h3>By year</h3>
+      <div class="rings" id="dRings" role="img"></div>
+      <div class="ring-years" aria-hidden="true"><span id="rStart"></span><span id="rEnd"></span></div>
+      <h3 id="dPartH">Cited together with</h3>
+      <ol class="rows" id="dPartners"></ol>
+    </section>
+  </aside>
+</main>
+
+<dialog id="about" aria-labelledby="aboutH">
+  <button type="button" class="icon-btn close" aria-label="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+  <h2 id="aboutH">About the data</h2>
+  <div id="aboutBody"></div>
+</dialog>
+<span id="live" class="sr" aria-live="polite"></span>
+
+<script>
+(function () {
+  "use strict";
+  var S = window.Shell, V = S.V, P = V.papers, W = V.works, N = P.length, C = S.C, $ = S.$, fmt = S.fmt, el = S.el;
+  var canvas = $("sky"), wrap = $("skyWrap"), tip = S.tip(wrap);
+  var GA = Math.PI * (3 - Math.sqrt(5)), CORE = 0.17, TAU = Math.PI * 2;
+  var t0 = V.years[0], tEnd = S.tEnd;
+
+  // ---------- geometry: one dot per (citing work, cited paper), in rings by year ----------
+  var lists = P.map(function () { return []; });          // dated work indices per paper, in time order
+  W.forEach(function (w, i) { if (w[0] != null) w[1].forEach(function (j) { lists[j].push(i); }); });
+  var total = lists.reduce(function (a, l) { return a + l.length; }, 0);
+  var dx = new Float32Array(total), dy = new Float32Array(total), dPaper = new Uint16Array(total), dWork = new Int32Array(total), dTime = new Float32Array(total), dMulti = new Uint8Array(total);
+  var first = new Int32Array(N + 1), ptimes = lists.map(function (l) { return l.map(function (i) { return W[i][0]; }); });
+  var twins = new Map();                                    // work index -> its dots, for works that cite several
+  var undatedMulti = new Int32Array(N);                     // undated works that cite this paper and another, counted at "All years"
+  W.forEach(function (w) { if (w[0] == null && w[1].length > 1) w[1].forEach(function (j) { undatedMulti[j]++; }); });
+  (function place() {
+    var at = 0;
+    for (var j = 0; j < N; j++) {
+      first[j] = at;
+      var list = lists[j], n = list.length, a = 0, phase = j * 1.7;
+      while (a < n) {                                       // one ring: the works of one calendar year
+        var year = Math.floor(W[list[a]][0]), b = a;
+        while (b < n && Math.floor(W[list[b]][0]) === year) b++;
+        var free = [], k;
+        for (k = a; k < b; k++) free.push(k);
+        var taken = new Map(), singles = [];
+        for (k = a; k < b; k++) {
+          var wi = list[k], ps = W[wi][1];
+          if (ps.length < 2) { singles.push(wi); continue; }
+          // a work that cites several papers sits on the side of the ring that faces the others
+          var mx = 0, my = 0;
+          ps.forEach(function (q) { if (q !== j) { mx += P[q].x; my += P[q].z; } });
+          var want = Math.atan2(my / (ps.length - 1) - P[j].z, mx / (ps.length - 1) - P[j].x), best = 0, bd = 9;
+          for (var f = 0; f < free.length; f++) {
+            var d = Math.abs(((free[f] * GA + phase - want) % TAU + TAU + Math.PI) % TAU - Math.PI);
+            if (d < bd) { bd = d; best = f; }
+          }
+          taken.set(free[best], wi); free.splice(best, 1);
+        }
+        for (k = a; k < b; k++) {
+          var w = taken.has(k) ? taken.get(k) : singles.shift();
+          var rr = Math.sqrt(CORE * CORE + (1 - CORE * CORE) * (k + 0.5) / n), ang = k * GA + phase, id = at + k;
+          dx[id] = Math.cos(ang) * rr; dy[id] = Math.sin(ang) * rr; dPaper[id] = j; dWork[id] = w; dTime[id] = W[w][0];
+          if (W[w][1].length > 1) { dMulti[id] = 1; if (!twins.has(w)) twins.set(w, []); twins.get(w).push(id); }
+        }
+        a = b;
+      }
+      at += n;
+    }
+    first[N] = at;
+  })();
+  var ringR = function (j, count) { var n = lists[j].length || 1; return P[j].r * Math.sqrt(CORE * CORE + (1 - CORE * CORE) * Math.min(1, count / n)); };
+
+  // ---------- co-citation: counts over time, and the figure lines (a maximum spanning forest) ----------
+  var pairTimes = new Map();
+  W.forEach(function (w) {
+    if (w[0] == null || w[1].length < 2) return;
+    for (var a = 0; a < w[1].length; a++) for (var b = a + 1; b < w[1].length; b++) {
+      var key = w[1][a] * N + w[1][b]; if (!pairTimes.has(key)) pairTimes.set(key, []); pairTimes.get(key).push(w[0]);
+    }
+  });
+  var pairs = V.pairs.map(function (p) { return { a: p[0], b: p[1], n: p[2], t: pairTimes.get(p[0] * N + p[1]) || [] }; });
+  var LINE_MIN = 3, lines = (function () {
+    var parent = P.map(function (_, i) { return i; }), out = [];
+    function find(i) { while (parent[i] !== i) i = parent[i] = parent[parent[i]]; return i; }
+    pairs.forEach(function (p) { if (p.n < LINE_MIN) return; var a = find(p.a), b = find(p.b); if (a !== b) { parent[a] = b; out.push(p); } });
+    return out;
+  })();
+  var strongest = pairs.length ? pairs[0].n : 1;
+  var partners = P.map(function () { return []; });
+  pairs.forEach(function (p) { partners[p.a].push(p); partners[p.b].push(p); });
+
+  // ---------- state ----------
+  var view = { x: 0, y: 0, k: 1 }, fly = null, K_MAX = 18;
+  var time = tEnd, playing = false, selected = -1, hoverStar = -1, hoverDot = -1, width = 0, height = 0, ctx = null, base = 1, dirty = true;
+  var count = new Int32Array(N), stats = { works: 0, multi: 0 };
+  var sx = function (x) { return width / 2 + (x - view.x) * base * view.k; }, sy = function (y) { return height / 2 + (y - view.y) * base * view.k; };
+  var isAll = function () { return time >= tEnd - 0.005; };
+
+  function recount() {
+    for (var j = 0; j < N; j++) count[j] = S.upTo(ptimes[j], time);
+    var works = 0, multi = 0, all = isAll();
+    for (var i = 0; i < W.length; i++) { var w = W[i]; if (w[0] == null ? !all : w[0] > time) continue; works++; if (w[1].length > 1) multi++; }
+    stats.works = works; stats.multi = multi;
+  }
+  var total_ = function (j) { return count[j] + (isAll() ? P[j].u : 0); };
+  var shown = function (j) { return count[j] > 0 || (P[j].y != null && P[j].y <= time) || (isAll() && P[j].u > 0); };
+
+  // ---------- drawing ----------
+  function resize() { var s = S.size(canvas); ctx = s.ctx; width = s.width; height = s.height; base = Math.min(width, height) / 2 * 0.94; dirty = true; }
+  function draw() {
+    dirty = false;
+    var g = ctx, scale = base * view.k, focus = selected >= 0, j, i;
+    g.clearRect(0, 0, width, height);
+    var onScreen = new Uint8Array(N);
+    for (j = 0; j < N; j++) { var R = P[j].r * scale, x = sx(P[j].x), y = sy(P[j].z); onScreen[j] = shown(j) && x + R > 0 && x - R < width && y + R > 0 && y - R < height ? 1 : 0; }
+
+    // rings: every other year is tinted, so a wide band is a busy year
+    g.fillStyle = C.ink;
+    for (j = 0; j < N; j++) {
+      if (!onScreen[j] || P[j].r * scale < 12) continue;
+      var cum = 0, yr = P[j].yr, cx = sx(P[j].x), cy = sy(P[j].z), dim = focus && j !== selected;
+      g.globalAlpha = dim ? 0.02 : C.dark ? 0.11 : 0.07;
+      for (i = 0; i < yr.length && cum < count[j]; i++) {
+        var lo = cum; cum = Math.min(count[j], cum + yr[i]);
+        if (i % 2 || cum === lo) continue;
+        g.beginPath(); g.arc(cx, cy, ringR(j, cum) * scale, 0, TAU); g.arc(cx, cy, ringR(j, lo) * scale, 0, TAU, true); g.fill();
+      }
+    }
+    g.globalAlpha = 1;
+
+    // figure lines between the edges of two halos
+    g.strokeStyle = C["ink-2"]; g.lineCap = "round";
+    lines.forEach(function (p) {
+      var c = S.upTo(p.t, time); if (c < LINE_MIN || !shown(p.a) || !shown(p.b) || p.a === selected || p.b === selected) return;
+      var ax = sx(P[p.a].x), ay = sy(P[p.a].z), bx = sx(P[p.b].x), by = sy(P[p.b].z), d = Math.hypot(bx - ax, by - ay) || 1;
+      var ra = ringR(p.a, count[p.a]) * scale + 3, rb = ringR(p.b, count[p.b]) * scale + 3; if (ra + rb >= d) return;
+      var ux = (bx - ax) / d, uy = (by - ay) / d;
+      g.globalAlpha = focus ? 0.12 : 0.3 + 0.5 * Math.sqrt(c / strongest);
+      g.lineWidth = 0.7 + 2.3 * Math.sqrt(c / strongest);
+      g.beginPath(); g.moveTo(ax + ux * ra, ay + uy * ra); g.lineTo(bx - ux * rb, by - uy * rb); g.stroke();
+    });
+    g.globalAlpha = 1;
+
+    // dots
+    var fresh = playing ? 0.3 : 0;
+    for (var pass = 0; pass < 2; pass++) {           // singles first, the works that cite several on top
+      g.fillStyle = pass ? C.accent : C.dot;
+      for (j = 0; j < N; j++) {
+        if (!onScreen[j]) continue;
+        var n = lists[j].length, R2 = P[j].r * scale, spacing = R2 * Math.sqrt(Math.PI / Math.max(n, 1));
+        var sz = Math.max(1.15, Math.min(5, spacing * 0.56)), ox = sx(P[j].x), oy = sy(P[j].z), dimmed = focus && j !== selected;
+        g.globalAlpha = dimmed ? 0.14 : pass ? 0.95 : C.dark ? 0.72 : 0.62;
+        var round = sz >= 2.4;
+        if (round) g.beginPath();
+        for (i = first[j]; i < first[j + 1]; i++) {
+          if (dMulti[i] !== pass || dTime[i] > time) continue;
+          var px = ox + dx[i] * R2, py = oy + dy[i] * R2, z = fresh && time - dTime[i] < fresh ? sz * 1.9 : sz;
+          if (round) { g.moveTo(px + z / 2, py); g.arc(px, py, z / 2, 0, TAU); } else g.fillRect(px - z / 2, py - z / 2, z, z);
+        }
+        if (round) g.fill();
+      }
+    }
+    g.globalAlpha = 1;
+
+    // threads from the selected star to the papers it is cited with
+    if (focus) {
+      g.strokeStyle = C.accent;
+      partners[selected].forEach(function (p) {
+        var c = S.upTo(p.t, time), o = p.a === selected ? p.b : p.a; if (!c || !shown(o)) return;
+        var top = S.upTo(partners[selected][0].t, time) || 1;
+        var ax = sx(P[selected].x), ay = sy(P[selected].z), bx = sx(P[o].x), by = sy(P[o].z), mx = (ax + bx) / 2, my = (ay + by) / 2;
+        g.globalAlpha = 0.18 + 0.6 * c / top; g.lineWidth = 0.6 + 2.6 * c / top;
+        g.beginPath(); g.moveTo(ax, ay); g.quadraticCurveTo(mx + (by - ay) * 0.14, my - (bx - ax) * 0.14, bx, by); g.stroke();
+      });
+      g.globalAlpha = 1;
+    }
+    // the same citing work in other halos
+    if (hoverDot >= 0 && twins.has(dWork[hoverDot])) {
+      var tw = twins.get(dWork[hoverDot]).filter(function (d) { return dTime[d] <= time; });
+      g.strokeStyle = C.accent; g.lineWidth = 1.2; g.globalAlpha = 0.9; g.beginPath();
+      var hx = dotX(hoverDot), hy = dotY(hoverDot);
+      tw.forEach(function (d) { if (d !== hoverDot) { g.moveTo(hx, hy); g.lineTo(dotX(d), dotY(d)); } });
+      g.stroke();
+      g.fillStyle = C.accent; tw.forEach(function (d) { g.beginPath(); g.arc(dotX(d), dotY(d), 4, 0, TAU); g.fill(); });
+      g.globalAlpha = 1;
+    } else if (hoverDot >= 0) {
+      g.strokeStyle = C.ink; g.lineWidth = 1.4; g.beginPath(); g.arc(dotX(hoverDot), dotY(hoverDot), 5, 0, TAU); g.stroke();
+    }
+
+    // stars and names
+    var boxes = [];
+    g.textAlign = "center"; g.textBaseline = "alphabetic"; g.lineJoin = "round";
+    for (j = 0; j < N; j++) {
+      if (!onScreen[j]) continue;
+      var X = sx(P[j].x), Y = sy(P[j].z), RR = P[j].r * scale, core = Math.max(1.6, Math.min(6, RR * CORE * 0.5)), off = focus && j !== selected;
+      g.globalAlpha = off ? 0.35 : 1; g.fillStyle = count[j] ? C.ink : C["ink-3"];
+      g.beginPath(); g.arc(X, Y, core, 0, TAU); g.fill();
+      if (j === selected || j === hoverStar) {
+        g.strokeStyle = j === selected ? C.accent : C["ink-2"]; g.lineWidth = 1.2; g.globalAlpha = 1;
+        g.beginPath(); g.arc(X, Y, Math.max(8, ringR(j, count[j]) * scale + 4), 0, TAU); g.stroke();
+      }
+      var must = j === selected || j === hoverStar;
+      if (!must && (RR < 20 || off)) continue;
+      var name = S.shortName(P[j].t, RR > 90 || must ? 44 : 22), big = RR > 60;
+      g.font = (big ? "500 15px " : "500 12.5px ") + C.display;
+      var tw2 = g.measureText(name).width, LX = Math.max(tw2 / 2 + 6, Math.min(width - tw2 / 2 - 6, X)), ty = Y - Math.max(8, ringR(j, count[j]) * scale) - 8, box = [LX - tw2 / 2 - 4, ty - 14, LX + tw2 / 2 + 4, ty + 4];
+      if (!must && boxes.some(function (b) { return box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1]; })) continue;
+      boxes.push(box);
+      g.globalAlpha = 0.82; g.fillStyle = C.bg; plate(g, box[0], box[1], box[2] - box[0], box[3] - box[1]);
+      g.globalAlpha = 1; g.fillStyle = C.ink; g.fillText(name, LX, ty);
+    }
+    g.globalAlpha = 1;
+
+    // years written on the rings of the selected (or the hovered) star, up its vertical radius
+    var lab = selected >= 0 ? selected : hoverStar;
+    if (lab >= 0 && onScreen[lab] && P[lab].r * scale > 70) {
+      var cum2 = 0, yrs = P[lab].yr, LX = sx(P[lab].x), LY = sy(P[lab].z), last = -Infinity;
+      g.font = "600 10.5px " + C.ui; g.textBaseline = "middle";
+      for (i = 0; i < yrs.length && cum2 < count[lab]; i++) {
+        var lo2 = cum2; cum2 = Math.min(count[lab], cum2 + yrs[i]);
+        var r1 = ringR(lab, lo2) * scale, r2 = ringR(lab, cum2) * scale, mid = (r1 + r2) / 2;
+        if (r2 - r1 < 9 || mid - last < 13) continue;
+        last = mid;
+        var txt = "’" + String(V.years[i]).slice(2);
+        g.globalAlpha = 0.85; g.fillStyle = C.bg; plate(g, LX - 13, LY + mid - 8, 26, 16); g.globalAlpha = 1; g.fillStyle = C.ink; g.fillText(txt, LX, LY + mid);
+      }
+    }
+  }
+  function plate(g, x, y, w, h) { g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, 4); else g.rect(x, y, w, h); g.fill(); }
+  function dotX(i) { return sx(P[dPaper[i]].x) + dx[i] * P[dPaper[i]].r * base * view.k; }
+  function dotY(i) { return sy(P[dPaper[i]].z) + dy[i] * P[dPaper[i]].r * base * view.k; }
+  function frame() {
+    if (fly) {
+      var p = Math.min(1, (performance.now() - fly.start) / fly.ms), e = 1 - Math.pow(1 - p, 3);
+      view.x = fly.from.x + (fly.to.x - fly.from.x) * e; view.y = fly.from.y + (fly.to.y - fly.from.y) * e;
+      view.k = Math.exp(Math.log(fly.from.k) + (Math.log(fly.to.k) - Math.log(fly.from.k)) * e);
+      if (p >= 1) fly = null; dirty = true;
+    }
+    if (dirty) draw();
+    requestAnimationFrame(frame);
+  }
+  function flyTo(x, y, k) {
+    var to = { x: x, y: y, k: Math.max(0.8, Math.min(K_MAX, k)) };
+    if (S.reduce) { view = to; dirty = true; return; }
+    fly = { from: { x: view.x, y: view.y, k: view.k }, to: to, start: performance.now(), ms: 650 };
+  }
+  function fitStar(j) { flyTo(P[j].x, P[j].z, Math.min(width, height) * 0.36 / (base * P[j].r)); }
+  function zoomAt(px, py, factor) {
+    fly = null;
+    var k = Math.max(0.8, Math.min(K_MAX, view.k * factor)), wx = view.x + (px - width / 2) / (base * view.k), wy = view.y + (py - height / 2) / (base * view.k);
+    view.x = wx - (px - width / 2) / (base * k); view.y = wy - (py - height / 2) / (base * k); view.k = k; dirty = true;
+  }
+
+  /* pointer position inside the canvas */
+  function ex(e) { return e.clientX - canvas.getBoundingClientRect().left; }
+  function ey(e) { return e.clientY - canvas.getBoundingClientRect().top; }
+
+  // ---------- picking ----------
+  function pick(mx, my) {
+    var scale = base * view.k, best = -1, bd = 49, j, i;
+    for (j = 0; j < N; j++) {
+      if (!shown(j)) continue;
+      var ox = sx(P[j].x), oy = sy(P[j].z), R = P[j].r * scale;
+      if (mx < ox - R - 7 || mx > ox + R + 7 || my < oy - R - 7 || my > oy + R + 7) continue;
+      for (i = first[j]; i < first[j + 1]; i++) {
+        if (dTime[i] > time) continue;
+        var ddx = ox + dx[i] * R - mx, ddy = oy + dy[i] * R - my, d = ddx * ddx + ddy * ddy;
+        if (d < bd) { bd = d; best = i; }
+      }
+    }
+    var star = -1, sd = Infinity;
+    for (j = 0; j < N; j++) {
+      if (!shown(j)) continue;
+      var dd = Math.hypot(mx - sx(P[j].x), my - sy(P[j].z)), lim = Math.max(10, ringR(j, count[j]) * scale + 3);
+      if (dd < lim && dd < sd) { sd = dd; star = j; }
+    }
+    // a dot is only worth naming once dots are far enough apart to point at
+    if (best >= 0) { var pj = dPaper[best], sp = P[pj].r * scale * Math.sqrt(Math.PI / lists[pj].length); if (sp < 4.5) best = -1; }
+    return { dot: best, star: best >= 0 ? dPaper[best] : star };
+  }
+  var det = null;
+  function showTip(mx, my) {
+    if (hoverDot >= 0) {
+      var wi = dWork[hoverDot], w = W[wi], nodes = [];
+      if (!det) S.details().then(function (d) { det = d; if (hoverDot >= 0) showTip(mx, my); }).catch(function () {});
+      nodes.push(el("div", "t-name", det ? det[wi][0] || "Untitled" : "Loading…"));
+      nodes.push(el("div", "t-meta", (det && det[wi][1] ? det[wi][1] + " · " : "") + S.workDate(w)));
+      if (w[1].length > 1) nodes.push(el("div", "t-meta", "Cites " + w[1].map(function (q) { return S.shortName(P[q].t, 24); }).join(", ")));
+      tip.show(mx, my, nodes);
+    } else if (hoverStar >= 0) {
+      var p = P[hoverStar];
+      tip.show(mx, my, [el("div", "t-name", p.t), el("div", "t-meta", (p.y ? p.y + " · " : "") + fmt(total_(hoverStar)) + " citing papers")]);
+    } else tip.hide();
+  }
+
+  // ---------- pointer, wheel, keys ----------
+  var pointers = new Map(), drag = null, pinch = null, moved = false;
+  canvas.addEventListener("pointerdown", function (e) {
+    canvas.setPointerCapture(e.pointerId); pointers.set(e.pointerId, [ex(e), ey(e)]); moved = false; fly = null;
+    if (pointers.size === 1) drag = { x: ex(e), y: ey(e), vx: view.x, vy: view.y };
+    else if (pointers.size === 2) { var a = [].concat.apply([], Array.from(pointers.values())); pinch = { d: Math.hypot(a[0] - a[2], a[1] - a[3]) || 1 }; drag = null; moved = true; }
+  });
+  canvas.addEventListener("pointermove", function (e) {
+    var mx = ex(e), my = ey(e);
+    if (pointers.has(e.pointerId)) pointers.set(e.pointerId, [mx, my]);
+    if (pinch && pointers.size === 2) {
+      var a = [].concat.apply([], Array.from(pointers.values())), d = Math.hypot(a[0] - a[2], a[1] - a[3]) || 1;
+      zoomAt((a[0] + a[2]) / 2, (a[1] + a[3]) / 2, d / pinch.d); pinch.d = d; return;
+    }
+    if (drag) {
+      if (!moved && Math.hypot(mx - drag.x, my - drag.y) < 4) return;
+      moved = true; canvas.classList.add("dragging"); tip.hide();
+      view.x = drag.vx - (mx - drag.x) / (base * view.k); view.y = drag.vy - (my - drag.y) / (base * view.k); dirty = true; return;
+    }
+    if (e.pointerType === "touch") return;
+    var hit = pick(mx, my);
+    if (hit.dot !== hoverDot || hit.star !== hoverStar) { hoverDot = hit.dot; hoverStar = hit.star; dirty = true; }
+    canvas.classList.toggle("pointing", hit.star >= 0); showTip(mx, my);
+  });
+  function release(e) {
+    var wasDrag = moved; pointers.delete(e.pointerId); canvas.classList.remove("dragging");
+    if (pointers.size < 2) pinch = null;
+    if (!pointers.size) drag = null;
+    if (e.type === "pointerup" && !wasDrag) { var hit = pick(ex(e), ey(e)); choose(hit.star === selected ? -1 : hit.star, true); }
+  }
+  canvas.addEventListener("pointerup", release); canvas.addEventListener("pointercancel", release);
+  canvas.addEventListener("pointerleave", function () { if (hoverDot >= 0 || hoverStar >= 0) { hoverDot = hoverStar = -1; dirty = true; } tip.hide(); });
+  canvas.addEventListener("wheel", function (e) { e.preventDefault(); zoomAt(ex(e), ey(e), Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0022))); tip.hide(); }, { passive: false });
+  canvas.addEventListener("dblclick", function (e) { e.preventDefault(); });
+  canvas.addEventListener("keydown", function (e) {
+    var step = 60 / (base * view.k), k = e.key;
+    if (k === "ArrowLeft") view.x -= step; else if (k === "ArrowRight") view.x += step; else if (k === "ArrowUp") view.y -= step; else if (k === "ArrowDown") view.y += step;
+    else if (k === "+" || k === "=") zoomAt(width / 2, height / 2, 1.4); else if (k === "-" || k === "_") zoomAt(width / 2, height / 2, 1 / 1.4);
+    else if (k === "0") flyTo(0, 0, 1);
+    else return;
+    e.preventDefault(); fly = k === "0" ? fly : null; dirty = true;
+  });
+  $("zIn").addEventListener("click", function () { flyTo(view.x, view.y, view.k * 1.7); });
+  $("zOut").addEventListener("click", function () { flyTo(view.x, view.y, view.k / 1.7); });
+  $("zFit").addEventListener("click", function () { flyTo(0, 0, 1); });
+
+  // ---------- side panel ----------
+  var paperPicker = S.picker($("paperBtn"), function (j) { choose(j, true); });
+  function choose(j, move) {
+    selected = j; paperPicker.set(j < 0 ? "" : String(j)); dirty = true;
+    if (j >= 0 && move) fitStar(j);
+    panel(); if (j >= 0) S.announce(P[j].t + ", " + fmt(total_(j)) + " citing papers");
+  }
+  $("dClose").addEventListener("click", function () { choose(-1); canvas.focus(); });
+  function row(name, sub, n, onClick) {
+    var li = el("li"), b = el("button", "row-btn"); b.type = "button";
+    b.append(el("span", "nm", name), el("span", "ct", fmt(n))); if (sub) b.append(el("span", "sub", sub));
+    b.addEventListener("click", onClick); li.append(b); return li;
+  }
+  function panel() { S.keepFocus(document.querySelector(".side"), fill); }
+  function fill() {
+    $("fWorks").textContent = fmt(stats.works);
+    var mv = $("fMulti"); mv.replaceChildren(fmt(stats.multi), el("span", "u", stats.works ? Math.round(100 * stats.multi / stats.works) + "%" : ""));
+    var open = selected >= 0; $("detail").hidden = !open; $("pairsSec").hidden = open;
+    if (!open) {
+      var top = pairs.map(function (p) { return { p: p, c: isAll() ? p.n : S.upTo(p.t, time) }; }).filter(function (o) { return o.c > 0; }).sort(function (a, b) { return b.c - a.c; }).slice(0, 10);
+      $("pairs").replaceChildren.apply($("pairs"), top.map(function (o) {
+        return row(S.shortName(P[o.p.a].t, 40), "with " + S.shortName(P[o.p.b].t, 44), o.c, function () {
+          var a = P[o.p.a], b = P[o.p.b], span = Math.hypot(a.x - b.x, a.z - b.z) + a.r + b.r;
+          selected = o.p.a; paperPicker.set(String(o.p.a)); panel(); flyTo((a.x + b.x) / 2, (a.z + b.z) / 2, Math.min(width, height) * 0.84 / (base * span));
+        });
+      }));
+      return;
+    }
+    var p = P[selected], n = total_(selected);
+    $("dName").replaceChildren(S.paperLink(selected));
+    $("dSub").textContent = (p.y ? "Published " + p.y + " · " : "") + fmt(n) + " citing papers" + (isAll() ? "" : " by " + S.monthLabel(time));
+    var shared = isAll() ? undatedMulti[selected] : 0; for (var i = first[selected]; i < first[selected + 1]; i++) if (dMulti[i] && dTime[i] <= time) shared++;
+    var chip = el("div", "chip"); chip.append(el("b", null, fmt(shared)), el("span", null, "also cite another paper here"));
+    $("dChips").replaceChildren(chip);
+    var a = p.yr.findIndex(function (v) { return v > 0; }); if (a < 0) a = 0;
+    var mx = Math.max.apply(null, p.yr.concat([1]));
+    $("dRings").replaceChildren.apply($("dRings"), p.yr.slice(a).map(function (v, k) { var b = el("i", V.years[a + k] > time ? "off" : ""); b.style.height = Math.max(1, v / mx * 100) + "%"; b.title = V.years[a + k] + ": " + fmt(v); return b; }));
+    $("dRings").setAttribute("aria-label", "Citing papers per year: " + p.yr.slice(a).map(function (v, k) { return V.years[a + k] + " " + v; }).join(", "));
+    $("rStart").textContent = V.years[a]; $("rEnd").textContent = V.years[V.years.length - 1];
+    var part = partners[selected].map(function (q) { return { o: q.a === selected ? q.b : q.a, c: isAll() ? q.n : S.upTo(q.t, time) }; }).filter(function (o) { return o.c > 0; }).sort(function (x, y) { return y.c - x.c; }).slice(0, 10);
+    $("dPartH").hidden = !part.length;
+    $("dPartners").replaceChildren.apply($("dPartners"), part.map(function (o) { return row(S.shortName(P[o.o].t, 46), P[o.o].y ? String(P[o.o].y) : "", o.c, function () { choose(o.o, true); }); }));
+  }
+
+  // ---------- time ----------
+  var perYear = V.years.map(function (y) { return { t: y, n: 0 }; });
+  W.forEach(function (w) { if (w[0] != null) perYear[Math.floor(w[0]) - t0].n++; });
+  $("yStart").textContent = t0; $("yEnd").textContent = V.years[V.years.length - 1];
+  var panelTimer = 0;
+  var player = S.player({ button: $("playBtn"), slider: $("time"), when: $("when"), spark: $("spark"), t0: t0, t1: tEnd, seconds: 20, bars: perYear,
+    label: function (t) { return [t >= tEnd - 0.005 ? "All years" : S.monthLabel(t), ""]; },
+    onTime: function (t, isPlaying) {
+      time = t; playing = isPlaying; recount(); dirty = true;
+      if (!isPlaying) { panel(); return; }
+      if (!panelTimer) panelTimer = setTimeout(function () { panelTimer = 0; panel(); }, 200);   // the lists need not follow every frame
+    } });
+
+  // ---------- about ----------
+  $("lede").append(el("b", null, fmt(V.stats.works)), " papers citing " + V.owner + ", ringed around the " + P.filter(function (p) { return p.n > 0; }).length + " papers they cite");
+  $("aboutBody").append(
+    el("p", null, "Each star is one of " + V.owner + "’s papers. Every paper that cites it is a dot in its halo. The dots are laid out in the order they were published, from the centre outwards, so the halo is made of rings, one per calendar year. Every dot takes the same room, so the area of a ring is the number of citations that year."),
+    el("p", null, fmt(V.stats.multi) + " of the " + fmt(V.stats.works) + " citing papers cite two or more of these papers. They are drawn in the accent colour, once in each halo, on the side of the ring that faces the other papers they cite. Within a ring their distance from the centre carries no further meaning."),
+    el("p", null, "Stars are placed by a force layout, computed once when the data is built, in which papers that are often cited together attract each other. A line joins two halos when at least " + LINE_MIN + " papers cite both; only the strongest links that connect the stars are drawn, so the lines form figures rather than a mesh. Select a star to see every paper it is cited with."),
+    el("p", null, "Versions of one paper (preprint, proceedings) are merged by title. " + V.stats.undated + " citing papers have no date: they are counted under “All years” but not drawn. Papers known only by year are spread over their year, each on a fixed day. Snapshot " + V.snapshot.slice(0, 10) + ", from OpenAlex."));
+  S.about($("aboutBtn"), $("about"));
+
+  S.onEscape(function () { if (selected >= 0) choose(-1); });
+  S.onTheme(function () { dirty = true; });
+  new ResizeObserver(resize).observe(canvas);
+  resize(); recount(); panel(); player.set(tEnd, true); requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

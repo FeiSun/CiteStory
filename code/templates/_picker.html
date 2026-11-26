@@ -1,0 +1,109 @@
+<style>
+/* paper picker: a searchable list of the cited papers, opened from a button (or Ctrl/Cmd-K).
+   Pages map their own colours onto --pk-bg, --pk-ink, --pk-muted, --pk-line, --pk-hover, --pk-accent, --pk-shade. */
+.pk-trigger{display:flex;align-items:center;gap:8px;width:100%;text-align:left;cursor:pointer;min-width:0}
+.pk-trigger .pk-now{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-trigger kbd{flex:none;font:500 10.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--pk-muted);border:1px solid var(--pk-line);border-radius:4px;padding:3px 5px}
+.pk-back{position:fixed;inset:0;z-index:1000;background:rgba(10,10,12,.32);display:flex;justify-content:center;align-items:flex-start;padding:min(12vh,110px) 16px 16px}
+.pk-dlg{width:min(720px,100%);max-height:min(76vh,760px);display:flex;flex-direction:column;background:var(--pk-bg);color:var(--pk-ink);border:1px solid var(--pk-line);border-radius:14px;
+  box-shadow:0 30px 80px -20px var(--pk-shade);overflow:hidden;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
+.pk-head{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--pk-line)}
+.pk-head svg{width:18px;height:18px;flex:none;fill:none;stroke:var(--pk-muted);stroke-width:1.6;stroke-linecap:round}
+.pk-head input{flex:1;min-width:0;border:0;outline:none;background:transparent;color:var(--pk-ink);font:inherit;font-size:17px}
+.pk-head input::placeholder{color:var(--pk-muted)}
+.pk-head input::-webkit-search-cancel-button{display:none}
+.pk-esc{flex:none;font:500 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--pk-muted);border:1px solid var(--pk-line);border-radius:6px;padding:6px 8px;background:transparent;cursor:pointer}
+.pk-list{overflow:auto;padding:6px;overscroll-behavior:contain}
+.pk-opt{display:grid;grid-template-columns:44px minmax(0,1fr) auto 64px;align-items:center;gap:4px 14px;padding:10px 12px;border-radius:10px;cursor:pointer}
+.pk-opt[aria-selected=true]{background:var(--pk-hover)}
+.pk-opt.cur .pk-title{font-weight:600}
+.pk-rk{font:500 12px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--pk-muted)}
+.pk-title{font-size:15px;line-height:1.35;color:var(--pk-ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pk-title mark{background:none;color:var(--pk-accent);font-weight:600}
+.pk-sub{display:block;font-size:12.5px;color:var(--pk-muted);margin-top:3px}
+.pk-spark{width:74px;height:20px;color:var(--pk-ink)}
+.pk-n{font-size:16px;text-align:right;font-variant-numeric:tabular-nums lining-nums;color:var(--pk-ink)}
+.pk-empty{padding:18px 14px;color:var(--pk-muted);font-size:14px}
+.pk-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:620px){
+  .pk-back{padding:10px}
+  .pk-dlg{max-height:calc(100svh - 20px)}
+  .pk-opt{grid-template-columns:34px minmax(0,1fr) 52px;gap:2px 10px}
+  .pk-spark{display:none}
+  .pk-trigger kbd{display:none}
+}
+</style>
+<script>
+/* PaperPicker({button, papers:[{key,title,year,n,yearly}], total, allLabel, value, onSelect(key)}) -> {set(key)}
+   papers come ranked; key '' means all papers. */
+window.PaperPicker=function(o){
+ const btn=o.button,papers=o.papers,fmt=n=>new Intl.NumberFormat('en-US').format(n),SVG='http://www.w3.org/2000/svg';
+ const fold=s=>String(s||'').normalize('NFKD').replace(/[̀-ͯ]/g,'').toLowerCase();
+ const MAC=/Mac|iPhone|iPad/.test(navigator.platform),TOUCH=matchMedia('(pointer:coarse)').matches;
+ let value=o.value||'',back=null,dlg=null,input=null,list=null,live=null,items=[],at=0,lastFocus=null,gen=0;
+ const mk=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;};
+ const rank=new Map(papers.map((p,i)=>[p.key,i+1]));
+ for(const p of papers)p._hay=fold(p.title+' '+(p.year||''));
+ btn.classList.add('pk-trigger');btn.setAttribute('aria-haspopup','dialog');btn.replaceChildren();
+ const now=mk('span','pk-now'),kbd=mk('kbd',null,MAC?'⌘K':'Ctrl K');kbd.setAttribute('aria-hidden','true');
+ btn.append(now,kbd);
+ function label(){const p=papers.find(p=>p.key===value);now.textContent=p?p.title:o.allLabel;btn.title=p?p.title:'';btn.setAttribute('aria-label','Paper: '+(p?p.title:o.allLabel));}
+ label();
+ function spark(p){const s=document.createElementNS(SVG,'svg');s.setAttribute('viewBox','0 0 74 20');s.setAttribute('class','pk-spark');s.setAttribute('aria-hidden','true');
+  const v=p.yearly||[],mx=Math.max(1,...v),bw=74/Math.max(1,v.length);
+  v.forEach((x,i)=>{if(!x)return;const h=Math.max(1.5,Math.sqrt(x/mx)*18),r=document.createElementNS(SVG,'rect');
+   r.setAttribute('x',(i*bw+.5).toFixed(1));r.setAttribute('y',(20-h).toFixed(1));r.setAttribute('width',Math.max(1,bw-1.2).toFixed(1));r.setAttribute('height',h.toFixed(1));r.setAttribute('rx','.8');
+   r.setAttribute('fill','currentColor');r.setAttribute('opacity',x===mx?'.9':'.35');s.append(r);});return s;}
+ function hl(title,q){const t=mk('span','pk-title');if(!q){t.textContent=title;return t;}
+  const f=fold(title),i=f.indexOf(q);if(i<0||f.length!==title.length){t.textContent=title;return t;}
+  t.append(title.slice(0,i),mk('mark',null,title.slice(i,i+q.length)),title.slice(i+q.length));return t;}
+ function render(){const q=fold(input.value.trim());list.replaceChildren();gen++;
+  items=[];if(!q||fold(o.allLabel).includes(q))items.push({key:'',title:o.allLabel,n:o.total});
+  const words=q.split(/\s+/).filter(Boolean);
+  for(const p of papers)if(!words.length||words.every(w=>p._hay.includes(w)))items.push(p);
+  const nPapers=items.filter(p=>p.key).length;live.textContent=q?(nPapers?nPapers+(nPapers===1?' paper':' papers'):'No paper matches'):'';
+  if(!items.length){list.append(mk('div','pk-empty','No paper matches'));input.removeAttribute('aria-activedescendant');return;}
+  items.forEach((p,i)=>{const r=mk('div','pk-opt'+(p.key===value?' cur':''));r.id='pk-o'+gen+'-'+i;r.setAttribute('role','option');
+   const main=mk('span');main.append(hl(p.title,words[0]||''),mk('span','pk-sub',p.key?(p.year?'Published '+p.year:'Year not recorded'):fmt(papers.length)+' papers'));
+   if(p.key===value)main.append(mk('span','pk-sr',', current choice'));
+   r.append(mk('span','pk-rk',p.key?'#'+String(rank.get(p.key)).padStart(2,'0'):'ALL'),main);
+   r.append(p.key?spark(p):mk('span','pk-spark'));
+   const n=mk('span','pk-n',fmt(p.n));n.append(mk('span','pk-sr',' citing papers'));r.append(n);
+   r.addEventListener('mousemove',()=>{if(at!==i)move(i-at,true);});r.addEventListener('click',()=>pick(i));list.append(r);});
+  at=q?0:Math.max(0,items.findIndex(p=>p.key===value));move(0);}
+ function move(d,mouse){if(!items.length)return;at=(at+d+items.length)%items.length;
+  [...list.children].forEach((r,i)=>r.setAttribute('aria-selected',String(i===at)));
+  input.setAttribute('aria-activedescendant','pk-o'+gen+'-'+at);if(!mouse)list.children[at]?.scrollIntoView({block:'nearest'});}
+ // the page reacts first (it may rebuild the element that had focus), then focus returns
+ function pick(i){const p=items[i];if(!p)return;const changed=p.key!==value;shut();if(changed){value=p.key;label();o.onSelect(value);}refocus();}
+ function refocus(){(lastFocus&&lastFocus!==document.body&&document.contains(lastFocus)?lastFocus:btn).focus({preventScroll:true});}
+ function close(){if(!back)return;shut();refocus();}
+ function shut(){if(!back)return;back.remove();back=null;document.documentElement.style.overflow='';document.removeEventListener('keydown',keys,true);visualViewport?.removeEventListener('resize',fit);}
+ // keep the list above the on-screen keyboard
+ function fit(){if(dlg&&window.visualViewport)dlg.style.maxHeight=Math.max(200,visualViewport.height-(innerWidth<=620?20:110))+'px';}
+ function keys(e){if(!back)return;if(e.isComposing)return;
+  if(!dlg.contains(document.activeElement))input.focus();
+  if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close();}
+  else if(e.key==='ArrowDown'){e.preventDefault();move(1);}else if(e.key==='ArrowUp'){e.preventDefault();move(-1);}
+  else if(e.key==='PageDown'){e.preventDefault();move(Math.min(8,items.length-1-at));}else if(e.key==='PageUp'){e.preventDefault();move(-Math.min(8,at));}
+  else if(e.key==='Enter'&&document.activeElement===input){e.preventDefault();pick(at);}
+  else if(e.key==='Tab'){e.preventDefault();(document.activeElement===input?esc:input).focus();}}
+ let esc=null;
+ function open(){if(back||document.querySelector('dialog[open]'))return;lastFocus=document.activeElement;
+  back=mk('div','pk-back');dlg=mk('div','pk-dlg');dlg.setAttribute('role','dialog');dlg.setAttribute('aria-modal','true');dlg.setAttribute('aria-label','Choose a paper');
+  const head=mk('div','pk-head');head.innerHTML='<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4.2 4.2"/></svg>';
+  input=mk('input');input.type='search';input.placeholder='Search '+papers.length+' papers by title or year';input.autocomplete='off';input.spellcheck=false;
+  input.setAttribute('aria-label','Search papers by title or year');input.setAttribute('role','combobox');input.setAttribute('aria-expanded','true');input.setAttribute('aria-controls','pk-list');input.setAttribute('aria-autocomplete','list');
+  esc=mk('button','pk-esc',TOUCH?'×':'Esc');esc.type='button';esc.setAttribute('aria-label','Close');esc.addEventListener('click',close);
+  live=mk('span','pk-sr');live.setAttribute('aria-live','polite');
+  head.append(input,esc);list=mk('div','pk-list');list.id='pk-list';list.setAttribute('role','listbox');list.setAttribute('aria-label','Papers');
+  dlg.append(head,list,live);back.append(dlg);document.body.append(back);document.documentElement.style.overflow='hidden';
+  back.addEventListener('mousedown',e=>{if(e.target===back){close();return;}if(!e.target.closest('input,button'))e.preventDefault();}); // focus stays in the search box
+  input.addEventListener('input',render);
+  document.addEventListener('keydown',keys,true);visualViewport?.addEventListener('resize',fit);fit();
+  render();input.focus();}
+ btn.addEventListener('click',open);
+ if(o.shortcut!==false)document.addEventListener('keydown',e=>{if(e.repeat||e.isComposing||e.altKey||e.key.toLowerCase()!=='k'||!(MAC?e.metaKey:e.ctrlKey))return;e.preventDefault();back?close():open();});
+ return {set(k){value=k||'';label();},open};
+};
+</script>

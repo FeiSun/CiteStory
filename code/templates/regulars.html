@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="referrer" content="no-referrer">
+<title>Citation Regulars</title>
+<script src="views.js"></script>
+<!--SHELL-->
+<style>
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart .grid line { stroke: var(--rule); }
+.chart .grid text { fill: var(--ink-3); font-size: 11.5px; }
+.chart .row { cursor: pointer; outline: none; }
+.chart .row .bg { fill: transparent; }
+.chart .row:hover .bg, .chart .row[aria-pressed=true] .bg { fill: var(--accent-soft); }
+.chart .row:focus-visible .bg { stroke: var(--focus); stroke-width: 2; }
+.chart .row .name { fill: var(--ink); font: 500 15px var(--font-display); }
+.chart .row .inst { fill: var(--ink-3); font-size: 12px; }
+.chart .row .n { fill: var(--ink); font-size: 13px; font-weight: 600; }
+.chart .row .base { stroke: var(--rule-strong); }
+.chart .u { fill: var(--dot); }
+.chart .u.several { fill: var(--accent); }
+.chart .u.year { fill: transparent; stroke: var(--dot); stroke-width: 1.1; }
+.chart .u.year.several { stroke: var(--accent); }
+.chart .row.fade, .chart .u.fade { opacity: .22; }
+.key i { border-radius: 1.5px; }
+.stage .key { margin: 0 0 10px; }
+.more { margin-top: 12px; }
+.insts { list-style: none; margin: 0; padding: 0; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1>Regulars</h1>
+    <p class="lede" id="lede"></p>
+  </div>
+  <div class="tools">
+    <div class="seg" role="group" aria-label="Order" id="sortSeg">
+      <button type="button" data-sort="n" aria-pressed="true">Most papers</button>
+      <button type="button" data-sort="first" aria-pressed="false">Earliest</button>
+      <button type="button" data-sort="span" aria-pressed="false">Longest</button>
+    </div>
+    <button type="button" class="text-btn" id="ownBtn" aria-pressed="false">Co-authors</button>
+    <button type="button" class="text-btn" id="aboutBtn">About the data</button>
+    <a class="icon-btn" href="index.html" aria-label="All views" title="All views"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M2.5 7.5 8 3l5.5 4.5M4 6.5V13h3V9.5h2V13h3V6.5"/></svg></a>
+    <button type="button" class="icon-btn" id="themeBtn" aria-label="Switch theme"></button>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="stage" aria-label="Authors and their citing papers by quarter">
+    <div class="key" aria-hidden="true"><span><i></i>cites one</span><span><i class="several"></i>cites several</span><span><i class="hollow"></i>year known only</span></div>
+    <div class="chart" id="chart"></div>
+    <button type="button" class="text-btn more" id="more" hidden></button>
+  </section>
+
+  <aside class="side">
+    <div class="figures">
+      <div class="fig"><div class="k">Authors</div><div class="v" id="fAuthors"></div></div>
+      <div class="fig"><div class="k">Their citing papers</div><div class="v" id="fWorks"></div></div>
+    </div>
+
+    <section id="instSec" aria-labelledby="instH">
+      <h2 id="instH">Where they work</h2>
+      <ol class="rows" id="insts"></ol>
+    </section>
+
+    <section id="detail" hidden>
+      <div class="detail-head">
+        <h2 id="dName"></h2>
+        <button type="button" class="icon-btn" id="dClose" aria-label="Close author"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+      </div>
+      <p class="detail-sub" id="dSub"></p>
+      <div class="chips" id="dChips"></div>
+      <h3>Cites most</h3>
+      <ol class="rows" id="dCites"></ol>
+      <h3>Citing papers</h3>
+      <ul class="papers" id="dPapers"></ul>
+      <button type="button" class="text-btn more" id="dMore" hidden>Show more</button>
+    </section>
+  </aside>
+</main>
+
+<dialog id="about" aria-labelledby="aboutH">
+  <button type="button" class="icon-btn close" aria-label="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+  <h2 id="aboutH">About the data</h2>
+  <div id="aboutBody"></div>
+</dialog>
+<span id="live" class="sr" aria-live="polite"></span>
+
+<script>
+(function () {
+  "use strict";
+  var S = window.Shell, V = S.V, P = V.papers, W = V.works, A = V.citers, $ = S.$, fmt = S.fmt, el = S.el;
+  var chart = $("chart"), tip = S.tip(chart), NS = "http://www.w3.org/2000/svg", U = 7, tEnd = S.tEnd;
+  var sort = "n", own = false, selected = -1, expanded = false, inst = "", det = null, shownPapers = 12;
+  A.forEach(function (a) { a.dated = a.w.filter(function (i) { return W[i][0] != null; }); a.first = a.dated.length ? W[a.dated[0]][0] : Infinity; a.last = a.dated.length ? W[a.dated[a.dated.length - 1]][0] : -Infinity; });
+  function s(tag, attrs, text) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; }
+  function pool() { return A.map(function (_, i) { return i; }).filter(function (i) { return own || !A[i].own; }); }
+  function rows() {
+    var key = { n: function (i) { return -A[i].w.length; }, first: function (i) { return A[i].first; }, span: function (i) { return -(A[i].last - A[i].first); } }[sort];
+    var all = pool().sort(function (a, b) { return key(a) - key(b) || A[a].name.localeCompare(A[b].name); });
+    var keep = expanded ? all : all.slice(0, 25);
+    if (selected >= 0 && keep.indexOf(selected) < 0 && all.indexOf(selected) >= 0) keep.push(selected);
+    $("more").hidden = all.length <= 25; $("more").textContent = expanded ? "Show fewer" : "Show all " + all.length;
+    return keep;
+  }
+
+  function render() {
+    var width = chart.clientWidth, narrow = width < 640, labelW = narrow ? 0 : Math.min(300, width * 0.36), list = rows();
+    // the axis starts where the bulk of the squares start; the few earlier ones wait in a gutter on the left
+    var all = []; list.forEach(function (i) { A[i].dated.forEach(function (w) { all.push(W[w][0]); }); }); all.sort(function (a, b) { return a - b; });
+    var tA = Math.floor(all.length ? all[Math.floor(all.length * 0.01)] : tEnd - 1), gutter = all.length && all[0] < tA ? 2 * U + 8 : 0;
+    var x0 = labelW + (narrow ? 2 : 14) + gutter, x1 = width - 40, top = 22, nq = Math.max(1, Math.ceil((tEnd - tA) * 4));
+    var qw = (x1 - x0) / nq, cols = Math.max(1, Math.floor(qw / U)), unit = U - 1.5;
+    function quarter(t) { return (Math.floor(t) - tA) * 4 + Math.floor(S.monthOf(t) / 3); }      // by calendar month, not by fraction of the year
+    // stack heights first, then rows
+    var y = top, geo = list.map(function (i) {
+      var a = A[i], per = new Map(), tallest = 0;
+      a.dated.forEach(function (w) { var q = W[w][0] < tA ? -1 : Math.min(nq - 1, quarter(W[w][0])); if (!per.has(q)) per.set(q, []); per.get(q).push(w); });
+      per.forEach(function (ws, q) { tallest = Math.max(tallest, Math.ceil(ws.length / (q < 0 ? 2 : cols))); });
+      var h = Math.max(narrow ? 44 : 32, tallest * U + (narrow ? 30 : 14)), o = { i: i, y: y, h: h, per: per }; y += h; return o;
+    });
+    var svg = s("svg", { viewBox: "0 0 " + width + " " + (y + 4), height: y + 4, role: "list", "aria-label": "Authors who cite these papers most often" });
+    var grid = s("g", { "class": "grid" }), every = qw * 4 < 30 ? 2 : 1;
+    for (var yr = tA; yr <= Math.floor(tEnd); yr++) {
+      var gx = Math.round(x0 + (yr - tA) * 4 * qw) + 0.5;
+      grid.appendChild(s("line", { x1: gx, x2: gx, y1: top - 4, y2: y }));
+      if ((yr - tA) % every === 0) grid.appendChild(s("text", { x: gx + 3, y: top - 9 }, qw * 4 < 44 ? "’" + String(yr).slice(2) : String(yr)));
+    }
+    if (gutter && !narrow) grid.appendChild(s("text", { x: x0 - 8, y: top - 9, "text-anchor": "end" }, "earlier"));
+    svg.appendChild(grid);
+    geo.forEach(function (o) {
+      var a = A[o.i], base = o.y + o.h - 6, dimRow = inst && a.inst !== inst;
+      var g = s("g", { "class": "row" + (dimRow ? " fade" : ""), tabindex: 0, role: "button", "data-i": o.i, "aria-pressed": String(o.i === selected),
+        "aria-label": a.name + ", " + a.w.length + " citing papers" + (a.inst ? ", " + a.inst : "") + (a.dated.length ? ", " + Math.floor(a.first) + " to " + Math.floor(a.last) : "") });
+      g.appendChild(s("rect", { "class": "bg", x: 0, y: o.y + 1, width: width, height: o.h - 2, rx: 4 }));
+      if (narrow) {
+        g.appendChild(s("text", { "class": "name", x: 4, y: o.y + 18 }, a.name));
+        g.appendChild(s("text", { "class": "n", x: width - 4, y: o.y + 18, "text-anchor": "end" }, String(a.w.length)));
+      } else {
+        var name = s("text", { "class": "name", x: 6, y: base - 3 }, a.name); g.appendChild(name);
+        var room = Math.floor((labelW - 16 - a.name.length * 8.2) / 6.2);
+        if (a.inst && room > 8) name.appendChild(s("tspan", { "class": "inst", dx: 9 }, a.inst.length > room ? a.inst.slice(0, room - 1).trimEnd() + "…" : a.inst));
+        g.appendChild(s("text", { "class": "n", x: width - 4, y: base - 3, "text-anchor": "end" }, String(a.w.length)));
+      }
+      if (a.dated.length) g.appendChild(s("line", { "class": "base", x1: a.first < tA ? x0 - gutter : x0 + quarter(a.first) * qw, x2: Math.min(x1, x0 + (quarter(a.last) + 1) * qw), y1: base + 0.5, y2: base + 0.5 }));
+      o.per.forEach(function (ws, q) {
+        var left = q < 0 ? x0 - gutter : x0 + q * qw + (qw - cols * U + 1.5) / 2, cq = q < 0 ? 2 : cols;
+        ws.forEach(function (w, k) {
+          var cls = "u" + (W[w][1].length > 1 ? " several" : "") + (W[w][3] & 2 ? " year" : "");
+          var r = s("rect", { "class": cls, x: (left + (k % cq) * U).toFixed(1), y: (base - 1 - (Math.floor(k / cq) + 1) * U + 1.5).toFixed(1), width: unit, height: unit, rx: 1 });
+          r.dataset.w = w; g.appendChild(r);
+        });
+      });
+      svg.appendChild(g);
+    });
+    var old = chart.querySelector("svg"), focus = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.i : null;
+    if (old) old.remove(); chart.prepend(svg);
+    if (focus != null) { var again = chart.querySelector('g[data-i="' + focus + '"]'); if (again) again.focus({ preventScroll: true }); }
+  }
+
+  chart.addEventListener("click", function (e) { var g = e.target.closest("g.row"); if (g) choose(+g.dataset.i === selected ? -1 : +g.dataset.i); });
+  chart.addEventListener("keydown", function (e) { var g = e.target.closest("g.row"); if (g && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); choose(+g.dataset.i === selected ? -1 : +g.dataset.i); } });
+  chart.addEventListener("pointermove", function (e) {
+    var u = e.target.closest ? e.target.closest("rect.u") : null; if (!u) { tip.hide(); return; }
+    var wi = +u.dataset.w, w = W[wi], r = chart.getBoundingClientRect();
+    if (!det) S.details().then(function (d) { det = d; }).catch(function () {});
+    tip.show(e.clientX - r.left, e.clientY - r.top, [el("div", "t-name", det ? det[wi][0] || "Untitled" : "Loading…"), el("div", "t-meta", S.workDate(w)),
+      el("div", "t-meta", "Cites " + w[1].slice(0, 3).map(function (q) { return S.shortName(P[q].t, 26); }).join(", ") + (w[1].length > 3 ? " +" + (w[1].length - 3) : ""))]);
+  });
+  chart.addEventListener("pointerleave", function () { tip.hide(); });
+
+  // ---------- side panel ----------
+  function choose(i) { selected = i; shownPapers = 12; inst = ""; render(); panel(); if (i >= 0) S.announce(A[i].name + ", " + A[i].w.length + " citing papers"); }
+  $("dClose").addEventListener("click", function () { var was = selected; choose(-1); var g = chart.querySelector('g[data-i="' + was + '"]'); if (g) g.focus(); });
+  function mark(paper) {                 // fade the units of the selected author that do not cite this paper
+    chart.querySelectorAll('g[data-i="' + selected + '"] rect.u').forEach(function (r) { r.classList.toggle("fade", paper >= 0 && W[+r.dataset.w][1].indexOf(paper) < 0); });
+  }
+  function panel() { S.keepFocus(document.querySelector(".side"), fill); }
+  function fill() {
+    var list = pool(), open = selected >= 0; $("detail").hidden = !open; $("instSec").hidden = open;
+    $("fAuthors").textContent = list.length;
+    var works = new Set(); list.forEach(function (i) { A[i].w.forEach(function (w) { works.add(w); }); }); $("fWorks").textContent = fmt(works.size);
+    if (!open) {
+      var by = new Map(); list.forEach(function (i) { if (A[i].inst) by.set(A[i].inst, (by.get(A[i].inst) || 0) + 1); });
+      var top = Array.from(by).sort(function (a, b) { return b[1] - a[1] || a[0].localeCompare(b[0]); }).filter(function (x) { return x[1] > 1; }).slice(0, 10);
+      $("insts").replaceChildren.apply($("insts"), top.map(function (x) {
+        var li = el("li"), b = el("button", "row-btn" + (inst === x[0] ? " on" : "")); b.type = "button"; b.setAttribute("aria-pressed", String(inst === x[0]));
+        b.append(el("span", "nm", x[0]), el("span", "ct", x[1])); b.addEventListener("click", function () { inst = inst === x[0] ? "" : x[0]; render(); panel(); }); li.append(b); return li;
+      }));
+      $("instSec").hidden = !top.length; return;
+    }
+    var a = A[selected];
+    $("dName").textContent = a.name;
+    $("dSub").textContent = [a.inst, a.own ? "co-author" : ""].filter(Boolean).join(" · ");
+    function chip(v, k) { var c = el("div", "chip"); c.append(el("b", null, v), el("span", null, k)); return c; }
+    var several = a.w.filter(function (w) { return W[w][1].length > 1; }).length;
+    $("dChips").replaceChildren(chip(String(a.w.length), "citing papers"), chip(a.dated.length ? Math.floor(a.first) + "–" + Math.floor(a.last) : "–", "first to latest"), chip(String(several), "cite several"));
+    var per = new Map(); a.w.forEach(function (w) { W[w][1].forEach(function (j) { per.set(j, (per.get(j) || 0) + 1); }); });
+    $("dCites").replaceChildren.apply($("dCites"), Array.from(per).sort(function (x, y) { return y[1] - x[1] || x[0] - y[0]; }).slice(0, 8).map(function (x) {
+      var li = el("li"), b = el("button", "row-btn"); b.type = "button"; b.append(el("span", "nm", P[x[0]].t), el("span", "ct", x[1]));
+      b.title = P[x[0]].t;
+      b.addEventListener("pointerenter", function () { mark(x[0]); }); b.addEventListener("pointerleave", function () { mark(-1); });
+      b.addEventListener("focus", function () { mark(x[0]); }); b.addEventListener("blur", function () { mark(-1); });
+      b.addEventListener("click", function () { window.open(S.safeLink(P[x[0]].link), "_blank", "noopener"); });
+      li.append(b); return li;
+    }));
+    papers();
+  }
+  function papers() {
+    var a = A[selected], ul = $("dPapers");
+    if (!det) { ul.replaceChildren(el("li", "m", "Loading papers…")); S.details().then(function (d) { det = d; if (selected >= 0) papers(); }).catch(function () { ul.replaceChildren(el("li", "m", "The paper titles could not be loaded.")); }); $("dMore").hidden = true; return; }
+    var list = a.w.slice().reverse();
+    ul.replaceChildren.apply(ul, list.slice(0, shownPapers).map(function (w) {
+      var li = el("li"), link = el("a", null, det[w][0] || "Untitled"); link.href = S.safeLink(det[w][2]); link.target = "_blank"; link.rel = "noopener noreferrer";
+      li.append(link, el("div", "m", S.workDate(W[w]) + " · cites " + W[w][1].map(function (q) { return S.shortName(P[q].t, 24); }).join(", "))); return li;
+    }));
+    $("dMore").hidden = list.length <= shownPapers;
+  }
+  $("dMore").addEventListener("click", function () { shownPapers += 24; papers(); });
+  $("more").addEventListener("click", function () { expanded = !expanded; render(); });
+  S.seg($("sortSeg"), "sort", function (k) { sort = k; render(); });
+  $("ownBtn").addEventListener("click", function () { own = !own; $("ownBtn").setAttribute("aria-pressed", String(own)); if (selected >= 0 && A[selected].own && !own) selected = -1; inst = ""; render(); panel(); });
+
+  $("lede").append("The authors whose papers cite " + V.owner + " most often, one square per paper");
+  $("aboutBody").append(
+    el("p", null, "Each row is an author; each square is one of their papers that cites " + V.owner + ". Squares are stacked by the quarter in which the paper appeared, so a tall stack is a busy quarter and a long row is a reader who kept coming back."),
+    el("p", null, "The " + A.filter(function (a) { return !a.own; }).length + " authors with the most citing papers are listed. Co-authors of the cited papers are hidden until “Co-authors” is switched on. Authors are told apart by their OpenAlex author id, which is not perfect: one person can appear twice, and two people can be merged."),
+    el("p", null, "The time axis starts where almost all of the squares start; the few older papers are stacked under “earlier”, and their dates are in the tooltip. A hollow square is a paper known only by its year; it is placed on a fixed day in that year. Undated papers are counted in an author’s total but have no square. Institution is the one an author most often signs with. The owner is never listed; an author with no OpenAlex id is also left out when the name matches the owner's, which can hide a namesake. Snapshot " + V.snapshot.slice(0, 10) + ", from OpenAlex."));
+  S.about($("aboutBtn"), $("about"));
+  S.onEscape(function () { if (selected >= 0) choose(-1); });
+  var raf = 0; new ResizeObserver(function () { cancelAnimationFrame(raf); raf = requestAnimationFrame(render); }).observe(chart);
+  render(); panel();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="referrer" content="no-referrer">
+<title>Citation Race</title>
+<script src="views.js"></script>
+<!--SHELL-->
+<!--PAPER_PICKER-->
+<style>
+.clockbar { display: flex; align-items: center; gap: 12px; margin: 2px 0 6px; }
+.clockbar .when { text-align: left; font-size: 20px; min-width: 0; }
+.clockbar .when small { display: inline; margin-left: 10px; font-size: 12.5px; }
+.lanes { position: relative; }
+#lanes { width: 100%; cursor: crosshair; touch-action: pan-y; }
+#lanes.pointing { cursor: pointer; }
+/* the slider's thumb is the playhead: its track lies exactly over the time axis */
+#time { position: absolute; top: 0; height: 18px; margin: 0; -webkit-appearance: none; appearance: none; background: transparent; cursor: ew-resize; }
+#time::-webkit-slider-runnable-track { height: 18px; background: transparent; }
+#time::-moz-range-track { height: 18px; background: transparent; }
+#time::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-top: 2px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+#time::-moz-range-thumb { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+.row-btn .ct.date { font-weight: 400; color: var(--ink-2); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1>Race</h1>
+    <p class="lede" id="lede"></p>
+  </div>
+  <div class="tools">
+    <div class="seg" role="group" aria-label="Clock" id="modeSeg">
+      <button type="button" data-mode="calendar" aria-pressed="true">Calendar</button>
+      <button type="button" data-mode="age" aria-pressed="false">Since publication</button>
+    </div>
+    <button type="button" class="text-btn" id="aboutBtn">About the data</button>
+    <a class="icon-btn" href="index.html" aria-label="All views" title="All views"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M2.5 7.5 8 3l5.5 4.5M4 6.5V13h3V9.5h2V13h3V6.5"/></svg></a>
+    <button type="button" class="icon-btn" id="themeBtn" aria-label="Switch theme"></button>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="stage" aria-label="Rank over time">
+    <div class="clockbar">
+      <button type="button" class="play" id="playBtn" aria-label="Play"></button>
+      <div class="when" id="when"></div>
+    </div>
+    <div class="lanes" id="lanesWrap">
+      <canvas id="lanes" role="img" aria-label="One ribbon per paper. Its lane is its rank by cumulative citations, its thickness the number of citations. Ribbons cross where one paper overtakes another."></canvas>
+      <input type="range" id="time" aria-label="Time">
+    </div>
+  </section>
+
+  <aside class="side">
+    <div class="field"><button type="button" id="paperBtn"></button></div>
+    <div class="figures">
+      <div class="fig wide"><div class="k" id="fLeadK">Leader</div><div class="v" id="fLead"></div><div class="s" id="fLeadS"></div></div>
+    </div>
+
+    <section id="eventsSec" aria-labelledby="eventsH">
+      <h2 id="eventsH">Changes in the top three</h2>
+      <ol class="rows" id="events"></ol>
+    </section>
+
+    <section id="detail" hidden>
+      <div class="detail-head">
+        <h2 id="dName"></h2>
+        <button type="button" class="icon-btn" id="dClose" aria-label="Close paper"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+      </div>
+      <p class="detail-sub" id="dSub"></p>
+      <div class="chips" id="dChips"></div>
+      <h3 id="dPassH">Overtakes</h3>
+      <ol class="rows" id="dPass"></ol>
+    </section>
+  </aside>
+</main>
+
+<dialog id="about" aria-labelledby="aboutH">
+  <button type="button" class="icon-btn close" aria-label="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+  <h2 id="aboutH">About the data</h2>
+  <div id="aboutBody"></div>
+</dialog>
+<span id="live" class="sr" aria-live="polite"></span>
+
+<script>
+(function () {
+  "use strict";
+  var S = window.Shell, V = S.V, P = V.papers, W = V.works, N = P.length, C = S.C, $ = S.$, fmt = S.fmt, el = S.el;
+  var canvas = $("lanes"), wrap = $("lanesWrap"), slider = $("time"), tip = S.tip(wrap), tEnd = S.tEnd;
+  var STEP = 1 / 24, HOLD = 12, SMOOTH = 6;   // half-month samples; an overtake must hold six months
+  var HUES = { light: ["#2f6fb0", "#c2562e", "#16906a", "#8a5cb8", "#a8800f", "#b54a6a", "#1d7f8c", "#6f7f2a", "#8a5a3c", "#5d6b7a"],
+               dark: ["#5b9ae0", "#e0774a", "#35b08a", "#a98ae0", "#c79d2a", "#dc7396", "#3fa9b8", "#9aab45", "#b98564", "#8b9aab"] };
+
+  // ---------- citation times per paper ----------
+  var raw = P.map(function () { return []; });
+  /* The build already gives a year-only work a fixed day in its year; here each paper's year-only citations
+     are spread evenly over their year instead, so its own count rises smoothly. */
+  var yearOnly = new Map();
+  W.forEach(function (w) { if (w[0] != null && (w[3] & 2)) w[1].forEach(function (j) { var k = j + ":" + Math.floor(w[0]); yearOnly.set(k, (yearOnly.get(k) || 0) + 1); }); });
+  var seenYear = new Map();
+  W.forEach(function (w) {
+    if (w[0] == null) return;
+    w[1].forEach(function (j) {
+      if (!(w[3] & 2)) { raw[j].push(w[0]); return; }
+      var y = Math.floor(w[0]), k = j + ":" + y, i = seenYear.get(k) || 0; seenYear.set(k, i + 1);
+      raw[j].push(Math.min(tEnd, y + (i + 0.5) / yearOnly.get(k) * Math.min(1, Math.max(0.05, tEnd - y))));
+    });
+  });
+  raw.forEach(function (a) { a.sort(function (x, y) { return x - y; }); });
+  /* The clock of a paper starts in its publication year, or up to two years earlier when a preprint was
+     already being cited. A stray citation dated before that is counted from the start of the clock. */
+  var born = P.map(function (p, j) {
+    if (p.y == null) return Math.floor(raw[j][0] != null ? raw[j][0] : tEnd);
+    var early = raw[j].find(function (t) { return t >= p.y - 2; });
+    return Math.min(p.y, Math.floor(early != null ? early : p.y));
+  });
+  var cal = raw.map(function (a, j) { return a.map(function (t) { return Math.max(t, born[j]); }).sort(function (x, y) { return x - y; }); });
+  var age = cal.map(function (a, j) { return a.map(function (t) { return t - born[j]; }); });
+  var vmax = Math.max.apply(null, P.map(function (p) { return p.n; }));
+  var MIN = Math.min(10, Math.max(1, Math.ceil(vmax / 10)));     // a paper is ranked from its tenth citation (fewer for a small record)
+
+  // ---------- one model per clock: sampled values, ranks, smoothed lanes, overtakes ----------
+  function model(mode, K) {
+    var t0 = mode === "calendar" ? Math.floor(Math.min.apply(null, cal.map(function (a) { return a.length ? a[0] : tEnd; }))) : 0;
+    var t1 = mode === "calendar" ? tEnd : Math.max.apply(null, P.map(function (p, j) { return p.n >= MIN ? tEnd - born[j] : 0; }).concat([1]));   // every paper that can be ranked, not only today's top K
+    var n = Math.ceil((t1 - t0) / STEP) + 1, ts = new Float32Array(n), s, j;
+    for (s = 0; s < n; s++) ts[s] = Math.min(t1, t0 + s * STEP);
+    var val = P.map(function () { return new Int32Array(n); }), rank = P.map(function () { return new Int16Array(n); });
+    var order = [];
+    for (s = 0; s < n; s++) {
+      for (j = 0; j < N; j++) {
+        if (mode === "calendar") val[j][s] = S.upTo(cal[j], ts[s]) + (s === n - 1 ? P[j].u : 0);   // undated works join at the end
+        else val[j][s] = S.upTo(age[j], Math.min(ts[s], tEnd - born[j])) + (ts[s] >= tEnd - born[j] ? P[j].u : 0);
+      }
+      var o = []; for (j = 0; j < N; j++) if (val[j][s] >= MIN) o.push(j);
+      o.sort(function (a, b) { return val[b][s] - val[a][s] || a - b; });
+      for (j = 0; j < N; j++) rank[j][s] = 999;
+      o.forEach(function (q, r) { rank[q][s] = r; });
+      order.push(o);
+    }
+    // lanes are a moving average of the rank; prefix sums make any window cheap
+    var off = K + 1.2, pre = P.map(function () { return new Float32Array(n + 1); });
+    for (j = 0; j < N; j++) for (s = 0; s < n; s++) pre[j][s + 1] = pre[j][s] + Math.min(off, rank[j][s]);
+    // a overtakes b at s when a is ahead from s on for at least HOLD samples (or to the end)
+    var events = [], ahead = new Map();
+    for (s = 1; s < n; s++) {
+      var top = order[s].slice(0, K);
+      for (var x = 0; x < top.length; x++) for (var y = x + 1; y < top.length; y++) {
+        var a = top[x], b = top[y];
+        if (rank[a][s - 1] < rank[b][s - 1] || rank[b][s - 1] === 999) continue;     // was already ahead, or b was unranked
+        var holds = true;
+        for (var h = s; h < Math.min(n, s + HOLD); h++) if (rank[a][h] > rank[b][h]) { holds = false; break; }
+        var key = a * N + b;
+        var both = mode === "calendar" || (ts[s] <= tEnd - born[a] && ts[s] <= tEnd - born[b]);     // not against a paper that is younger than the clock
+        if (holds && both && ahead.get(key) !== s - 1) events.push({ s: s, t: ts[s], a: a, b: b, to: rank[a][s] });
+        if (holds) ahead.set(key, s);
+      }
+    }
+    var ever = []; for (j = 0; j < N; j++) { for (s = 0; s < n; s++) if (rank[j][s] < K) { ever.push(j); break; } }
+    var hue = new Map(); for (j = 0; j < Math.min(10, N); j++) hue.set(j, j);     // the ten most cited papers carry a colour, the rest are neutral
+    return { hue: hue, mode: mode, t0: t0, t1: t1, n: n, ts: ts, val: val, rank: rank, pre: pre, order: order, events: events, ever: ever, K: K };
+  }
+
+  // ---------- state ----------
+  var rowAt = new Map(), snap = true, lastDraw = 0;
+  var mode = "calendar", K = 12, M = null, time = tEnd, playing = false, selected = -1, hover = -1, dirty = true;
+  var width = 0, height = 0, ctx = null, laneH = 40, top = 46, x0 = 14, x1 = 0, labelW = 300, narrow = false;
+  var X = function (t) { return x0 + (x1 - x0) * (t - M.t0) / (M.t1 - M.t0); };
+  var sampleAt = function (t) { return t >= M.t1 - 0.006 ? M.n - 1 : Math.max(0, Math.min(M.n - 1, (t - M.t0) / STEP)); };
+  function at(arr, f) { var i = Math.floor(f), g = f - i; return i >= arr.length - 1 ? arr[arr.length - 1] : arr[i] + (arr[i + 1] - arr[i]) * g; }
+  var laneY = function (r) { return top + (r + 0.5) * laneH; }, headS = 0;
+  /* lane of paper j at sample s: its rank averaged over a window that closes at both ends of the data and
+     at the playhead (headS), so the head of a ribbon always sits on the paper's true rank */
+  function LN(j, s) { var w = Math.max(0, Math.min(SMOOTH, s, M.n - 1 - s, headS - s)); return (M.pre[j][s + w + 1] - M.pre[j][s - w]) / (2 * w + 1); }
+  var half = function (v) { return Math.max(0.8, 0.5 * laneH * 0.86 * Math.sqrt(v / vmax)); };
+  var color = function (j) { return M.hue.has(j) ? HUES[C.dark ? "dark" : "light"][M.hue.get(j)] : C["ink-2"]; };
+  var alive = function (j, t) { return mode === "calendar" || t <= tEnd - born[j] + 1e-6; };
+
+  function layout() {
+    narrow = wrap.clientWidth < 640; K = narrow ? 8 : 12; labelW = narrow ? 150 : Math.min(330, wrap.clientWidth * 0.36);
+    laneH = Math.max(34, Math.min(54, (innerHeight - 190) / K));
+    var s = S.size(canvas, wrap.clientWidth, top + K * laneH + 10); canvas.style.height = s.height + "px";
+    ctx = s.ctx; width = s.width; height = s.height; x1 = width - labelW;
+    if (!M || M.K !== K || M.mode !== mode) rebuild(M && M.mode === mode);
+    slider.style.left = (x0 - 9) + "px"; slider.style.width = (x1 - x0 + 18) + "px";
+    dirty = true;
+  }
+  function rebuild(keepTime) {
+    M = model(mode, K); snap = true;
+    time = keepTime ? Math.min(M.t1, Math.max(M.t0, time)) : mode === "calendar" ? M.t1 : Math.min(M.t1, 4);
+    if (player) { player.setRange(M.t0, M.t1, mode === "calendar" ? null : S.linear(M.t0, M.t1)); player.set(time, true); }
+    panel();
+  }
+
+  // ---------- drawing ----------
+  function ribbon(g, j, f) {              // the path of paper j from its first ranked sample to sample position f
+    var val = M.val[j], last = Math.floor(f), s = 0, pts = [];
+    while (s <= last && M.rank[j][Math.min(M.n - 1, s + SMOOTH)] === 999) s++;     // below the lanes until its first ranked month
+    for (; s <= last; s++) pts.push([X(M.ts[s]), laneY(LN(j, s)), half(val[s])]);
+    if (f > last && last < M.n - 1) pts.push([X(M.ts[last] + (f - last) * STEP), laneY(LN(j, last)), half(at(val, f))]);
+    if (pts.length < 2) return null;
+    g.beginPath(); g.moveTo(pts[0][0], pts[0][1] - pts[0][2]);
+    var i; for (i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1] - pts[i][2]);
+    for (i = pts.length - 1; i >= 0; i--) g.lineTo(pts[i][0], pts[i][1] + pts[i][2]);
+    g.closePath(); return pts[pts.length - 1];
+  }
+  function draw() {
+    dirty = false;
+    headS = Math.floor(sampleAt(time));
+    var now = performance.now(), ease = 1 - Math.exp(-Math.min(200, now - lastDraw) / 110); lastDraw = now;
+    var g = ctx, f = sampleAt(time), xp = X(time), focus = selected >= 0 ? selected : hover, dimOthers = focus >= 0 && M.ever.indexOf(focus) >= 0, j, i;
+    g.clearRect(0, 0, width, height);
+    // axis
+    g.font = "11.5px " + C.ui; g.textBaseline = "alphabetic"; g.lineWidth = 1;
+    var gap = (x1 - x0) / (M.t1 - M.t0), every = gap < 26 ? 2 : 1, shortYear = gap < 44;
+    for (var y = Math.ceil(M.t0); y <= Math.floor(M.t1); y++) {
+      var x = Math.round(X(y)) + 0.5;
+      g.strokeStyle = C.rule; g.beginPath(); g.moveTo(x, top - 4); g.lineTo(x, height - 6); g.stroke();
+      if ((y - Math.ceil(M.t0)) % every) continue;
+      g.fillStyle = C["ink-3"]; g.textAlign = "center";
+      g.fillText(mode === "calendar" ? (shortYear ? "’" + String(y).slice(2) : String(y)) : y + " y", x, top - 10);
+    }
+    // ribbons: the leaders last, so they lie on top
+    g.save(); g.beginPath(); g.rect(0, top - 2, x1 + 1, height - top - 4); g.clip();
+    M.ever.slice().sort(function (a, b) { return M.rank[b][headS] - M.rank[a][headS]; }).forEach(function (q) {
+      var endF = mode === "age" ? Math.min(f, sampleAt(tEnd - born[q])) : f, head = ribbon(g, q, endF);
+      if (!head) return;
+      g.globalAlpha = dimOthers && q !== focus ? 0.16 : M.hue.has(q) ? 0.86 : 0.5; g.fillStyle = color(q); g.fill();
+      if (endF < f) {                                // younger than the clock: its count is frozen from here on
+        g.globalAlpha = dimOthers && q !== focus ? 0.12 : 0.6; g.strokeStyle = color(q); g.lineWidth = 1.2; g.setLineDash([2, 4]); g.beginPath(); g.moveTo(head[0], head[1]);
+        for (i = Math.ceil(endF); i <= headS; i++) g.lineTo(X(M.ts[i]), laneY(LN(q, i)));
+        g.lineTo(xp, laneY(LN(q, headS))); g.stroke(); g.setLineDash([]);
+      }
+    });
+    g.restore(); g.globalAlpha = 1;
+
+    // overtakes of the paper in focus; otherwise the changes of leader
+    var marks = M.events.filter(function (e) { return e.t <= time && (focus >= 0 ? e.a === focus : e.to === 0); });
+    marks.forEach(function (e) {
+      var mx = X(e.t), my = laneY(LN(e.a, e.s));
+      g.fillStyle = C.bg; g.strokeStyle = color(e.a); g.lineWidth = 1.6; g.beginPath(); g.arc(mx, my, 4, 0, 7); g.fill(); g.stroke();
+    });
+    var flag = null;
+    if (focus < 0) flag = marks[marks.length - 1];
+    if (flag && !narrow) {
+      var fx = X(flag.t), fy = laneY(LN(flag.a, flag.s)), text = S.shortName(P[flag.a].t, 26) + " takes the lead, " + (mode === "calendar" ? label(flag.t) : "aged " + label(flag.t).trim());
+      g.font = "italic 13px " + C.display; var tw = g.measureText(text).width, left = fx - tw - 14 > x0;
+      var px = left ? fx - 10 - tw : fx + 10, py = fy + 18;
+      g.globalAlpha = 0.85; g.fillStyle = C.bg; g.beginPath(); g.rect(px - 5, py - 10, tw + 10, 20); g.fill(); g.globalAlpha = 1;
+      g.textAlign = "left"; g.textBaseline = "middle"; g.fillStyle = C.ink; g.fillText(text, px, py);
+    }
+
+    // playhead
+    g.strokeStyle = C.accent; g.lineWidth = 1.2; g.beginPath(); g.moveTo(xp, 14); g.lineTo(xp, height - 6); g.stroke();
+
+    // the board: every ranked paper at the playhead, in its lane
+    g.textBaseline = "middle";
+    var nameX = x1 + (narrow ? 26 : 44), valX = width - 2;
+    // rows sit on whole ranks and slide when two papers swap; a hairline ties each row to its ribbon
+    var board = M.order[headS].slice(0, K + 1).map(function (q, i) { return { q: q, r: i, ln: i }; }), seen = new Set();
+    board.forEach(function (o) {
+      var was = rowAt.get(o.q); seen.add(o.q);
+      if (was == null || S.reduce || snap) was = o.r; else if (Math.abs(o.r - was) > 0.01) { was += (o.r - was) * ease; dirty = true; } else was = o.r;
+      rowAt.set(o.q, was); o.row = was;
+    });
+    rowAt.forEach(function (_, q) { if (!seen.has(q)) rowAt.delete(q); });
+    snap = false;
+    board.forEach(function (o) {
+      var q = o.q, ln = o.ln; if (o.row > K - 0.35) return;
+      var yy = laneY(o.row), a = Math.max(0, Math.min(1, (K - 0.35 - o.row) * 3)), v = M.val[q][headS], dim = dimOthers && q !== focus;
+      g.globalAlpha = a * (dim ? 0.35 : 1);
+      g.strokeStyle = color(q); g.lineWidth = 1; g.beginPath(); g.moveTo(xp + 3, laneY(ln)); g.lineTo(x1 + (narrow ? 4 : 10), yy); g.globalAlpha *= 0.4; g.stroke(); g.globalAlpha = a * (dim ? 0.35 : 1);
+      g.fillStyle = color(q); g.beginPath(); g.arc(x1 + (narrow ? 12 : 22), yy, M.hue.has(q) ? 4 : 3, 0, 7); g.fill();
+      g.textAlign = "right"; g.font = "600 13px " + C.ui; g.fillStyle = C.ink; var vt = fmt(v); g.fillText(vt, valX, yy);
+      var room = valX - g.measureText(vt).width - 10 - nameX;
+      g.textAlign = "left"; g.font = (q === focus ? "600 " : "500 ") + (narrow ? "13px " : "15px ") + C.display;
+      g.fillStyle = alive(q, time) ? C.ink : C["ink-3"]; g.fillText(fit(g, S.shortName(P[q].t, narrow ? 18 : 40), room), nameX, yy);
+    });
+    g.globalAlpha = 1;
+  }
+  function fit(g, s, w) { if (g.measureText(s).width <= w) return s; var lo = 0, hi = s.length; while (lo < hi) { var m = (lo + hi + 1) >> 1; if (g.measureText(s.slice(0, m) + "…").width <= w) lo = m; else hi = m - 1; } return s.slice(0, lo).replace(/\s+$/, "") + "…"; }
+  function label(t) { if (mode === "calendar") return S.monthLabel(t); var m = Math.round(t * 12); return (m >= 12 ? Math.floor(m / 12) + " y " : "") + (m % 12 ? m % 12 + " mo" : m >= 12 ? "" : "0 mo"); }
+  (function frame() { if (dirty && M) draw(); requestAnimationFrame(frame); })();
+
+  /* pointer position inside the canvas */
+  function ex(e) { return e.clientX - canvas.getBoundingClientRect().left; }
+  function ey(e) { return e.clientY - canvas.getBoundingClientRect().top; }
+
+  // ---------- picking ----------
+  function pick(mx, my) {
+    var f = sampleAt(time);
+    if (mx > x1) {                                    // the board
+      var best = -1, bd = laneH * 0.5;
+      M.order[Math.floor(f)].slice(0, K).forEach(function (q, i) { var d = Math.abs(laneY(i) - my); if (d < bd) { bd = d; best = q; } });
+      return { j: best, f: f };
+    }
+    var t = M.t0 + (mx - x0) / (x1 - x0) * (M.t1 - M.t0); if (t > time || t < M.t0) return { j: -1 };
+    var fs = sampleAt(t), hit = -1, hd = Infinity;
+    M.ever.forEach(function (q) {
+      var ln = LN(q, Math.round(fs)); if (ln > K) return;
+      var d = Math.abs(laneY(ln) - my), lim = Math.max(7, half(at(M.val[q], fs)) + 2);
+      if (d < lim && d < hd) { hd = d; hit = q; }
+    });
+    return { j: hit, f: fs, t: t };
+  }
+  canvas.addEventListener("pointermove", function (e) {
+    if (e.pointerType === "touch") return;
+    var hit = pick(ex(e), ey(e));
+    if (hit.j !== hover) { hover = hit.j; dirty = true; }
+    canvas.classList.toggle("pointing", hit.j >= 0);
+    if (hit.j < 0 || ex(e) > x1) { tip.hide(); return; }
+    var r = M.rank[hit.j][Math.round(hit.f)];
+    tip.show(ex(e), ey(e), [el("div", "t-name", P[hit.j].t), el("div", "t-meta", label(hit.t) + " · " + fmt(at(M.val[hit.j], hit.f)) + " citing papers" + (r < 999 ? " · #" + (r + 1) : ""))]);
+  });
+  canvas.addEventListener("pointerleave", function () { if (hover >= 0) { hover = -1; dirty = true; } tip.hide(); });
+  canvas.addEventListener("click", function (e) {
+    var hit = pick(ex(e), ey(e));
+    if (hit.j >= 0) choose(hit.j === selected ? -1 : hit.j);
+    else if (ex(e) <= x1 && ex(e) >= x0) { player.stop(); player.set(M.t0 + (ex(e) - x0) / (x1 - x0) * (M.t1 - M.t0)); }
+    else choose(-1);
+  });
+
+  // ---------- side panel ----------
+  var paperPicker = S.picker($("paperBtn"), function (j) { choose(j); });
+  function choose(j) { selected = j; paperPicker.set(j < 0 ? "" : String(j)); dirty = true; panel(); if (j >= 0) S.announce(P[j].t + " selected"); }
+  $("dClose").addEventListener("click", function () { choose(-1); });
+  function eventRow(e, text, sub) {
+    var li = el("li"), b = el("button", "row-btn"); b.type = "button";
+    b.append(el("span", "nm", text), el("span", "ct date", label(e.t)), el("span", "sub", sub));
+    b.addEventListener("click", function () { player.stop(); player.set(Math.min(M.t1, e.t + 0.25)); });
+    li.append(b); return li;
+  }
+  function panel() { S.keepFocus(document.querySelector(".side"), fill); }
+  function fill() {
+    if (!M) return;
+    var f = Math.floor(sampleAt(time)), lead = M.order[f][0];
+    $("fLeadK").textContent = mode === "calendar" ? "Leader, " + label(time) : "Leader " + label(time).trim() + " after publication";
+    $("fLead").textContent = lead != null ? P[lead].t : "No citations yet";
+    $("fLeadS").textContent = lead != null ? fmt(M.val[lead][f]) + " citing papers" : "";
+    var open = selected >= 0; $("detail").hidden = !open; $("eventsSec").hidden = open;
+    if (!open) {
+      var ev = M.events.filter(function (e) { return e.to <= 2; });
+      $("events").replaceChildren.apply($("events"), ev.map(function (e) { return eventRow(e, S.shortName(P[e.a].t, 40), "passes " + S.shortName(P[e.b].t, 34) + " for #" + (e.to + 1)); }));
+      $("eventsSec").hidden = !ev.length;
+      return;
+    }
+    var p = P[selected], r = M.rank[selected][f], best = 999, bestS = 0, firstIn = -1, s;
+    for (s = 0; s < M.n; s++) { var q = M.rank[selected][s]; if (q < best) { best = q; bestS = s; } if (firstIn < 0 && q < K) firstIn = s; }
+    $("dName").replaceChildren(S.paperLink(selected));
+    $("dSub").textContent = (p.y ? "Published " + p.y + " · " : "") + fmt(p.n) + " citing papers";
+    function chip(v, k) { var c = el("div", "chip"); c.append(el("b", null, v), el("span", null, k)); return c; }
+    var chips = [chip(r < 999 ? "#" + (r + 1) : "–", mode === "calendar" ? "in " + label(time) : "at " + label(time).trim())];
+    if (best < 999) chips.push(chip("#" + (best + 1), "best, from " + label(M.ts[bestS]).trim()));
+    if (firstIn >= 0) chips.push(chip(label(M.ts[firstIn]).trim(), "entered the top " + K));
+    $("dChips").replaceChildren.apply($("dChips"), chips);
+    var mine = M.events.filter(function (e) { return e.a === selected; });
+    $("dPassH").hidden = !mine.length;
+    $("dPass").replaceChildren.apply($("dPass"), mine.map(function (e) { return eventRow(e, "Passes " + S.shortName(P[e.b].t, 36), "for #" + (e.to + 1) + " with " + fmt(M.val[e.a][e.s])); }));
+  }
+
+  // ---------- clock ----------
+  var player = null, panelTimer = 0;
+  player = S.player({ button: $("playBtn"), slider: slider, when: $("when"), t0: 0, t1: 1, seconds: 26,
+    label: function (t) { return M ? [mode === "calendar" ? label(t) : label(t).trim() + " after publication", ""] : ["", ""]; },
+    onTime: function (t, isPlaying) {
+      time = t; playing = isPlaying; dirty = true;
+      if (!isPlaying) { panel(); return; }
+      if (!panelTimer) panelTimer = setTimeout(function () { panelTimer = 0; panel(); }, 250);
+    } });
+  S.seg($("modeSeg"), "mode", function (m) { player.stop(); mode = m; selected = -1; paperPicker.set(""); rebuild(); dirty = true; S.announce(m === "calendar" ? "Calendar clock" : "Every paper starts at its publication"); });
+
+  $("lede").append("Rank by cumulative citations, month by month, for the papers of " + V.owner);
+  $("aboutBody").append(
+    el("p", null, "Each ribbon is one paper. Its lane is its rank among " + V.owner + "’s " + N + " papers by the number of papers citing it so far; its thickness grows with the square root of that number. Where two ribbons cross, one paper overtakes the other. The top " + 12 + " lanes are shown (8 on a narrow screen); a ribbon that leaves them runs off the bottom."),
+    el("p", null, "“Calendar” lines the papers up by date. “Since publication” starts every paper at its own publication, so papers are compared at the same age; a paper younger than the clock keeps its present count, drawn as a dotted line."),
+    el("p", null, "Counts are sampled twice a month and lanes are smoothed over about six months, so a crossing is drawn as a gentle curve. An overtake is listed when the new order holds for at least six months."),
+    el("p", null, "A paper is ranked from its tenth citation, which keeps the early years from being a tangle of ones and twos. A paper’s clock starts in its publication year, or up to two years earlier when a preprint was already cited. A citation dated before that (a metadata error upstream) is counted from the start of the clock. " + V.stats.undated + " undated citing papers join at the end. The citations of papers known only by year are spread evenly over that year. Snapshot " + V.snapshot.slice(0, 10) + ", from OpenAlex."));
+  S.about($("aboutBtn"), $("about"));
+
+  S.onEscape(function () { if (selected >= 0) choose(-1); });
+  S.onTheme(function () { dirty = true; });
+  new ResizeObserver(layout).observe(wrap);
+  addEventListener("resize", layout);
+  layout();
+})();
+</script>
+</body>
+</html>
