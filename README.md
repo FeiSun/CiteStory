@@ -1,13 +1,29 @@
-# CiteStory
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.png">
+    <img src="docs/wordmark-light.png" alt="CiteStory" width="460">
+  </picture>
+</h1>
 
-**English** | [简体中文](README.zh-CN.md)
+<p align="center">The story behind your citations: who reads your papers, where, and since when.</p>
 
-**The story behind your citations: who reads your papers, where, and since when.** Give it a Google Scholar profile; it finds every paper that
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white" alt="Python 3.9+">
+  <img src="https://img.shields.io/badge/dependencies-none-2f7d4f" alt="No dependencies">
+  <img src="https://img.shields.io/badge/output-static_HTML-b5560f" alt="Static HTML output">
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license">
+</p>
+
+<p align="center"><a href="#atlas-where-in-the-world">Atlas</a> · <a href="#reach-how-far">Reach</a> · <a href="#story-how-it-spread">Story</a> · <a href="#flow-from-paper-to-place">Flow</a> · <a href="#constellation-papers-and-their-neighbours">Constellation</a> · <a href="#race-who-led-when">Race</a> · <a href="#regulars-who-keeps-coming-back">Regulars</a> · <a href="#record-listen-to-it">Record</a></p>
+
+<p align="center"><b>English</b> | <a href="README.zh-CN.md">简体中文</a></p>
+
+![The eight views, one after another](docs/screenshots/promo.webp)
+
+Give it a Google Scholar profile; it finds every paper that
 cites that person in [OpenAlex](https://openalex.org), places each one at the cities of its authors'
 institutions, and builds eight interactive pages from the result. Run one command again next month and the
 pages are up to date.
-
-![Atlas: every city with a citing paper, arcs drawn from home](docs/screenshots/atlas.webp)
 
 - **Eight views, one dataset.** Two maps, a long read, a flow diagram, a star chart, a race, a table of regular
   readers and a record you can play.
@@ -43,7 +59,9 @@ Why each view takes the form it does, what was tried and dropped, and how Record
 
 ### Atlas: where in the world
 
-The animation at the top of this page. A globe that unfolds into a live street-level map. Each city that has produced a citing paper is a point of
+![Atlas: every city with a citing paper, arcs drawn from home](docs/screenshots/atlas.webp)
+
+A globe that unfolds into a live street-level map. Each city that has produced a citing paper is a point of
 light, and an arc runs to it from the owner's home institution along the great circle. Press play and the
 citations arrive in order, from the first one to the snapshot date. You can pick a single paper, search any
 city, country or institution, and switch between globe and flat map.

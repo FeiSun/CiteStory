@@ -1,12 +1,28 @@
-# CiteStory
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.png">
+    <img src="docs/wordmark-light.png" alt="CiteStory" width="460">
+  </picture>
+</h1>
 
-[English](README.md) | **简体中文**
+<p align="center">你的引用背后的故事：谁在读你的论文，在哪里读，从什么时候开始读。</p>
 
-**你的引用背后的故事：谁在读你的论文，在哪里读，从什么时候开始读。** 给它一个 Google Scholar 主页，它会在
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white" alt="Python 3.9+">
+  <img src="https://img.shields.io/badge/dependencies-none-2f7d4f" alt="No dependencies">
+  <img src="https://img.shields.io/badge/output-static_HTML-b5560f" alt="Static HTML output">
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license">
+</p>
+
+<p align="center"><a href="#atlas在世界的哪里">Atlas</a> · <a href="#reach传得多远">Reach</a> · <a href="#story怎样传开">Story</a> · <a href="#flow从论文到地方">Flow</a> · <a href="#constellation论文和它的邻居">Constellation</a> · <a href="#race谁在什么时候领先">Race</a> · <a href="#regulars谁总是回来">Regulars</a> · <a href="#record听一听">Record</a></p>
+
+<p align="center"><a href="README.md">English</a> | <b>简体中文</b></p>
+
+![八个视图依次播放](docs/screenshots/promo.webp)
+
+给它一个 Google Scholar 主页，它会在
 [OpenAlex](https://openalex.org) 里找出引用这个人的所有论文，把每篇论文放到作者所在机构的城市上，再据此生成八个交互页面。
 下个月再运行一条命令，页面就是最新的。
-
-![Atlas：每个出现过引用论文的城市，弧线从家乡机构出发](docs/screenshots/atlas.webp)
 
 - **一份数据，八种视图。** 两张地图、一篇长文、一张流向图、一张星图、一场排名赛、一张常客表，还有一张可以播放的唱片。
 - **只需一个输入。** 一个 Scholar 链接就够了。自动判断出错时，有几个可选字段可以纠正。
@@ -38,7 +54,9 @@
 
 ### Atlas：在世界的哪里
 
-就是本页顶部那段动图。一个地球仪，展开后变成可以缩放到街道级别的实时地图。每个产生过引用论文的城市是一个光点，
+![Atlas：每个出现过引用论文的城市，弧线从家乡机构出发](docs/screenshots/atlas.webp)
+
+一个地球仪，展开后变成可以缩放到街道级别的实时地图。每个产生过引用论文的城市是一个光点，
 从主页主人所在机构沿大圆画一条弧线连到它。点击播放，引用按时间顺序依次出现，从第一篇一直到快照日期。
 你可以单独选一篇论文，搜索任意城市、国家或机构，也可以在地球仪和平面地图之间切换。
 
