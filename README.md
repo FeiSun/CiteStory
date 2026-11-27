@@ -43,6 +43,7 @@ The images show my own profile (11,423 citing papers from 1,307 cities, snapshot
 - [How the numbers are made](#how-the-numbers-are-made)
 - [Repository layout](#repository-layout)
 - [Credits and inspirations](#credits-and-inspirations)
+- [Why I made this](#why-i-made-this)
 - [Built with AI](#built-with-ai)
 - [License](#license)
 
@@ -378,6 +379,20 @@ from [Shipmap.org](https://www.shipmap.org) (animated movement over a dark world
 
 Constellation's rings and Record are my own ideas as far as I know. If you have seen them before, tell me
 and I will credit it.
+
+## Why I made this
+
+A long time ago I tinkered with putting my citations on a world map. I used
+[CitationMap](https://github.com/ChenLiu-1996/CitationMap) and changed some of its code along the way. I got
+a map out of it, but the experience wasn't great, mostly because Google Scholar doesn't let you scrape it,
+which got tiresome. A few years ago I also tried to get an AI to draw my travels on a world map, and that
+didn't really work either.
+
+AI has recently become very good at visualization, and what Claude can draw impressed me. I also happened to
+be building an app on OpenAlex data. One evening in November 2026, after work, the old map idea came back to
+me: I could take the citation data straight from OpenAlex and let AI do the visualization. That is how this
+project started. I have tried to draw things on a map a few times over the years, and this is the first time
+it has come out the way I pictured it.
 
 ## Built with AI
 
