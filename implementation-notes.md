@@ -45,11 +45,12 @@
 
 - Assumptions/decisions:
   - Both READMEs open with a centred wordmark ("Cite" in ink, "Story" in the accent orange, as in the video), the tagline, four badges, links to the eight views and the language switch.
-  - The wordmark is a PNG, because GitHub strips colour from README text and an SVG would fall back to another serif off the Mac. `docs/wordmark-light.png` and `docs/wordmark-dark.png` are switched with `<picture>`; `node promo/wordmark.mjs` regenerates them.
+  - The wordmark is a PNG, because GitHub strips colour from README text and an SVG would fall back to another serif off the Mac. `docs/wordmark-light.png` and `docs/wordmark-dark.png` are switched with GitHub's `#gh-light-mode-only` / `#gh-dark-mode-only` fragments, which follow the GitHub theme setting; a `<picture>` with `prefers-color-scheme` followed the operating system instead and showed the light-ink version on GitHub's light theme; `node promo/wordmark.mjs` regenerates them.
   - The first animation is now `docs/screenshots/promo.webp`, made from the promo video (960x540, 30 fps, 1283 frames, 12.2 MB, silent). GitHub does not play a video file from the repository in a README, so the video itself is not embedded.
   - `atlas.webp` moved under the Atlas heading, replacing the sentence that pointed to the top of the page.
 - Tradeoffs/deviations:
   - The badges are loaded from img.shields.io, a third-party service, on every view of the README.
+  - The static-HTML badge URL uses `%20` instead of `_`: GitHub's image proxy had cached a failed fetch of the first URL, and a new URL makes it fetch again.
   - `promo.webp` adds 12.2 MB to the repository. It was 5.8 MB at 12.5 fps, which the author found too choppy; quality 38 at 30 fps saved 2 MB but showed blocks in the flat background.
 - Implementation notes:
   - Made with `ffmpeg -vf fps=30,scale=960:540` to PNG frames, then `img2webp -lossy -q 55 -m 4 -d 33`.

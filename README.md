@@ -1,8 +1,6 @@
 <h1 align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/wordmark-dark.png">
-    <img src="docs/wordmark-light.png" alt="CiteStory" width="460">
-  </picture>
+  <img src="docs/wordmark-light.png#gh-light-mode-only" alt="CiteStory" width="460">
+  <img src="docs/wordmark-dark.png#gh-dark-mode-only" alt="CiteStory" width="460">
 </h1>
 
 <p align="center">The story behind your citations: who reads your papers, where, and since when.</p>
@@ -10,7 +8,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white" alt="Python 3.9+">
   <img src="https://img.shields.io/badge/dependencies-none-2f7d4f" alt="No dependencies">
-  <img src="https://img.shields.io/badge/output-static_HTML-b5560f" alt="Static HTML output">
+  <img src="https://img.shields.io/badge/output-static%20HTML-b5560f" alt="Static HTML output">
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license">
 </p>
 
