@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license">
 </p>
 
-<p align="center"><a href="#atlas-where-in-the-world">Atlas</a> · <a href="#reach-how-far">Reach</a> · <a href="#story-how-it-spread">Story</a> · <a href="#flow-from-paper-to-place">Flow</a> · <a href="#constellation-papers-and-their-neighbours">Constellation</a> · <a href="#race-who-led-when">Race</a> · <a href="#regulars-who-keeps-coming-back">Regulars</a> · <a href="#record-listen-to-it">Record</a></p>
+<p align="center"><a href="#atlas-where-in-the-world">Atlas</a> · <a href="#reach-how-far">Reach</a> · <a href="#story-how-it-spread">Story</a> · <a href="#flow-from-paper-to-place">Flow</a> · <a href="#constellation-papers-and-their-neighbours">Constellation</a> · <a href="#race-who-led-when">Race</a> · <a href="#regulars-who-keeps-coming-back">Regulars</a> · <a href="#record-listen-to-it">Record</a> · <a href="#year-one-year-looked-back-on">Year</a></p>
 
 <p align="center"><b>English</b> | <a href="README.zh-CN.md">简体中文</a></p>
 
@@ -20,14 +20,14 @@
 
 Give it a Google Scholar profile; it finds every paper that
 cites that person in [OpenAlex](https://openalex.org), places each one at the cities of its authors'
-institutions, and builds eight interactive pages from the result. Run one command again next month and the
+institutions, and builds nine interactive pages from the result. Run one command again next month and the
 pages are up to date.
 
-- **Eight views, one dataset.** Two maps, a long read, a flow diagram, a star chart, a race, a table of regular
-  readers and a record you can play.
+- **Nine views, one dataset.** Two maps, a long read, a flow diagram, a star chart, a race, a table of regular
+  readers, a record you can play and a look back at the year.
 - **One input.** A Scholar URL. Optional fields cover the cases the automatic guesses get wrong.
 - **Static output.** Plain HTML, CSS and JavaScript files with no build step and no framework. They open from
-  disk or from any static host. Seven of the eight pages work offline.
+  disk or from any static host. Eight of the nine pages work offline.
 - **Standard library only.** The pipeline is Python 3.9+ with no packages to install.
 
 The images show my own profile (11,423 citing papers from 1,307 cities, snapshot of 26 November 2026), in the light theme; every page also has a dark one. The animations are real recordings of the pages, sped up.
@@ -154,7 +154,35 @@ Play it, drag it round by hand, or drag the needle across the years. With sound 
 fixed note on a D Lydian scale, chosen so that the most-cited papers form a chord. A cut plays the notes of
 the papers it cites, and cuts that pass together sound together: a busy year sounds fuller, not faster.
 
-There is also an index page that links all eight and states the totals.
+### Year: the year, looked back on
+
+The latest calendar year, told in a few screens with the same dots from start to end: one dot for every paper that
+cited the work that year. The dots spell the year, turn into a ring of the year's days, stack over the years the papers they cite were written in,
+split into new and returning readers, group by the phrases in their titles, and fly to the map, where fog
+still covers every place no reader has appeared in. Along the way the page names what was new: the papers published that year and the conferences
+they went to, each one's first reader, the papers that passed a round number, the cities and countries
+reached for the first time (one stamp each), the farthest place of the year, and the distance to all the
+year's readers added up. Scrolling drives the motion; Play runs it like a short film. At the end the dots
+fly into a card: the map of the year with the conferences where the owner's papers were presented, the
+year's first citation and its farthest place; five figures (new papers, citations, readers, cities,
+countries and regions); and a stamp for every country reached for the first time. The card saves as a
+1080 × 1350 picture, or as a vector PDF through the browser's print dialog. Text is in English or Chinese.
+
+Three things are there to be felt more than read. On the ring of days, **Listen** plays the year in about 25
+seconds, with the notes of Record. Near the end, the names of everyone who wrote a citing paper that year roll
+by in the order they arrived; anyone can find their own name there and save a card of it. And the card carries the address of the page when it is on the web, or
+else where to make one.
+
+The page shows one year: the snapshot's, or in January and February the year just ended.
+
+New papers are the papers on the Scholar profile, in the year written in their venue ("SIGIR 2026"), so a
+paper OpenAlex has not matched still counts. Conference cities are not in OpenAlex. They come from a small
+table, `code/venues.json`; a paper whose conference is not listed there is counted but left off the route.
+The stamps of new countries show a small line drawing of the city the paper arrived in, from
+`code/landmarks.json`; a city that is not listed there gets the outline of its country, and drawings for more
+cities are welcome. Every scene has a button that saves it as a picture.
+
+There is also an index page that links all nine and states the totals.
 
 ## Quick start
 
@@ -254,8 +282,8 @@ To refresh monthly, a crontab line is enough:
 
 ## Putting it on a website
 
-`profiles/<name>/site/` holds everything the pages need and nothing else: nine HTML files (eight views and the index)
-and four data files. Copy the folder to any static host, or set `deploy_to` to have it copied for you.
+`profiles/<name>/site/` holds everything the pages need and nothing else: ten HTML files (nine views and the index)
+and five data files. Copy the folder to any static host, or set `deploy_to` to have it copied for you.
 
 **The look follows [al-folio](https://github.com/alshedivat/al-folio)**, the Jekyll theme I use for my
 homepage:
@@ -345,7 +373,11 @@ code/
   fetch_citation_geo.py  Scholar list, OpenAlex matches, citing works, institutions
   build_citation_geo.py  aggregates cities, writes data.js, fills the templates
   build_views.py         papers, co-citation layout, authors: views.js
-  templates/             the eight pages and the index; _shell.html, _picker.html and _views.html are shared parts
+  build_year.py          the facts of the latest calendar year: year.js
+  venues.json            where and when conferences met, for the Year page
+  landmarks.json         line drawings of cities, for the stamps on the Year page
+  city_names_zh.json     Chinese names of cities, for the Year page
+  templates/             the nine pages and the index; _shell.html, _picker.html and _views.html are shared parts
   basemap/               Natural Earth 1:50m countries
   test_*.py              unit tests: python3 -m unittest discover -s code -p "test_*.py"
   DATA.md                data contracts

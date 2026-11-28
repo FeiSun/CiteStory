@@ -1,0 +1,60 @@
+{
+  "about": "A small line drawing of a landmark or a view for a city, for the stamps on the Year page. A key is the city's name as data.js writes it, a comma and the ISO-3166 alpha-2 country code. `d` is an SVG path in a box 100 wide and 70 high, drawn as a stroke only, with the ground near y = 60; `name` and `zh` say what it shows. A country reached for the first time whose first city is not listed here keeps the outline of the country as its stamp. The drawings were made by hand and are simplified; most were checked against photographs on Wikimedia Commons (not the Stone Bridge, and Hagere Maryam shows a general highland view); corrections and new cities are welcome.",
+  "places": {
+    "Sohar, OM": {
+      "name": "Sohar Fort",
+      "zh": "苏哈尔堡",
+      "d": "M4 60H96M10 60V40h3v-3h2v3h2v-3h2v3h3V60M22 48h3v-2h3v2h3v-2h3v2h2M36 60V18h3v-3h3v3h3v-3h3v3h4v-3h3v3h3v-3h3v3h3V60M64 46h3v2h3v-2h3v2h3v-2h3v2M79 60V40h3v-3h2v3h2v-3h2v3h3V60M46 60V51a4 4 0 0 1 8 0V60M43 26v4M50 26v4M57 26v4M43 37v4M57 37v4M50 15V5l7 2.5l-7 2.5"
+    },
+    "Novi Sad, RS": {
+      "name": "Petrovaradin clock tower",
+      "zh": "彼得罗瓦拉丁钟楼",
+      "d": "M6 60L14 48H86L94 60M10 66q5 -3 10 0t10 0t10 0t10 0t10 0t10 0t10 0t10 0M45 48L46 20H54L55 48M44.5 20H55.5M45 20L47 14H53L55 20M48 14V10H52V14M47.5 10L50 5L52.5 10M55 29a5 5 0 1 0 -10 0a5 5 0 1 0 10 0M50 29V25.5M50 29h3M48.5 48V43h3V48M62 48V40L71 34L80 40V48M20 48V41H36V48M20 41l8 -5l8 5"
+    },
+    "Dushanbe, TJ": {
+      "name": "Ismoili Somoni monument",
+      "zh": "索莫尼纪念碑",
+      "d": "M4 60H96M37 60V28Q37 8 50 8Q63 8 63 28V60M42 60V30Q42 15 50 15Q58 15 58 30V60M45 8l1 -5l2.5 3l1.5 -4l1.5 4l2.5 -3l1 5M46.5 60V50H53.5V60M50 50V41M51.8 39a1.8 1.8 0 1 0 -3.6 0a1.8 1.8 0 1 0 3.6 0M50 44l4.5 -6M54.5 38v-7M30 60V57H70V60M84 60V8M84 9q3.5 -2 7 0t7 0v7q-3.5 -2 -7 0t-7 0M4 52L14 38L22 47L28 42L37 52"
+    },
+    "Taiz, YE": {
+      "name": "Al-Qahira Castle below Jabal Sabir",
+      "zh": "萨比尔山下的开罗堡",
+      "d": "M4 60H96M4 42L20 24L30 32L36 28M72 28L84 18L96 32M16 60L36 36H70L88 60M38 36V30h3v-2h3v2h4V22h3v-2h3v2h3v-2h3v2V30h4v-2h3v2h1V36M54 22v-5M30 46L40 44M64 46L76 50M6 60V55H13V60M90 60V56H96"
+    },
+    "Ulaanbaatar, MN": {
+      "name": "A ger below Bogd Khan Mountain",
+      "zh": "博格达汗山下的蒙古包",
+      "d": "M4 60H96M30 60V48H70V60M30 48L46 36H54L70 48M46 36q4 -3 8 0M46 60V50H54V60M30 52H46M54 52H70M57 37V29M4 50L20 30L31 45M63 43L78 22L96 46M76 60V53H90V60M76 53L81 48H85L90 53M55 16a5 5 0 1 0 -10 0a5 5 0 1 0 10 0"
+    },
+    "Sofia, BG": {
+      "name": "Alexander Nevsky Cathedral",
+      "zh": "亚历山大·涅夫斯基大教堂",
+      "d": "M4 60H96M12 60V44H88V60M16 44V24H28V44M15 24Q22 10 29 24M22 17V10M20 12.5h4M44 34V26H72V34M42 26Q58 2 74 26M58 14V6M56 8.5h4M34 44Q36 34 44 34H72Q80 34 82 44M19 60V52a3 3 0 0 1 6 0V60M42 57V51a2.5 2.5 0 0 1 5 0V57M55.5 57V51a2.5 2.5 0 0 1 5 0V57M69 57V51a2.5 2.5 0 0 1 5 0V57M50 33v-4M58 33v-4M66 33v-4"
+    },
+    "Skopje, MK": {
+      "name": "Stone Bridge and the cross on Vodno",
+      "zh": "石桥与沃德诺山上的十字架",
+      "d": "M4 30L40 10L62 22L80 14L96 28M40 10V3M37.5 5.5h5M6 40L50 35L94 40M6 43L50 38L94 43M6 58V40M94 58V40M12 58a8 10 0 0 1 16 0M30 58a9 12 0 0 1 18 0M52 58a9 12 0 0 1 18 0M72 58a8 10 0 0 1 16 0M47 35V30H53V35M46 30l4 -3l4 3M10 65q5 -3 10 0t10 0t10 0t10 0t10 0t10 0t10 0t10 0"
+    },
+    "Hagere Maryam, ET": {
+      "name": "Huts and an acacia in the highlands",
+      "zh": "高原上的茅屋与金合欢",
+      "d": "M4 60H96M24 60V50H42V60M21 50L33 36L45 50ZM31 60V54h4V60M52 60V53H64V60M50 53L58 43L66 53ZM80 60V42M80 50l-6 -9M80 48l6 -7M66 40Q80 27 94 40Q80 35 66 40M4 48Q12 36 20 46M62 20a5 5 0 1 0 -10 0a5 5 0 1 0 10 0"
+    },
+    "Khartoum, SD": {
+      "name": "The egg-shaped tower where the Blue and White Nile meet",
+      "zh": "青白尼罗河交汇处的蛋形高楼",
+      "d": "M4 60H96M52 60C40 60 38 44 40 30C42 14 48 6 52 6C56 6 62 14 64 30C66 44 64 60 52 60M40.8 26H63.2M39.6 38H64.4M40.6 50H63.4M70 60Q78 46 86 60M90 60V40l1.5 -4l1.5 4V60M22 60Q23 50 21 42M21 42q-6 -4 -10 1M21 42q-3 -7 -9 -6M21 42q4 -7 9 -5M21 42q7 -3 10 3M6 64q5 -2 10 0t10 0t10 0Q46 65 56 67M6 69q5 2 10 0t10 0t10 0Q46 69 56 67M56 67q5 -2 10 0t10 0t10 0t10 0"
+    },
+    "Lubumbashi, CD": {
+      "name": "The slag heap and the smelter chimney",
+      "zh": "矿渣山与冶炼厂烟囱",
+      "d": "M4 60H96M8 60L34 30Q40 26 46 30L72 60M22 48Q40 43 58 48M29 40Q40 36 51 40M78 60L79.5 10H84.5L86 60M79.2 20H84.8M82 9C77 4 87 1 93 3M88 60V52l4 -3v3l4 -3V60"
+    },
+    "Abidjan, CI": {
+      "name": "St Paul's Cathedral",
+      "zh": "圣保罗大教堂",
+      "d": "M4 60H96M20 60L33 10L40 60M29 26H37M33 10V2M30.5 4.5h5M40 60V46L92 57V60M34 14L50 48M34 14L62 50.6M34 14L74 53.2M34 14L86 55.7M10 66q5 -3 10 0t10 0t10 0t10 0t10 0t10 0t10 0t10 0"
+    }
+  }
+}

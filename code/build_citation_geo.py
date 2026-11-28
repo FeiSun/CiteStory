@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 
 import build_views
+import build_year
 from build_views import script_json
 from fetch_citation_geo import normalized_title, owner_keys, owner_names, short
 
@@ -303,8 +304,8 @@ def basemap():
 
 
 PAGES = ["index.html", "atlas.html", "reach.html", "story.html", "flow.html",
-         "constellation.html", "race.html", "regulars.html", "record.html"]
-DATA_FILES = ["data.js", "data-details.js", "views.js", "views-details.js"]
+         "constellation.html", "race.html", "regulars.html", "record.html", "year.html"]
+DATA_FILES = ["data.js", "data-details.js", "views.js", "views-details.js", "year.js"]
 
 
 def home_place(targets, institutions):
@@ -430,6 +431,9 @@ def build(data, site):
         # bylines with no OpenAlex author id are recognised as the owner by name (aliases since this field was added)
         owner_name_keys = owner_keys(owner_names(targets["owner"], targets.get("aliases", ())))
         view_stats = build_views.write(staging, payload, details, raw, owner_ids, coauthor_ids, owner_name_keys)
+        view_stats.update(build_year.write(staging, payload, raw, targets["scholar"], owner_ids, coauthor_ids, owner_name_keys,
+                                           {short(iid): {"type": inst.get("type"), "lat": (inst.get("geo") or {}).get("latitude"),
+                                                         "lon": (inst.get("geo") or {}).get("longitude")} for iid, inst in institutions.items()}))
         views = (TEMPLATES / "_views.html").read_text(encoding="utf-8")     # ?paper= and the links that carry it to the other views
         picker = (TEMPLATES / "_picker.html").read_text(encoding="utf-8").replace("<!--PAPER_VIEWS-->", views)   # shared paper picker
         shell = (TEMPLATES / "_shell.html").read_text(encoding="utf-8")     # shared tokens, chrome and helpers of the pages on views.js

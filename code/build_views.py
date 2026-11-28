@@ -15,7 +15,7 @@ import re
 
 from fetch_citation_geo import name_match, normalized_title as normalized, short as short_id
 
-YEAR_ONLY, OWN = 2, 1     # bits of a work's flags in views.js
+YEAR_ONLY, OWN = 2, 1     # bits of a work's flags in views.js (year.js has its own, see build_year.py)
 
 
 def year_only_day(work_id, year, snapshot):

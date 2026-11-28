@@ -12,19 +12,19 @@
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license">
 </p>
 
-<p align="center"><a href="#atlas在世界的哪里">Atlas</a> · <a href="#reach传得多远">Reach</a> · <a href="#story怎样传开">Story</a> · <a href="#flow从论文到地方">Flow</a> · <a href="#constellation论文和它的邻居">Constellation</a> · <a href="#race谁在什么时候领先">Race</a> · <a href="#regulars谁总是回来">Regulars</a> · <a href="#record听一听">Record</a></p>
+<p align="center"><a href="#atlas在世界的哪里">Atlas</a> · <a href="#reach传得多远">Reach</a> · <a href="#story怎样传开">Story</a> · <a href="#flow从论文到地方">Flow</a> · <a href="#constellation论文和它的邻居">Constellation</a> · <a href="#race谁在什么时候领先">Race</a> · <a href="#regulars谁总是回来">Regulars</a> · <a href="#record听一听">Record</a> · <a href="#year回看一年">Year</a></p>
 
 <p align="center"><a href="README.md">English</a> | <b>简体中文</b></p>
 
 ![八个视图依次播放](docs/screenshots/promo.webp)
 
 给它一个 Google Scholar 主页，它会在
-[OpenAlex](https://openalex.org) 里找出引用这个人的所有论文，把每篇论文放到作者所在机构的城市上，再据此生成八个交互页面。
+[OpenAlex](https://openalex.org) 里找出引用这个人的所有论文，把每篇论文放到作者所在机构的城市上，再据此生成九个交互页面。
 下个月再运行一条命令，页面就是最新的。
 
-- **一份数据，八种视图。** 两张地图、一篇长文、一张流向图、一张星图、一场排名赛、一张常客表，还有一张可以播放的唱片。
+- **一份数据，九种视图。** 两张地图、一篇长文、一张流向图、一张星图、一场排名赛、一张常客表、一张可以播放的唱片，还有这一年的回顾。
 - **只需一个输入。** 一个 Scholar 链接就够了。自动判断出错时，有几个可选字段可以纠正。
-- **静态输出。** 纯 HTML、CSS 和 JavaScript，不需要构建，也不依赖框架。直接从本地打开，或放到任何静态托管上都行。八个页面里有七个可以离线使用。
+- **静态输出。** 纯 HTML、CSS 和 JavaScript，不需要构建，也不依赖框架。直接从本地打开，或放到任何静态托管上都行。九个页面里有八个可以离线使用。
 - **只用标准库。** 数据流程是 Python 3.9+，不需要安装任何包。
 
 图中是我自己的主页（来自 1,307 个城市的 11,423 篇引用论文，快照日期 2026 年 11 月 26 日），使用浅色主题；每个页面也都有深色主题。动图是页面的真实录屏，做了加速。
@@ -135,7 +135,20 @@
 也可以把唱针拖过不同的年份。打开声音后，每篇被引论文对应 D 利底亚调式上一个固定的音，被引最多的几篇合起来是一个和弦。
 一道刻痕会奏出它所引用的那些论文的音，同时经过唱针的刻痕合在一起响：热闹的年份听起来更饱满，而不是更快。
 
-另外还有一个首页，链接到全部八个视图，并给出总数。
+### Year：回看这一年
+
+用几屏讲完最近的一个自然年，从头到尾是同一批点：这一年每一篇引用论文一个点。这些点先拼出年份，再排成一年的圆环，按被引论文发表的年份堆成一列一列，
+分成新读者和老读者，按标题里的说法分组，最后飞到地图上；地图上还没有读者出现过的地方盖着迷雾。一路上，页面会说出这一年新的东西：新发表的论文和它们去过的会议、
+每篇新论文的第一位读者、引用数跨过整数关口的论文、第一次到达的城市和国家（每个一张邮票），这一年到达的最远的地方，以及到所有读者的距离加起来有多远。
+滚动直接驱动点的运动；按播放可以像短片一样看完。最后这些点飞进一张卡片：这一年的地图上标着作者论文发表的会议、这一年第一篇引用和最远的地方；五个数字（新论文、引用、读者、城市、国家和地区）；以及每个第一次到达的国家一张邮票。卡片可以存成 1080 × 1350 的图片，也可以通过浏览器的打印存成矢量 PDF。文字有中文和英文。
+
+有三处更多是用来感受的。圆环那一幕的“听这一年”用大约 25 秒把这一年放一遍，音色和 Record 相同。快结束时，这一年所有引用论文的作者的名字按到来的先后滚过；每个人都可以在里面找到自己的名字，存一张卡片。卡片上写着这一页的网址（页面放在网上时），否则写着去哪里做一份自己的。
+
+页面只展示一年：快照所在的那一年；一月和二月则是刚过去的那一年。
+
+新论文以 Scholar 主页为准，年份取会议名里写的年份（如 “SIGIR 2026”），所以 OpenAlex 没有匹配上的论文也会计入。OpenAlex 里没有会议举办的城市，这部分来自一张小表 `code/venues.json`。会议不在表里的论文照常计数，只是不画在路线上。新国家的邮票上是论文到达的那座城市的一幅小线稿，来自 `code/landmarks.json`；表里没有的城市用所在国家的轮廓，欢迎补充更多城市的线稿。每一幕都有一个按钮，可以把这一幕存成图片。
+
+另外还有一个首页，链接到全部九个视图，并给出总数。
 
 ## 快速开始
 
@@ -226,7 +239,7 @@ python3 code/citestory.py build  profiles/me     # 只重新构建，比如修�
 
 ## 放到网站上
 
-`profiles/<name>/site/` 里是页面需要的全部文件，没有多余的东西：九个 HTML 文件（八个视图和首页）和四个数据文件。
+`profiles/<name>/site/` 里是页面需要的全部文件，没有多余的东西：十个 HTML 文件（九个视图和首页）和五个数据文件。
 把这个文件夹复制到任何静态托管上即可，或者设置 `deploy_to`，让它自动复制。
 
 **外观沿用了 [al-folio](https://github.com/alshedivat/al-folio)**，也就是我个人主页用的 Jekyll 主题：
@@ -298,7 +311,11 @@ code/
   fetch_citation_geo.py  Scholar 列表、OpenAlex 匹配、引用论文、机构
   build_citation_geo.py  汇总城市，写出 data.js，填充模板
   build_views.py         论文、共引布局、作者：views.js
-  templates/             八个页面和首页；_shell.html、_picker.html 和 _views.html 是共用部分
+  build_year.py          最近一个自然年的事实：year.js
+  venues.json            会议在哪里、什么时候开，供 Year 页面使用
+  landmarks.json         城市的线稿，供 Year 页面的邮票使用
+  city_names_zh.json     城市的中文名，供 Year 页面使用
+  templates/             九个页面和首页；_shell.html、_picker.html 和 _views.html 是共用部分
   basemap/               Natural Earth 1:50m 国家边界
   test_*.py              单元测试：python3 -m unittest discover -s code -p "test_*.py"
   DATA.md                数据约定

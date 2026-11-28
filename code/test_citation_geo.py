@@ -476,7 +476,7 @@ class BuildTest(unittest.TestCase):
             # a build that fails halfway leaves the previous pages in place and nothing beside them
             (site / "CNAME").write_text("cites.example.org", encoding="utf-8")     # not build output: kept
             before = sorted(p.name for p in site.iterdir())
-            with patch.object(build_citation_geo.build_views, "write", side_effect=RuntimeError("boom")):
+            with patch.object(build_citation_geo.build_year, "write", side_effect=RuntimeError("boom")):
                 with self.assertRaises(RuntimeError):
                     build_citation_geo.build(data, site)
             self.assertEqual(sorted(p.name for p in site.iterdir()), before)

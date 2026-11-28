@@ -1,0 +1,1449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>The Year in Citations</title>
+<meta name="description" content="One year of citations to one researcher's work, told with the same dots from start to end.">
+<script>
+(function(){var t=null;try{t=localStorage.getItem('theme')}catch(e){}
+if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);})();
+try{history.scrollRestoration='manual';}catch(e){}   // the page is one sequence: always open at its start
+</script>
+<style>
+:root{
+  --serif:"Iowan Old Style","Iowan Old Style BT",ui-serif,"New York",Charter,"Palatino Linotype",Palatino,Georgia,"Songti SC","Noto Serif CJK SC",serif;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Helvetica,Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+  --bg:#f5f0e6; --card:#fbf8f2; --ink:#1f1b16; --ink-2:#554d43; --ink-3:#6a6256;
+  --rule:#d8cfbe; --sea:#efe9dd; --land:#e2d9c6; --land-line:#cbbfa8; --fog:#f5f0e6;
+  --accent:#b8401f; --accent-soft:#e9b8a3; --sel:#f1c9b6; --gold:#c8921a;
+  --c-asia:#1d5566; --c-na:#c0782b; --c-eu:#72987a; --c-af:#8c4568; --c-sa:#4b6ea6; --c-oc:#a39348; --c-ot:#9b9284;
+  --shadow:0 1px 0 rgba(40,30,20,.04),0 8px 30px -12px rgba(40,30,20,.18);
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#121418; --card:#181b21; --ink:#ede6d7; --ink-2:#b7ae9e; --ink-3:#9a9387;
+  --rule:#2d3139; --sea:#161a20; --land:#252a32; --land-line:#353b45; --fog:#121418;
+  --accent:#f08c5f; --accent-soft:#6e3a26; --sel:#4a2f25; --gold:#f0c25a;
+  --c-asia:#6fb6bb; --c-na:#e39d55; --c-eu:#93bd94; --c-af:#cf86a9; --c-sa:#86a6dc; --c-oc:#d2c27a; --c-ot:#8d877c;
+  --shadow:0 1px 0 rgba(0,0,0,.2),0 10px 30px -12px rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#121418; --card:#181b21; --ink:#ede6d7; --ink-2:#b7ae9e; --ink-3:#9a9387;
+    --rule:#2d3139; --sea:#161a20; --land:#252a32; --land-line:#353b45; --fog:#121418;
+    --accent:#f08c5f; --accent-soft:#6e3a26; --sel:#4a2f25; --gold:#f0c25a;
+    --c-asia:#6fb6bb; --c-na:#e39d55; --c-eu:#93bd94; --c-af:#cf86a9; --c-sa:#86a6dc; --c-oc:#d2c27a; --c-ot:#8d877c;
+    --shadow:0 1px 0 rgba(0,0,0,.2),0 10px 30px -12px rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-snap-type:y proximity;overflow-anchor:none;-webkit-text-size-adjust:100%;scrollbar-width:none}
+html::-webkit-scrollbar{display:none}
+::selection{background:var(--sel);color:var(--ink)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);font-size:18px;line-height:1.6;
+  font-variant-numeric:tabular-nums lining-nums;overflow-x:hidden}
+a{color:inherit;text-decoration-color:var(--accent);text-underline-offset:.18em;text-decoration-thickness:1px}
+a:hover{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+button{font:inherit;color:inherit}
+
+#stage{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0}
+.bar{position:fixed;top:12px;left:14px;right:14px;z-index:5;display:flex;align-items:center;gap:8px;pointer-events:none;font-family:var(--sans)}
+.bar>*{pointer-events:auto}
+.bar .gap{flex:1;pointer-events:none}
+.ib{width:38px;height:38px;border-radius:50%;border:1px solid var(--rule);background:var(--card);color:var(--ink);display:grid;place-items:center;
+  cursor:pointer;text-decoration:none;font-size:13px;font-weight:600;padding:0}
+.ib:hover{border-color:var(--ink-3);color:var(--ink)}
+.ib svg{width:17px;height:17px}
+.ib[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+.ib .i-sun,.ib .i-pause,.ib.pic{display:none}
+:root[data-theme="dark"] .ib .i-sun{display:block}
+:root[data-theme="dark"] .ib .i-moon{display:none}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .ib .i-sun{display:block}
+  :root:not([data-theme="light"]) .ib .i-moon{display:none}
+}
+.ib[aria-pressed="true"] .i-play{display:none}
+.ib[aria-pressed="true"] .i-pause{display:block}
+
+main{position:relative;z-index:1;pointer-events:none}
+.scene{height:100vh;height:100svh;scroll-snap-align:start;display:flex;align-items:flex-end;
+  padding:0 clamp(20px,4.5vw,72px) clamp(36px,9vh,96px)}
+.text{pointer-events:auto;width:min(31%,27rem);will-change:opacity}
+.text h2{font-weight:500;font-size:clamp(30px,3.4vw,50px);line-height:1.06;letter-spacing:-.016em;margin:0 0 18px}
+.text p{margin:0 0 12px;font-size:clamp(16.5px,1.25vw,19px);line-height:1.6;color:var(--ink-2);
+  text-wrap:pretty}     /* ragged right, even word spaces; the browser avoids a lone last word and evens the right edge */
+.text p b{color:var(--ink);font-weight:600}
+.text p.gift{color:var(--ink);border-left:2px solid var(--gold);padding-left:12px}
+.text p q{font-style:italic;quotes:"\201C" "\201D"}
+:root[lang="zh"] .text p q{font-style:normal;quotes:"\300A" "\300B"}
+.text .note{font-family:var(--sans);font-size:13px;color:var(--ink-3)}
+.acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;font-family:var(--sans);font-size:14px}
+.acts button,.acts a{border:1px solid var(--rule);background:var(--card);border-radius:20px;padding:8px 16px;cursor:pointer;text-decoration:none}
+.acts button:hover,.acts a:hover{border-color:var(--accent);color:var(--accent)}
+.find{margin-top:16px;font-family:var(--sans);font-size:14px}
+.find input{width:100%;max-width:20rem;border:1px solid var(--rule);background:var(--card);color:var(--ink);border-radius:20px;padding:8px 16px;font:inherit}
+.find input:focus{border-color:var(--accent);outline:none}
+.find .hits{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.find .hits button{border:0;background:none;padding:3px 0;margin-right:10px;cursor:pointer;color:var(--ink);text-decoration:underline;text-decoration-color:var(--rule);text-underline-offset:.2em}
+.find .hits button:hover{color:var(--accent);text-decoration-color:var(--accent)}
+.find .hits span{color:var(--ink-3)}
+.find .acts{margin-top:10px}
+.find .acts[hidden]{display:none}
+.rail{position:fixed;right:8px;top:50%;transform:translateY(-50%);z-index:4;display:flex;flex-direction:column}
+.rail button{width:24px;height:24px;border:0;background:none;padding:0;cursor:pointer;display:grid;place-items:center}
+.rail button::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ink-3);opacity:.35;transition:opacity .2s,transform .25s,background .2s}
+.rail button:hover::before{opacity:.8}
+.rail button[aria-current]::before{opacity:1;background:var(--accent);transform:scale(1.45)}
+/* small tools by the picture: Listen with its speeds on the ring, and saving the scene */
+.tools{position:fixed;z-index:4;display:flex;align-items:center;gap:8px;font-family:var(--sans);font-size:12.5px;transition:opacity .2s}
+.player{display:flex;align-items:center;gap:4px;height:32px;padding:0 4px 0 3px;border:1px solid var(--rule);border-radius:16px;background:var(--card)}
+.player[hidden],.tb[hidden]{display:none}
+#printCard{display:none}
+@media print{
+  @page{size:1080px 1350px;margin:0}
+  html,body{background:none!important;margin:0!important}
+  body>*:not(#printCard){display:none!important}
+  #printCard{display:block!important;width:1080px;height:1350px;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #printCard svg{display:block;width:1080px;height:1350px}
+}
+.player .pp{width:26px;height:26px;border-radius:50%;border:0;padding:0;background:var(--accent);color:var(--bg);display:grid;place-items:center;cursor:pointer}
+.player .pp svg{width:11px;height:11px}
+.player .pp .i-pause,.player[data-on] .pp .i-play{display:none}
+.player[data-on] .pp .i-pause{display:block}
+.player .pl{color:var(--ink-2);margin:0 6px 0 4px}
+.player .sp{display:flex;border-left:1px solid var(--rule);padding-left:4px}
+.player .sp button{border:0;background:none;padding:3px 6px;border-radius:10px;color:var(--ink-3);font:inherit;cursor:pointer}
+.player .sp button:hover{color:var(--ink)}
+.player .sp button[aria-pressed="true"]{color:var(--ink);background:var(--bg)}
+.tb{width:32px;height:32px;border-radius:50%;border:1px solid var(--rule);background:var(--card);color:var(--ink-2);padding:0;display:grid;place-items:center;cursor:pointer}
+.tb:hover{border-color:var(--ink-3);color:var(--ink)}
+.tb svg{width:15px;height:15px}
+.tip{position:fixed;z-index:6;pointer-events:none;background:var(--ink);color:var(--bg);font-family:var(--sans);font-size:12.5px;line-height:1.35;
+  padding:8px 11px;border-radius:4px;max-width:290px;opacity:0;transform:translate(-50%,calc(-100% - 12px));transition:opacity .12s}
+.tip.on{opacity:1}
+.tip b{display:block;font-family:var(--serif);font-size:14px;font-weight:600;line-height:1.3}
+.tip span{display:block;margin-top:3px;opacity:.8}
+.after{position:relative;z-index:2;background:var(--bg);border-top:1px solid var(--rule)}
+.about{max-width:1180px;margin:0 auto;padding:clamp(56px,9vh,96px) 24px 40px;display:grid;grid-template-columns:200px minmax(0,68ch);gap:24px 48px}
+.about h2{font-weight:500;font-size:26px;line-height:1.15;margin:0}
+.about p{margin:0 0 14px;color:var(--ink-2);font-size:17px}
+.foot{max-width:1180px;margin:0 auto;padding:24px 24px 56px;font-family:var(--sans);font-size:13px;color:var(--ink-3)}
+.empty{position:relative;z-index:2;max-width:40rem;margin:0 auto;padding:22vh 24px;font-size:20px;color:var(--ink-2)}
+@media (max-width:860px){
+  body{font-size:17px}
+  .scene{padding:0 0 0}
+  .text{width:100%;max-height:50svh;overflow:auto;padding:26px 20px 26px;background:linear-gradient(to bottom,transparent,var(--bg) 26px)}
+  .text h2{font-size:27px;margin-bottom:10px}
+  .text p{font-size:16px;line-height:1.5;margin-bottom:8px}
+  .rail{display:none}
+  .ib.pic{display:grid}
+  .tools .tb{display:none}
+  .about{grid-template-columns:minmax(0,1fr);padding-left:20px;padding-right:20px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-snap-type:none}
+  *,*::before,*::after{transition-duration:0s!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<canvas id="stage" role="img" aria-label="Each dot is one paper that cited this work in the year; the text of each section gives the numbers."></canvas>
+<div class="bar">
+  <a class="ib" href="index.html" id="homeBtn" aria-label="All views" title="All views"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.75 11.25 12 4.5l8.25 6.75M6 9.75V19.5h4.5v-5.25h3v5.25H18V9.75"/></svg></a>
+  <span class="gap"></span>
+  <button class="ib pic" id="picBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v10.5M8 10.5l4 4 4-4M5 18.5h14"/></svg></button>
+  <button class="ib" id="playBtn" type="button" aria-pressed="false"><svg class="i-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg><svg class="i-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h3.6v14H7zM13.4 5H17v14h-3.6z"/></svg></button>
+  <button class="ib" id="langBtn" type="button"></button>
+  <button class="ib" id="themeBtn" type="button" aria-label="Switch theme">
+    <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+    <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
+  </button>
+</div>
+<main id="scenes"></main>
+<nav class="rail" id="rail" aria-label="Sections"></nav>
+<div class="tools" id="tools">
+  <div class="player" id="player" hidden>
+    <button class="pp" id="ppBtn" type="button"><svg class="i-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg><svg class="i-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg></button>
+    <span class="pl" id="ppLbl"></span>
+    <span class="sp" id="speeds" role="group"><button type="button" value="0.5">½×</button><button type="button" value="1">1×</button><button type="button" value="2">2×</button></span>
+  </div>
+  <button class="tb" id="saveBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v10.5M8 10.5l4 4 4-4M5 18.5h14"/></svg></button>
+</div>
+<div class="tip" id="tip" role="presentation"></div>
+<div class="after" id="after">
+  <section class="about" aria-labelledby="aboutTitle"><h2 id="aboutTitle"></h2><div id="aboutBody"></div></section>
+  <footer class="foot"><a href="index.html" id="footHome"></a> · <a href="https://github.com/FeiSun/CiteStory" id="footRepo" rel="noopener"></a></footer>
+</div>
+
+<script src="data.js"></script>
+<script src="year.js"></script>
+<script>
+(function(){
+'use strict';
+// a path that also keeps its outline as SVG path data, so that a card can be written out as an SVG
+const svgN=v=>String(Math.round(v*1e4)/1e4);
+function svgArc(x,y,r,a0,a1,ccw,has,n){n=n||svgN;let sw=ccw?a0-a1:a1-a0;const T=2*Math.PI;
+  if(sw>=T||sw<=-T)sw=T;else{sw=((sw%T)+T)%T;}
+  const p=a=>[x+r*Math.cos(a),y+r*Math.sin(a)],s=p(a0);let d=(has?'L':'M')+n(s[0])+' '+n(s[1]);if(!sw)return d;
+  const k=Math.ceil(sw/(Math.PI*.999)),st=sw/k*(ccw?-1:1);for(let i=1;i<=k;i++){const e=p(a0+st*i);d+='A'+n(r)+' '+n(r)+' 0 0 '+(ccw?0:1)+' '+n(e[0])+' '+n(e[1]);}return d;}
+const Path2D=class extends window.Path2D{
+  constructor(d){super(d);this.d=typeof d==='string'?d:'';this.has=false;}
+  moveTo(x,y){super.moveTo(x,y);this.d+='M'+svgN(x)+' '+svgN(y);this.has=true;}
+  lineTo(x,y){super.lineTo(x,y);this.d+='L'+svgN(x)+' '+svgN(y);this.has=true;}
+  closePath(){super.closePath();this.d+='Z';}
+  rect(x,y,w,h){super.rect(x,y,w,h);this.d+='M'+svgN(x)+' '+svgN(y)+'h'+svgN(w)+'v'+svgN(h)+'h'+svgN(-w)+'Z';this.has=true;}
+  arc(x,y,r,a0,a1,ccw){super.arc(x,y,r,a0,a1,ccw);this.d+=svgArc(x,y,r,a0,a1,ccw,this.has);this.has=true;}};
+const D=window.CITATION_DATA,Y=window.CITATION_YEAR,$=id=>document.getElementById(id);
+function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
+const HIST={};if(Y)(Y.history||[]).forEach(h=>{HIST[h[0]]=h[1];});       // citing papers of every year up to this one
+const ALL=Object.keys(HIST).map(Number).filter(y=>HIST[y]>0).sort((a,b)=>a-b);
+if(!D||!Y||!Y.review){$('after').remove();
+  $('scenes').appendChild(el('p','empty',!D||!Y?'The data files (data.js, year.js) could not be loaded.':'No dated citations yet.'));return;}
+
+/* ---------- the year (chosen when the page is built) and the language ---------- */
+const Q=new URLSearchParams(location.search),SNAP=new Date(Y.snapshot),SNAP_Y=SNAP.getUTCFullYear();
+const year=Y.year,YR=Y.review,P=Y.papers,OWNER=Y.owner||D.owner||'';
+let LANG=Q.get('lang');try{LANG=LANG||localStorage.getItem('citestory-lang');}catch(e){}
+if(LANG!=='en'&&LANG!=='zh')LANG=/^zh\b/i.test(navigator.language||'')?'zh':'en';
+const RM=matchMedia('(prefers-reduced-motion: reduce)');
+const L=(en,zh)=>LANG==='zh'?zh:en;
+const NF=new Intl.NumberFormat('en-US'),fmt=n=>NF.format(Math.round(n));
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function day(iso,yearOnly){const y=+iso.slice(0,4),m=+iso.slice(5,7),d=+iso.slice(8,10);
+  if(yearOnly)return L('during '+y,y+' 年内');
+  return y===year?L(d+' '+MONTHS[m-1],m+' 月 '+d+' 日'):L(d+' '+MONTHS[m-1]+' '+y,y+' 年 '+m+' 月 '+d+' 日');}
+function doy(iso){return Math.round((Date.UTC(+iso.slice(0,4),+iso.slice(5,7)-1,+iso.slice(8,10))-Date.UTC(+iso.slice(0,4),0,1))/864e5)+1;}
+function join(a){if(a.length<2)return a.join('');return LANG==='zh'?a.join('、'):a.slice(0,-1).join(', ')+' and '+a[a.length-1];}
+function shortTitle(t,max){t=String(t||'');const c=t.indexOf(':');if(c>3&&c<=max)return t.slice(0,c);
+  if(t.length<=max)return t;const s=t.slice(0,max),k=s.lastIndexOf(' ');return (k>max*0.5?s.slice(0,k):s).trimEnd()+'…';}
+const NAME_FULL={'Dem. Rep. Congo':'Democratic Republic of the Congo','Bosnia and Herz.':'Bosnia and Herzegovina','Central African Rep.':'Central African Republic','Dominican Rep.':'Dominican Republic','Eq. Guinea':'Equatorial Guinea','S. Sudan':'South Sudan'};
+const CONTS=['Asia','North America','Europe','Africa','South America','Oceania'];
+const CONT_VAR={'Asia':'--c-asia','North America':'--c-na','Europe':'--c-eu','Africa':'--c-af','South America':'--c-sa','Oceania':'--c-oc','Other':'--c-ot'};
+const CONT_ZH={'Asia':'亚洲','North America':'北美洲','Europe':'欧洲','Africa':'非洲','South America':'南美洲','Oceania':'大洋洲'};
+let ZH_NAMES=null;try{ZH_NAMES=new Intl.DisplayNames(['zh-CN'],{type:'region'});}catch(e){}
+function country(iso){const c=(D.countries||{})[iso]||(iso==='MO'?{name:'Macao',continent:'Asia'}:null);
+  let zh=null;if(LANG==='zh'&&ZH_NAMES&&/^[A-Z]{2}$/.test(iso||'')){try{zh=ZH_NAMES.of(iso);}catch(e){}}
+  const n=zh&&zh!==iso?zh:(c&&c.name)||iso||'';return {name:NAME_FULL[n]||n.replace(/\bIs\.$/,'Islands').replace(/\bRep\./,'Republic'),continent:c&&CONTS.indexOf(c.continent)>=0?c.continent:'Other'};}
+const CITY={},CITY_CONT={};D.cities.forEach(c=>{CITY[c.id]=c;CITY_CONT[c.id]=country(c.country).continent;});
+const ZHC=Y.zh||{},cityName=id=>CITY[id]?(LANG==='zh'&&ZHC[id])||CITY[id].name:'';     // Chinese names come from code/city_names_zh.json
+const homeLabel=()=>D.home?(LANG==='zh'&&Y.home_zh)||D.home.label:'',stopCity=s=>(LANG==='zh'&&s.city_zh)||s.city;
+const placeOf=x=>x.c!=null&&CITY[x.c]?cityFull(x.c):x.place||'';     // where a work was written: its first listed city
+const cityFull=id=>{if(!CITY[id])return '';const n=cityName(id),c=country(CITY[id].country).name,en=((D.countries||{})[CITY[id].country]||{}).name,same=c===n||en===CITY[id].name||(LANG==='zh'&&ZHC[id]&&/^(HK|MO|SG|TW)$/.test(CITY[id].country));
+  return same||!c?n:LANG==='zh'&&ZHC[id]?(n.indexOf(c)===0?n:c+n):n+(LANG==='zh'?'，':', ')+c;};     // in Chinese the country comes first: 越南芹苴
+function safeUrl(u){try{const x=new URL(u);if(x.protocol==='http:'||x.protocol==='https:')return x.href;}catch(e){}return null;}
+function workUrl(w){return (w.doi&&safeUrl(w.doi))||(/^W\d+$/.test(w.id)?'https://openalex.org/'+w.id:null);}
+
+/* ---------- the dots: one per citing paper of the year, in date order ---------- */
+const DOTS=YR.works.map((r,k)=>{const w=D.works[r[0]],cs=(w.cities||[]).filter(id=>CITY[id]).slice(0,60);
+  return {k:k,w:w,doy:r[1],yo:r[2]&1,ret:r[2]&2,own:r[2]&4,ps:r[3],cs:cs,cont:cs.length?CITY_CONT[cs[0]]:'Other'};});
+const N=DOTS.length,BYI={};DOTS.forEach(d=>{BYI[YR.works[d.k][0]]=d;});
+const NEW_CITY={},KNOWN={};
+(Y.known||[]).forEach(c=>{KNOWN[c]=1;});YR.places.new_cities.forEach(c=>{KNOWN[c]=1;NEW_CITY[c]=1;});
+const CONT_N={};DOTS.forEach(d=>{CONT_N[d.cont]=(CONT_N[d.cont]||0)+1;});
+
+/* ---------- colours ---------- */
+let COL={};
+function hexRgb(h){h=h.trim().replace('#','');if(h.length===3)h=h.replace(/./g,'$&$&');const n=parseInt(h,16);return [(n>>16)&255,(n>>8)&255,n&255];}
+function readColors(){const cs=getComputedStyle(document.documentElement);
+  ['--bg','--card','--ink','--ink-2','--ink-3','--rule','--sea','--land','--land-line','--fog','--accent','--accent-soft','--gold','--c-asia','--c-na','--c-eu','--c-af','--c-sa','--c-oc','--c-ot']
+    .forEach(k=>{COL[k]=hexRgb(cs.getPropertyValue(k));});}
+const rgba=(c,a)=>'rgba('+c[0]+','+c[1]+','+c[2]+','+(a==null?1:a)+')';
+const contCol=d=>COL[CONT_VAR[d.cont]];
+const SERIF=getComputedStyle(document.documentElement).getPropertyValue('--serif'),SANS=getComputedStyle(document.documentElement).getPropertyValue('--sans');
+
+/* ---------- projection: Equal Earth, centred on 10°E (as on the Story page) ---------- */
+const L0=10,A1=1.340264,A2=-0.081106,A3=0.000893,A4=0.003796,MM=Math.sqrt(3)/2;
+const rel=lon=>((lon-L0)%360+540)%360-180;
+function proj(lr,lat){const l=lr*Math.PI/180,p=Math.max(-90,Math.min(90,lat))*Math.PI/180,t=Math.asin(MM*Math.sin(p)),t2=t*t,t6=t2*t2*t2;
+  return [l*Math.cos(t)/(MM*(A1+3*A2*t2+t6*(7*A3+9*A4*t2))),-t*(A1+A2*t2+t6*(A3+A4*t2))];}
+const LAND=new Path2D(),OUTLINE=new Path2D();
+(D.land||[]).forEach(f=>{
+  f.polygons.forEach(poly=>poly.forEach(ring=>{if(!ring.length)return;const un=[];let prev=null,mn=Infinity,mx=-Infinity;
+    for(let k=0;k<ring.length;k++){let r=rel(ring[k][0]);if(prev!=null){while(r-prev>180)r-=360;while(r-prev<-180)r+=360;}prev=r;un.push(r);if(r<mn)mn=r;if(r>mx)mx=r;}
+    const offs=[0];if(mx>180)offs.push(-360);if(mn<-180)offs.push(360);
+    offs.forEach(o=>{for(let k=0;k<ring.length;k++){const p=proj(un[k]+o,ring[k][1]);if(k===0)LAND.moveTo(p[0],p[1]);else LAND.lineTo(p[0],p[1]);}LAND.closePath();});}));});
+(function(){let p;for(let k=-90;k<=90;k+=2){p=proj(180,k);k===-90?OUTLINE.moveTo(p[0],p[1]):OUTLINE.lineTo(p[0],p[1]);}
+  for(let k=90;k>=-90;k-=2){p=proj(-180,k);OUTLINE.lineTo(p[0],p[1]);}OUTLINE.closePath();})();
+const WORLD=[proj(-180,0)[0],proj(0,80)[1],proj(180,0)[0],proj(0,-56)[1]];
+function greatCircle(la1,lo1,la2,lo2){const r=Math.PI/180,v=(la,lo)=>[Math.cos(la*r)*Math.cos(lo*r),Math.cos(la*r)*Math.sin(lo*r),Math.sin(la*r)];
+  const a=v(la1,lo1),b=v(la2,lo2),d=Math.acos(Math.max(-1,Math.min(1,a[0]*b[0]+a[1]*b[1]+a[2]*b[2])));const segs=[];let pts=[],last=null;
+  if(d<1e-6)return [[proj(rel(lo1),la1)]];
+  for(let k=0;k<=72;k++){const t=k/72,s1=Math.sin((1-t)*d)/Math.sin(d),s2=Math.sin(t*d)/Math.sin(d),x=s1*a[0]+s2*b[0],y=s1*a[1]+s2*b[1],z=s1*a[2]+s2*b[2];
+    const lr=rel(Math.atan2(y,x)/r);if(last!=null&&Math.abs(lr-last)>180){segs.push(pts);pts=[];}last=lr;pts.push(proj(lr,Math.atan2(z,Math.sqrt(x*x+y*y))/r));}
+  segs.push(pts);return segs;}
+
+/* ---------- stage ---------- */
+const stage=$('stage');let ctx=stage.getContext('2d'),SW=1,SH=1,DPR=1,WIDE=true,STILL=false;   // STILL: a picture is being drawn, nothing moves
+function size(){SW=Math.max(1,window.innerWidth);SH=Math.max(1,window.innerHeight);DPR=Math.min(2,window.devicePixelRatio||1);WIDE=SW>860;
+  stage.width=Math.round(SW*DPR);stage.height=Math.round(SH*DPR);}
+// the part of the screen the dots may use; the text keeps the rest
+function plot(){return WIDE?{x:SW*0.385,y:SH*0.13,w:SW*0.565,h:SH*0.74}:{x:14,y:62,w:SW-28,h:SH*0.5-66};}
+function camFor(b){const s=Math.min(b.w/(WORLD[2]-WORLD[0]),b.h/(WORLD[3]-WORLD[1]));
+  return {s:s,tx:b.x+b.w/2-(WORLD[0]+WORLD[2])/2*s,ty:b.y+b.h/2-(WORLD[1]+WORLD[3])/2*s};}
+const at=(cam,lon,lat)=>{const p=proj(rel(lon),lat);return [cam.tx+p[0]*cam.s,cam.ty+p[1]*cam.s];};
+const GA=2.399963229728653,ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,hash=k=>{const x=Math.sin(k*12.9898)*43758.5453;return x-Math.floor(x);};
+function text(s,x,y,o){o=o||{};ctx.font=(o.weight||'400')+' '+(o.size||11.5)+'px '+(o.serif?SERIF:SANS);ctx.textAlign=o.align||'left';ctx.textBaseline=o.base||'middle';
+  ctx.fillStyle=rgba(COL[o.col||'--ink-2']);if(o.max&&ctx.measureText(s).width>o.max){while(s.length>1&&ctx.measureText(s+'…').width>o.max)s=s.slice(0,-1);s=s.trimEnd()+'…';}
+  if(o.halo!==0){ctx.lineJoin='round';ctx.lineWidth=3.2;ctx.strokeStyle=rgba(COL['--bg'],.82);ctx.strokeText(s,x,y);}ctx.fillText(s,x,y);}   // a halo keeps a label readable over dots and lines
+function drawLand(cam,a){ctx.save();ctx.globalAlpha*=a;ctx.setTransform(DPR*cam.s,0,0,DPR*cam.s,DPR*cam.tx,DPR*cam.ty);
+  ctx.fillStyle=rgba(COL['--sea']);ctx.fill(OUTLINE);ctx.save();ctx.clip(OUTLINE);ctx.fillStyle=rgba(COL['--land']);ctx.fill(LAND,'nonzero');
+  ctx.strokeStyle=rgba(COL['--land-line']);ctx.lineWidth=0.6/cam.s;ctx.stroke(LAND);ctx.restore();ctx.lineWidth=1/cam.s;ctx.stroke(OUTLINE);ctx.restore();}
+// fog over everything no reader has been placed in yet; every city reached so far opens a hole in it
+function fogFor(cam){const c=document.createElement('canvas');c.width=ctx.canvas.width;c.height=ctx.canvas.height;const f=c.getContext('2d');
+  f.setTransform(DPR*cam.s,0,0,DPR*cam.s,DPR*cam.tx,DPR*cam.ty);f.fillStyle=rgba(COL['--fog'],.64);f.fill(OUTLINE);f.setTransform(DPR,0,0,DPR,0,0);
+  const R=Math.max(9,cam.s*0.085),h=document.createElement('canvas');h.width=h.height=Math.ceil(R*2);const g=h.getContext('2d'),gr=g.createRadialGradient(R,R,0,R,R,R);
+  gr.addColorStop(0,'rgba(0,0,0,1)');gr.addColorStop(.45,'rgba(0,0,0,.85)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,R*2,R*2);
+  f.globalCompositeOperation='destination-out';Object.keys(KNOWN).forEach(id=>{const c0=CITY[id];if(!c0)return;const p=at(cam,c0.lon,c0.lat);f.drawImage(h,p[0]-R,p[1]-R);});return c;}
+function strokeArc(cam,segs,upTo){ctx.beginPath();let total=0,left=upTo==null?Infinity:upTo;segs.forEach(s=>{total+=s.length;});left*=total;
+  segs.forEach(s=>{for(let k=0;k<s.length&&left>0;k++,left--){const x=cam.tx+s[k][0]*cam.s,y=cam.ty+s[k][1]*cam.s;k===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}});ctx.stroke();}
+function pointOn(cam,segs,t){const flat=[];segs.forEach(s=>s.forEach(p=>flat.push(p)));const p=flat[Math.min(flat.length-1,Math.floor(t*(flat.length-1)))];return [cam.tx+p[0]*cam.s,cam.ty+p[1]*cam.s];}
+
+/* ---------- layouts: every one returns the dots it shows as {k, q, x, y, r, c, a} ---------- */
+// what the colours say: a swatch per continent
+function legendItems(){return CONTS.concat(['Other']).filter(c=>CONT_N[c]).map(c=>({c:COL[CONT_VAR[c]],t:(c==='Other'?L('No place listed','未列出地点'):L(c,CONT_ZH[c]))+' '+fmt(CONT_N[c])}));}
+// swatches and labels in rows no wider than w; returns the number of rows, and draws them when y is given
+function legend(g,items,x,y,w,fs,center){g.font='400 '+fs+'px '+SANS;const gap=fs*1.25,rows=[[]];let rw=0;
+  items.forEach(it=>{it.w=fs*1.05+g.measureText(it.t).width;const row=rows[rows.length-1];if(row.length&&rw+gap+it.w>w){rows.push([it]);rw=it.w;}else{rw+=(row.length?gap:0)+it.w;row.push(it);}});
+  if(y!=null){g.textAlign='left';g.textBaseline='middle';rows.forEach((row,r)=>{let cx=center?x+(w-row.reduce((a,it)=>a+it.w,0)-gap*(row.length-1))/2:x;
+    row.forEach(it=>{g.fillStyle=rgba(it.c);g.beginPath();g.arc(cx+fs*.32,y+r*fs*1.6,fs*.32,0,6.2832);g.fill();g.fillStyle=rgba(COL['--ink-3']);g.fillText(it.t,cx+fs*1.05,y+r*fs*1.6+fs*.04);cx+=it.w+gap;});});}
+  return rows.length;}
+function spiral(n,j,cx,cy,c){const r=c*Math.sqrt(j+.5),t=j*GA;return [cx+r*Math.cos(t),cy+r*Math.sin(t)];}
+const DOTA=d=>d.yo?.5:.92;
+
+function layCover(b){
+  const items=legendItems(),lr=legend(ctx,items,0,null,b.w,11.5);b={x:b.x,y:b.y,w:b.w,h:b.h-lr*18.4-10};
+  const w=Math.max(40,Math.round(b.w)),h=Math.max(40,Math.round(b.h)),c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d',{willReadFrequently:true});
+  let fs=h;g.font='700 '+fs+'px '+SERIF;fs=Math.min(h*0.86,fs*w*0.97/g.measureText(String(year)).width);
+  g.font='700 '+fs+'px '+SERIF;g.textAlign='center';g.textBaseline='middle';g.fillText(String(year),w/2,h/2);
+  const px=g.getImageData(0,0,w,h).data,inside=(x,y)=>x>=0&&y>=0&&x<w&&y<h&&px[((y|0)*w+(x|0))*4+3]>128;
+  const grid=s=>{const pts=[];let row=0;for(let y=s/2;y<h;y+=s*0.866,row++)for(let x=(row&1?s:s/2);x<w;x+=s)if(inside(x,y))pts.push([x,y]);return pts;};
+  let lo=0.7,hi=60,pts=[];for(let k=0;k<18;k++){const mid=(lo+hi)/2;if(grid(mid).length>=N)lo=mid;else hi=mid;}
+  pts=grid(lo);if(!pts.length)pts=[[w/2,h/2]];pts.sort((p,q)=>p[0]-q[0]||p[1]-q[1]);
+  const pick=pts.length>N?DOTS.map((d,j)=>pts[Math.floor(j*pts.length/N)]):pts,r=Math.max(.8,Math.min(7,lo*.4));
+  const inst=DOTS.map((d,j)=>{const p=pick[j%pick.length];return {k:d.k,q:0,x:b.x+p[0],y:b.y+p[1],r:r,c:contCol(d),a:DOTA(d)};});
+  return {inst:inst,base:function(a){ctx.globalAlpha=a*.06;text(String(year),b.x+w/2,b.y+h/2,{serif:1,weight:'700',size:fs,align:'center',col:'--ink',halo:0});ctx.globalAlpha=1;},
+    over:function(a){ctx.globalAlpha=a;legend(ctx,items,b.x,b.y+h+16,b.w,11.5,true);ctx.globalAlpha=1;}};
+}
+
+// the year as a ring: 1 January at the top and on clockwise; each day is a ray of its papers, out from the inner circle
+function layRing(b){
+  const dated=DOTS.filter(d=>!d.yo),loose=DOTS.filter(d=>d.yo),days=Math.round((Date.UTC(year+1,0,1)-Date.UTC(year,0,1))/864e5),step=2*Math.PI/days;
+  const per=new Array(days+2).fill(0);dated.forEach(d=>{per[d.doy]++;});const top=Math.max.apply(null,per.concat([1]));
+  const cx=b.x+b.w/2,cy=b.y+b.h/2,R=Math.max(40,Math.min(b.w/2-(WIDE?96:20),b.h/2-(WIDE?26:16)));
+  // a ray grows with the square root of its papers, so that a quiet day still shows beside the busiest; its dots close up as it grows
+  const R0=R*.34,len=n=>(R-R0)*Math.sqrt(n/top),r=Math.max(.6,Math.min(2.2,R0*step*.5));
+  const ang=t=>-Math.PI/2+(t-.5)*step,pt=(t,rad)=>[cx+rad*Math.cos(ang(t)),cy+rad*Math.sin(ang(t))];
+  const fill=new Array(days+2).fill(0),inst=[],upTo=new Array(days+3).fill(0);let lit=false;
+  dated.forEach(d=>{const j=fill[d.doy]++,o=pt(d.doy,R0+len(j+.5));upTo[d.doy]++;inst.push({k:d.k,q:0,x:o[0],y:o[1],r:r,c:contCol(d),a:.92,doy:d.doy});});
+  for(let k=1;k<upTo.length;k++)upTo[k]+=upTo[k-1];
+  const lc=Math.min(4,R0*.46/Math.sqrt(Math.max(1,loose.length)));     // papers dated only by year: in the middle
+  loose.forEach((d,j)=>{const o=spiral(0,j,cx,cy,lc);inst.push({k:d.k,q:0,x:o[0],y:o[1],r:Math.max(.55,lc*.42),c:contCol(d),a:.5,doy:0});});
+  const run=YR.days.run&&YR.days.run.n>=14?YR.days.run:null;
+  // the busiest days, named at the tip of their ray; the citing paper that made a round number of the whole record; the year's first and latest reader
+  const mk=(YR.marks||[]).filter(m=>!m.yo&&BYI[m.i]).slice(-1)[0],mkDot=mk?inst.find(d=>d.k===BYI[mk.i].k):null,mkLine=mk?L(fmt(mk.mark)+'th citing paper ever','有记录以来第 '+fmt(mk.mark)+' 篇引用'):'';
+  const tip=(t,extra)=>{const inRun=run&&t>=doy(run.start)&&t<=doy(run.end);return pt(t,Math.max(R0+len(per[t])+9,inRun?R+18:0)+(extra||0));};
+  // each label is a few lines: [text, colour]; the first is the day
+  const papers=n=>L(fmt(n)+(n===1?' paper':' papers'),fmt(n)+' 篇');
+  const peaks=YR.days.busiest.filter(p=>p[1]>=2).slice(0,WIDE?3:1).map((p,i)=>{const t=doy(p[0]),o=tip(t);
+    const ls=[[(i?'':L('Busiest: ','最忙：'))+day(p[0]),'--ink'],[papers(p[1]),'--ink-2']];if(mk&&mk.date===p[0])ls.push([mkLine,'--accent']);
+    return {x:o[0],y:o[1],t:t,ls:ls,out:tip(t,20)};});
+  if(mk&&!peaks.some(p=>p.ls.length>2)){const t=doy(mk.date),o=tip(t);peaks.push({x:o[0],y:o[1],t:t,ls:[[day(mk.date),'--ink'],[papers(per[t]),'--ink-2'],[mkLine,'--accent']],out:tip(t,20)});}
+  const E=YR.ends||{},endsAt=[E.first,E.last&&E.first&&E.last.i!==E.first.i?E.last:null].map((e,i)=>{const d=e&&!e.yo&&BYI[e.i];if(!d)return null;
+    const o=inst.find(x=>x.k===d.k),t=doy(e.date),at=tip(t,6),ls=[[(i?L(YR.complete?'Last paper: ':'Latest paper: ',YR.complete?'最后一篇：':'最近一篇：'):L('First paper: ','第一篇：'))+day(e.date),'--ink-2']];
+    if(e.c!=null&&CITY[e.c])ls.push([cityName(e.c),'--ink-3']);
+    return {o:o,x:at[0],y:at[1],t:t,ls:ls};}).filter(Boolean);
+  inst.forEach(d=>{d.r0=d.r;});let dialled=0;
+  const pre=function(){pump();const at=playDay(),sd=at==null?SCRUB:0;
+    if(sd!==dialled){dialled=sd;inst.forEach(d=>{d.r=d.doy&&d.doy===sd?d.r0*1.6:d.r0;});}     // the dialled day's ray stands out
+    if(sd){lit=true;inst.forEach(d=>{d.a=d.doy===sd?1:d.doy?.3:.2;});return;}
+    if(at==null){if(lit){lit=false;inst.forEach(d=>{d.a=d.doy?.92:.5;});}return;}
+    lit=true;inst.forEach(d=>{const age=d.doy?at-d.doy:-1;d.a=age<0?.13:.92;});};
+  // lines stack away from the ring: upward above it, downward below it, centred at the sides
+  // the block is kept inside the plot as a whole, so its lines stay aligned; it returns its box
+  const box=(ls,o,t,al)=>{const s=Math.sin(ang(t)),c=Math.cos(ang(t)),y0=al?o[1]:o[1]-(ls.length-1)*14*(.5-.5*s);al=al||(c>.2?'left':c<-.2?'right':'center');
+    ctx.font='600 11.5px '+SANS;const w=Math.max.apply(null,ls.map(l=>ctx.measureText(l[0]).width)),x0=Math.max(b.x,Math.min(b.x+b.w-w,al==='left'?o[0]+4:al==='right'?o[0]-4-w:o[0]-w/2));
+    return {al:al,x0:x0,x1:x0+w,y0:y0,y1:y0+(ls.length-1)*14};};
+  const block=(ls,o,t,al)=>{const q=box(ls,o,t,al),x=q.al==='left'?q.x0:q.al==='right'?q.x1:(q.x0+q.x1)/2;
+    ls.forEach((l,i)=>text(l[0],x,q.y0+i*14,{align:q.al,weight:i&&l[1]!=='--accent'?'400':'600',col:l[1]}));return [o[0],(q.y0+q.y1)/2,q.y1-q.y0+16];};
+  return {inst:inst,pre:pre,get live(){return !!sound;},
+    // the dial is the rim just outside the rays: the day under a point there, or 0. The rays inside stay for reading the dots;
+    // once the dial is held (`any`), only the angle counts. The band hugs the track and stays inside the plot, so a thumb at the screen's edge still scrolls
+    scrub:function(x,y,any){const dx=x-cx,dy=y-cy,dd=Math.hypot(dx,dy),KR=R+(WIDE?16:12);if(!any&&(Math.abs(dd-KR)>9||x<b.x||x>b.x+b.w))return 0;let a=Math.atan2(dy,dx)+Math.PI/2;if(a<0)a+=2*Math.PI;return Math.min(days,Math.floor(a/step)+1);},
+    base:function(a){ctx.globalAlpha=a;ctx.strokeStyle=rgba(COL['--rule']);ctx.lineWidth=1;ctx.beginPath();ctx.arc(cx,cy,R0-3,0,6.2832);
+      for(let m=0;m<12;m++){const t=Math.round((Date.UTC(year,m,1)-Date.UTC(year,0,1))/864e5)+.5,i=pt(t,R0-3),o=pt(t,R0-9);ctx.moveTo(i[0],i[1]);ctx.lineTo(o[0],o[1]);}
+      ctx.stroke();ctx.globalAlpha=1;},
+    over:function(a){ctx.globalAlpha=a;
+      for(let m=0;m<12&&!(SCRUB&&!sound);m++){const t=Math.round((Date.UTC(year,m,1)+Date.UTC(year,m+1,1))/2-Date.UTC(year,0,1))/864e5,o=pt(t,R0-(WIDE?15:11));
+        text(LANG==='zh'?(WIDE?(m+1)+'月':String(m+1)):WIDE?MONTHS[m].slice(0,3):MONTHS[m].charAt(0),o[0],o[1],{align:'center',col:'--ink-3',size:WIDE?11:10,halo:0});}
+      if(loose.length&&!sound&&!SCRUB&&!HOVER&&R0*.54-22>=12)text(L('year only','只知年份'),cx,cy+R0*.46+(WIDE?14:11),{align:'center',col:'--ink-3',size:WIDE?11:10});
+      const at=playDay();
+      // the hand: a line out to a knob on the rim, which can be taken and turned
+      const KR=R+(WIDE?16:12),knob=(t,on)=>{const o=pt(t,KR);ctx.beginPath();ctx.arc(o[0],o[1],on?4.5:3.5,0,6.2832);
+        if(on){ctx.fillStyle=rgba(COL['--accent']);ctx.fill();}else{ctx.fillStyle=rgba(COL['--bg']);ctx.fill();ctx.strokeStyle=rgba(COL['--ink-3']);ctx.lineWidth=1.2;ctx.stroke();}};
+      if(at!=null){const dn=Math.max(1,Math.min(steps().length*PER,days,at)),o=pt(dn,KR),iso=new Date(Date.UTC(year,0,Math.floor(dn))).toISOString().slice(0,10);
+        ctx.strokeStyle=rgba(COL['--accent']);ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(o[0],o[1]);ctx.stroke();knob(dn,1);
+        text(day(iso),cx,cy-9,{align:'center',weight:'600',col:'--accent'});text(fmt(upTo[Math.floor(dn)]),cx,cy+8,{align:'center',col:'--ink-2'});ctx.globalAlpha=1;return;}
+      if(SCRUB){const t=SCRUB,i0=pt(t,R0-2),o=pt(t,KR),iso=new Date(Date.UTC(year,0,t)).toISOString().slice(0,10);
+        ctx.strokeStyle=rgba(COL['--accent'],.6);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(i0[0],i0[1]);ctx.lineTo(o[0],o[1]);ctx.stroke();knob(t,1);
+        text(day(iso),cx,cy-9,{align:'center',weight:'600',col:'--accent'});text(papers(per[t]),cx,cy+8,{align:'center',col:'--ink-2'});ctx.globalAlpha=1;return;}
+      {const t=HOVER||1,i0=pt(t,R0-2),o=pt(t,KR);ctx.strokeStyle=rgba(COL['--ink-3'],.7);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(i0[0],i0[1]);ctx.lineTo(o[0],o[1]);ctx.stroke();knob(t,0);}     // the hand alone: at rest on 1 January, or on the day pointed at
+      if(HOVER){const iso=new Date(Date.UTC(year,0,HOVER)).toISOString().slice(0,10);text(day(iso),cx,cy-9,{align:'center',weight:'600',col:'--ink'});text(papers(per[HOVER]),cx,cy+8,{align:'center',col:'--ink-2'});}     // pointing at the rim names the day; the labels stay
+      if(run){const t0=doy(run.start),t1=doy(run.end),mid=pt((t0+t1)/2,R+(WIDE?20:13));ctx.strokeStyle=rgba(COL['--accent']);ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(cx,cy,R+6,ang(t0-.5),ang(t1+.5));ctx.stroke();
+        if(WIDE)block(LANG==='zh'?[['连续 '+fmt(run.n)+' 天','--accent']]:[[fmt(run.n)+' days','--accent'],['in a row','--accent']],mid,(t0+t1)/2);}
+      // the dots named below are ringed
+      const ring=(e,acc)=>{ctx.lineWidth=1.2;ctx.strokeStyle=rgba(COL[acc?'--accent':'--ink']);ctx.beginPath();ctx.arc(e.x,e.y,Math.max(3.4,r+2.4),0,6.2832);ctx.stroke();};
+      if(mkDot)ring(mkDot,1);
+      // a label that would sit on one already placed moves out, or is left out
+      const put=run&&WIDE?[pt((doy(run.start)+doy(run.end))/2,R+20)]:[],near=(x,y)=>put.some(q=>Math.abs(q[0]-x)<130&&Math.abs(q[1]-y)<(q[2]||16));
+      // a dot is ringed only when its label has room; a line runs from the ring to the label
+      if(WIDE)endsAt.forEach(e=>{if(!e.o||near(e.x,e.y))return;ring(e.o);ctx.strokeStyle=rgba(COL['--ink-2']);ctx.lineWidth=.8;ctx.beginPath();
+        // the line ends at the edge of the block nearest the dot
+        const q=box(e.ls,[e.x,e.y],e.t),tx=Math.max(q.x0,Math.min(q.x1,e.o.x)),ty=Math.max(q.y0-8,Math.min(q.y1+8,e.o.y)),
+          dx=tx-e.o.x,dy=ty-e.o.y,dd=Math.hypot(dx,dy)||1,g=Math.max(3.4,r+2.4);ctx.moveTo(e.o.x+dx/dd*g,e.o.y+dy/dd*g);ctx.lineTo(tx-dx/dd*3,ty-dy/dd*3);ctx.stroke();
+        put.push(block(e.ls,[e.x,e.y],e.t));});
+      // on a phone there is no room outside the arc: the busiest day is named in the top corner, with a line to its ray
+      if(!WIDE&&peaks.length){const p=peaks[0],q=box(p.ls,[b.x,b.y+8],p.t,'left'),ty=q.y1+8;block(p.ls,[b.x,b.y+8],p.t,'left');
+        ctx.strokeStyle=rgba(COL['--ink-2']);ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(q.x0+12,ty);ctx.lineTo(p.x,p.y);ctx.stroke();}
+      peaks.slice(WIDE?0:1).forEach(p=>{let o=[p.x,p.y];if(near(o[0],o[1]))o=p.out;if(near(o[0],o[1]))return;put.push(block(p.ls,o,p.t));});
+      ctx.globalAlpha=1;}};
+}
+
+// clusters of dots side by side: [{label, sub, members:[dot], mark}] packed into the box, largest first
+function layClusters(b,groups,keyOf){
+  groups=groups.filter(g=>g.members.length||g.keep);const lab=WIDE?48:44;let c=11,rows=[];
+  const pack=cc=>{const rs=[];let row={w:0,h:0,items:[]},y=0;
+    groups.forEach(g=>{const R=cc*Math.sqrt(g.members.length)+cc,wd=Math.max(2*R,WIDE?96:70)+12;
+      if(row.items.length&&row.w+wd>b.w){rs.push(row);y+=row.h;row={w:0,h:0,items:[]};}
+      row.items.push({g:g,R:R,wd:wd});row.w+=wd;row.h=Math.max(row.h,2*R+lab+10);});
+    rs.push(row);y+=row.h;return {rows:rs,h:y};};
+  let fit=pack(c);for(let k=0;k<40&&fit.h>b.h&&c>.9;k++){c*=.93;fit=pack(c);}
+  rows=fit.rows;const inst=[],labels=[];let y=b.y+Math.max(0,(b.h-fit.h)/2);
+  rows.forEach(row=>{let x=b.x+(b.w-row.w)/2;row.items.forEach(it=>{const cx=x+it.wd/2,cy=y+(row.h-lab-10)/2;
+    it.g.members.forEach((d,j)=>{const p=spiral(0,j,cx,cy,c);inst.push({k:d.k,q:keyOf(it.g),x:p[0],y:p[1],r:Math.max(.8,c*.42),c:contCol(d),a:DOTA(d)});});
+    labels.push({x:cx,y:cy+it.R+12,cy:cy,R:it.R,g:it.g,max:it.wd-8});x+=it.wd;});y+=row.h;});
+  // a label that does not fit takes a second line before it is cut short
+  return {inst:inst,over:function(a){ctx.globalAlpha=a;labels.forEach(l=>{if(!l.g.members.length){ctx.strokeStyle=rgba(COL['--ink-3']);ctx.lineWidth=1;ctx.beginPath();ctx.arc(l.x,l.cy,l.R*.8,0,6.2832);ctx.stroke();}
+    ctx.font='600 11.5px '+SANS;const ls=wrapLines(ctx,l.g.label,l.max,WIDE?2:3);
+    ls.forEach((t,i)=>text(t,l.x,l.y+i*14,{align:'center',weight:'600',col:l.g.mark?'--accent':'--ink',max:l.max}));
+    text(l.g.sub,l.x,l.y+ls.length*14+1,{align:'center',col:'--ink-3',max:l.max});});ctx.globalAlpha=1;}};
+}
+function layTopics(b){
+  const groups=YR.topics.slice(0,WIDE?8:6).map((t,j)=>({q:j+1,label:t.t.charAt(0).toUpperCase()+t.t.slice(1),sub:fmt(t.n),mark:t.fresh||(t.rise!=null&&t.rise>=2),
+    members:t.k.map(k=>DOTS[k]).filter(Boolean)}));
+  (YR.scripts||[]).filter(x=>SCRIPT[x[0]]).slice(0,WIDE?3:2).forEach((x,j)=>groups.push({q:20+j,label:SCRIPT[x[0]][2],sub:fmt(x[1])+' · '+L(SCRIPT[x[0]][3],SCRIPT[x[0]][4]),
+    members:(x[2]||[]).map(k=>DOTS[k]).filter(Boolean),other:1}));
+  return layRows(b,groups,g=>g.q);
+}
+// every cited paper as its own cluster of the papers that cited it; the clusters stand in bands, one for each year the papers were written in
+function layPapers(b){
+  const counts=YR.papers.counts,yearOf=p=>P[p].y==null?1e9:P[p].y,ys=Array.from(new Set(counts.map(c=>yearOf(c[0])))).sort((m,n)=>m-n),floorY=b.y+b.h-24,top=b.y+(YR.readers.deep?40:4),H=floorY-6-top,mid=top+H/2;
+  const rows={};ys.forEach(y=>{rows[y]=[];});counts.forEach(c=>rows[yearOf(c[0])].push(c));     // counts come largest first
+  // a band is as wide as its clusters need; inside it the largest sits on the middle line and the others as close to it as they can
+  const fit=(c,dense)=>{const R=n=>c*Math.sqrt(n)+c*.7,need=ys.map(y=>Math.max(Math.min(WIDE?30:15,b.w/ys.length*.5),2*R(rows[y][0][1])+4,rows[y].reduce((a,r)=>a+3.1416*R(r[1])*R(r[1]),0)/(H*dense))),sum=need.reduce((a,v)=>a+v,0);
+    if(sum>b.w||2*R(counts[0][1])>H)return null;const put=[],bands=[];let x0=b.x;
+    for(let k=0;k<ys.length;k++){const w=need[k]*b.w/sum,mine=[];bands.push({y:ys[k],x:x0,w:w});
+      for(const row of rows[ys[k]]){const r=R(row[1]);let best=null,cost=1e9;
+        for(let dx=0;dx<=w/2-r+.01&&dx<cost;dx+=3)for(const sx of dx?[1,-1]:[1]){const x=x0+w/2+sx*dx;
+          for(let dy=0;dy<=H/2-r&&dy+dx<cost;dy+=3)for(const sy of dy?[1,-1]:[1]){const y=mid+sy*dy;
+            if(!mine.some(q=>(q.x-x)*(q.x-x)+(q.y-y)*(q.y-y)<(q.R+r+2)*(q.R+r+2))){best={p:row[0],n:row[1],x:x,y:y,R:r};cost=dy+dx;break;}}}
+        if(!best)return null;mine.push(best);put.push(best);}
+      x0+=w;}
+    return {put:put,bands:bands};};
+  let c=10,got=null;for(;c>.4&&!(got=fit(c,.74)||fit(c,.62)||fit(c,.5));c*=.95);if(!got){const w=b.w/ys.length;got={bands:ys.map((y,k)=>({y:y,x:b.x+k*w,w:w})),put:counts.map(r=>({p:r[0],n:r[1],x:b.x+(ys.indexOf(yearOf(r[0]))+.5)*w,y:mid,R:c}))};}
+  const put=got.put,bands=got.bands,at={},fill={},inst=[],r=Math.max(.7,c*.42);put.forEach(q=>{at[q.p]=q;});
+  DOTS.forEach(d=>d.ps.forEach((p,q)=>{const o=at[p];if(!o)return;const j=fill[p]=(fill[p]||0)+1,xy=spiral(0,j-1,o.x,o.y,c);inst.push({k:d.k,q:q,x:xy[0],y:xy[1],r:r,c:contCol(d),a:DOTA(d),p:p});}));
+  // names for the largest, and for the oldest; a paper that passed a hundred this year is marked
+  const old=YR.papers.oldest,crossed={};YR.papers.crossed.forEach(x=>{if(x.mark>=100)crossed[x.p]=1;});
+  const named=put.filter(q=>q.R>=32).sort((m,n)=>n.n-m.n).slice(0,WIDE?7:3);if(old&&at[old.p]&&named.indexOf(at[old.p])<0)named.push(at[old.p]);
+  // the reader who cited most of these papers at once: a line from one to the next, oldest first
+  const deep=YR.readers.deep,dd=deep&&BYI[deep.i],chain=dd?inst.filter(d=>d.k===dd.k).sort((m,n)=>yearOf(m.p)-yearOf(n.p)||m.x-n.x):[];
+  return {inst:inst,over:function(a){ctx.globalAlpha=a;ctx.strokeStyle=rgba(COL['--rule']);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(b.x,floorY+4.5);ctx.lineTo(b.x+b.w,floorY+4.5);
+      bands.forEach((n,k)=>{if(k){ctx.moveTo(Math.round(n.x)+.5,floorY+4.5);ctx.lineTo(Math.round(n.x)+.5,floorY-3);}});ctx.stroke();
+      const seen=[];bands.slice().sort((m,n)=>(n.y===year)-(m.y===year)).forEach(n=>{const x=n.x+n.w/2,t=n.y===1e9?'?':n.w>=34?String(n.y):"'"+String(n.y).slice(2);if(seen.some(v=>Math.abs(v-x)<28))return;seen.push(x);
+        text(t,x,floorY+17,{align:'center',col:n.y===year?'--ink':'--ink-3',weight:n.y===year?'600':'400'});});
+      // the paper that cited most of them at once: a point above the clusters, with a line down to where it stands in each
+      if(chain.length>=2){const hx=Math.max(b.x+8,Math.min(b.x+b.w-8,chain.reduce((a,d)=>a+d.x,0)/chain.length)),hy=b.y+12;
+        ctx.strokeStyle=rgba(COL['--ink'],.75);ctx.lineWidth=.9;chain.forEach(d=>{ctx.beginPath();ctx.moveTo(hx,hy);ctx.bezierCurveTo(hx,hy+(d.y-hy)*.45,d.x,d.y-(d.y-hy)*.45,d.x,d.y);ctx.stroke();});
+        ctx.strokeStyle=rgba(COL['--ink']);ctx.lineWidth=1.2;chain.forEach(d=>{ctx.fillStyle=rgba(COL['--bg']);ctx.beginPath();ctx.arc(d.x,d.y,Math.max(3.2,r+1.8),0,6.2832);ctx.fill();ctx.stroke();});
+        ctx.fillStyle=rgba(COL['--ink']);ctx.beginPath();ctx.arc(hx,hy,4.5,0,6.2832);ctx.fill();
+        const t=L('One paper, citing '+deep.n+' of these at once','一篇论文，同时引用了其中 '+deep.n+' 篇');ctx.font='600 11.5px '+SANS;const w=ctx.measureText(t).width,right=hx+10+w<=b.x+b.w;
+        text(t,right?hx+10:Math.max(b.x+w,hx-10),hy,{align:right?'left':'right',weight:'600',col:'--ink'});}
+      const placed=[];named.forEach(q=>{const big=q.R>=32,max=big?Math.max(84,Math.min(170,2*q.R-14)):130;ctx.font='600 11.5px '+SANS;const ls=wrapLines(ctx,shortTitle(P[q.p].t,30),max,2),sub=big?fmt(q.n):fmt(q.n)+' · '+P[q.p].y;
+        const wd=Math.max.apply(null,ls.concat([sub]).map(t=>ctx.measureText(t).width))+14,ht=ls.length*14+20,x=Math.max(b.x+wd/2,Math.min(b.x+b.w-wd/2,q.x)),free=v=>v>=b.y-2&&v+ht<=floorY&&!placed.some(o=>Math.abs(o.x-x)<(o.w+wd)/2+2&&v<o.y+o.h+2&&o.y<v+ht+2);
+        const y=(big?[q.y-ht/2]:[q.y-q.R-ht-4,q.y+q.R+4,top,floorY-ht-4]).find(free);if(y==null)return;placed.push({x:x,y:y,w:wd,h:ht});     // a name that would cover another is left out
+        ctx.fillStyle=rgba(COL['--bg'],.86);ctx.beginPath();ctx.roundRect?ctx.roundRect(x-wd/2,y,wd,ht,5):ctx.rect(x-wd/2,y,wd,ht);ctx.fill();     // a plate keeps the name readable over the dots
+        ls.forEach((t,i)=>text(t,x,y+11+i*14,{align:'center',weight:'600',col:crossed[q.p]?'--accent':'--ink',halo:0}));text(sub,x,y+11+ls.length*14,{align:'center',col:'--ink-2',halo:0});});
+      ctx.globalAlpha=1;}};
+}
+// readers: every paper stands in the column of the year its longest-standing reader first cited this work; the owner's circle apart.
+// Above the columns, brackets for the people who cited it every year up to this one; below, an arc for each person who came back after five years or more
+function layReaders(b){
+  const rd=YR.readers,own=DOTS.filter(d=>d.own),out=DOTS.filter(d=>!d.own),since=d=>YR.works[d.k][4]||year,ys=[];
+  const y0=Math.min.apply(null,out.map(since).concat([year]));for(let y=y0;y<=year;y++)ys.push(y);
+  const st=rd.streaks||[],best=st.length?st[st.length-1]:null,five=st.filter(x=>x[0]>=5).reduce((a,x)=>a+x[1],0),br=[];
+  const who=WIDE&&(rd.streak_names||[]).length?rd.streak_names:null,others=who&&best?best[1]-who.length:0;
+  if(best&&best[0]>=5){br.push({from:year-best[0]+1,t:L(fmt(best[1])+' · every year for '+best[0]+' years'+(who?': '+who.join(', ')+(others>0?' and '+fmt(others)+' more':''):''),
+                                                    '连续 '+best[0]+' 年每年都来 · '+fmt(best[1])+' 人'+(who?'：'+join(who)+(others>0?' 等':''):''))});
+    if(WIDE&&best[0]>5&&five>best[1])br.push({from:year-4,t:L(fmt(five)+' · five years or more','连续五年以上 · '+fmt(five)+' 人')});}
+  const back=rd.back&&rd.back.gap>=5?rd.back:null,lines=back?(WIDE&&back.names.length?2:1):0,deep=back?Math.min(WIDE?46:24,b.h*.09):0;
+  const brH=br.length*22,arcH=back?10+deep+lines*14+4:0,floorY=b.y+b.h-26-arcH,room=floorY-(b.y+brH+34);
+  const ncol=ys.length+(own.length?1.6:0),cw=b.w/ncol,per={};ys.forEach(y=>{per[y]=0;});out.forEach(d=>{per[since(d)]++;});
+  const top=Math.max.apply(null,ys.map(y=>per[y]).concat([own.length,1]));let pitch=Math.min(9,cw*.86),across=1;
+  for(;pitch>.9;pitch*=.95){across=Math.max(1,Math.floor(cw*.86/pitch));if(Math.ceil(top/across)*pitch<=room)break;}
+  const fill={},inst=[],r=Math.max(.6,pitch*.4),colX=k=>b.x+k*cw+(cw-across*pitch)/2,put=(d,k)=>{const j=fill[k]=(fill[k]||0)+1,o={k:d.k,q:0,x:colX(k)+((j-1)%across+.5)*pitch,y:floorY-(Math.floor((j-1)/across)+.5)*pitch,r:r,c:contCol(d),a:DOTA(d)};
+    inst.push(o);return o;};
+  const mid=k=>b.x+(k+.5)*cw,xOf=y=>mid(Math.max(0,ys.indexOf(y)<0?0:ys.indexOf(y)));
+  let first=null;out.slice().sort((m,n)=>m.k-n.k).forEach(d=>{const o=put(d,ys.indexOf(since(d)));if(!first&&!d.yo&&since(d)===year)first={o:o,d:d};});
+  const ok=ys.length+.6;own.forEach(d=>put(d,ok));
+  const hgt=n=>Math.ceil(n/across)*pitch,tall=ys.reduce((m,y)=>per[y]>per[m]?y:m,year),old=ys.find(y=>per[y]);
+  const by=b.y+Math.max(0,floorY-hgt(top)-45-(b.y+brH));     // the brackets sit just above the tallest column and its name, not at the top of the plot
+  return {inst:inst,over:function(a){ctx.globalAlpha=a;ctx.strokeStyle=rgba(COL['--rule']);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(b.x,floorY+4.5);ctx.lineTo(b.x+ys.length*cw,floorY+4.5);
+      if(own.length){ctx.moveTo(b.x+ok*cw,floorY+4.5);ctx.lineTo(b.x+(ok+1)*cw,floorY+4.5);}ctx.stroke();
+      // the axis: this year, the own column and the first year first, then every year that has room
+      ctx.font='400 11.5px '+SANS;const axis=[],free=(x,w)=>!axis.some(o=>Math.abs(o[0]-x)<(o[1]+w)/2+6),label=(t,x,o)=>{const w=ctx.measureText(t).width;x=Math.max(b.x+w/2,Math.min(b.x+b.w-w/2,x));if(!free(x,w))return;axis.push([x,w]);text(t,x,floorY+17,Object.assign({align:'center',col:'--ink-3'},o));};
+      const yl=y=>cw>=34?String(y):"'"+String(y).slice(2);label(yl(year),mid(ys.length-1),{col:'--ink',weight:'600'});if(own.length)label(L('Own','本人'),b.x+(ok+.5)*cw);
+      if(old!=null)label(yl(old),xOf(old));ys.forEach((y,k)=>label(yl(y),mid(k)));
+      // names over the columns, kept apart
+      const tags=[],tag=(k,n,t)=>{ctx.font='600 11.5px '+SANS;const w=Math.max(ctx.measureText(t).width,30),x=Math.max(b.x+w/2,Math.min(b.x+b.w-w/2,mid(k))),y=Math.max(by+brH+30,floorY-hgt(n)-12);
+        if(tags.some(o=>Math.abs(o[0]-x)<(o[2]+w)/2+8&&Math.abs(o[1]-y)<32))return;tags.push([x,y,w]);text(t,x,y-14,{align:'center',weight:'600',col:'--ink'});text(fmt(n),x,y,{align:'center',col:'--ink-2'});};
+      tag(ys.indexOf(year),per[year],L('First time','第一次'));if(tall!==year&&per[tall])tag(ys.indexOf(tall),per[tall],L('Since '+tall,tall+' 年起'));
+      if(old!=null&&old!==tall&&old!==year)tag(ys.indexOf(old),per[old],L('Since '+old,old+' 年起'));
+      // every year up to this one: a bracket over the years
+      br.forEach((o,i)=>{const x0=b.x+Math.max(0,ys.indexOf(o.from))*cw+3,x1=b.x+ys.length*cw-3,y=by+i*22+18;
+        ctx.strokeStyle=rgba(COL['--ink-2']);ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(x0,y+6);ctx.lineTo(x0,y);ctx.lineTo(x1,y);ctx.lineTo(x1,y+6);ctx.stroke();
+        ctx.font='600 11.5px '+SANS;const w=ctx.measureText(o.t).width;text(o.t,Math.max(b.x+w/2,Math.min(b.x+b.w-w/2,(x0+x1)/2)),y-8,{align:'center',weight:i?'400':'600',col:i?'--ink-2':'--ink'});});
+      // came back: from the year a person last cited it to this one
+      if(back){const y=floorY+28,x1=mid(ys.length-1),most=back.gap;ctx.strokeStyle=rgba(COL['--accent'],.4);ctx.lineWidth=.8;
+        (back.last||[]).forEach(g=>{const x0=xOf(g[0]),d0=deep*(year-g[0])/most;for(let j=0;j<g[1];j++){const d=d0*(.62+.38*(j+.5)/g[1]);ctx.beginPath();ctx.moveTo(x0,y);ctx.bezierCurveTo(x0,y+d*1.33,x1,y+d*1.33,x1,y);ctx.stroke();}});
+        const cxm=(xOf(year-most)+x1)/2,ly=y+deep+12,far=back.names.length?L(back.names.join(', ')+' · last in '+(year-most),join(back.names)+' · 上一次在 '+(year-most)+' 年'):'';
+        text(L(fmt(back.n)+' came back after five years or more',fmt(back.n)+' 人隔了五年以上又回来'),cxm,ly,{align:'center',weight:'600',col:'--accent',max:b.w});
+        if(lines>1)text(far,cxm,ly+14,{align:'center',col:'--ink-2',max:b.w});}
+      // the first new reader of the year
+      if(first){const o=first.o,pl=first.d.cs.length?cityFull(first.d.cs[0]):'',iso=new Date(Date.UTC(year,0,first.d.doy)).toISOString().slice(0,10),t=L('First new reader · ','第一位新读者 · ')+day(iso)+(pl&&WIDE?(LANG==='zh'?'，':', ')+pl:'');
+        ctx.strokeStyle=rgba(COL['--ink']);ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(o.x,o.y,Math.max(3.5,r+2.5),0,6.2832);ctx.stroke();
+        // the label goes up into the open, above the columns it would cross; its line bends down the gap beside the dot's column
+        ctx.font='600 11.5px '+SANS;const w=ctx.measureText(t).width,lx=Math.max(b.x+4,o.x-w-34),cols=ys.map((y,k)=>k).filter(k=>b.x+(k+1)*cw>lx&&b.x+k*cw<lx+w),
+          over=Math.min.apply(null,cols.map(k=>floorY-hgt(per[ys[k]])).concat([floorY])),ly=Math.max(by+brH+44,Math.min(o.y-24,over-22));
+        const gx=colX(ys.length-1)-(cw-across*pitch)/2,x0=Math.min(lx+w+6,gx-10),g=Math.max(3.5,r+2.5);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x0,ly);
+        if(o.x-gx>g+3){ctx.arcTo(gx,ly,gx,o.y,10);ctx.arcTo(gx,o.y,o.x,o.y,Math.min(6,o.x-gx-g));ctx.lineTo(o.x-g,o.y);}
+        else{ctx.arcTo(gx,ly,gx,o.y-g,10);ctx.lineTo(gx,o.y-g);}ctx.stroke();text(t,lx,ly,{weight:'600',col:'--ink'});}
+      ctx.globalAlpha=1;}};
+}
+// topics: one row a phrase, its papers in a ribbon of dots, longest first; the groups marked `other` share one band
+// under a rule, each a small round cluster with its name beside it
+function layRows(b,groups,keyOf){
+  groups=groups.filter(g=>g.members.length);const oth=groups.filter(g=>g.other);groups=groups.filter(g=>!g.other);if(!groups.length&&!oth.length)return {inst:[]};
+  const n=groups.length+(oth.length?1:0),lab=Math.min(b.w*.34,WIDE?190:120),gap=WIDE?12:8,rh=(b.h-gap*(n-1))/n,most=Math.max.apply(null,groups.map(g=>g.members.length).concat([1])),wd=b.w-lab-12-46;
+  let pitch=Math.min(8,rh*.9),lines=1;for(;pitch>.9;pitch*=.95){lines=Math.max(1,Math.floor(rh*.86/pitch));if(Math.ceil(most/lines)*pitch<=wd)break;}
+  const inst=[],r=Math.max(.6,pitch*.4),rows=[],x0=b.x+lab+12;
+  groups.forEach((g,i)=>{const y=b.y+i*(rh+gap),cy=y+rh/2,h=lines*pitch;
+    g.members.forEach((d,j)=>{inst.push({k:d.k,q:keyOf(g),x:x0+(Math.floor(j/lines)+.5)*pitch,y:cy-h/2+(j%lines+.5)*pitch,r:r,c:contCol(d),a:DOTA(d)});});
+    rows.push({g:g,cy:cy,end:x0+Math.ceil(g.members.length/lines)*pitch});});
+  const band=b.y+groups.length*(rh+gap),cy=band+rh/2,bx=WIDE?x0:b.x,cell=(b.x+b.w-bx)/Math.max(1,oth.length),rings=[],
+    cp=Math.min(pitch,rh*.42/Math.sqrt(Math.max.apply(null,oth.map(g=>g.members.length).concat([1])))),cr=Math.max(.6,cp*.4);     // the largest cluster fits the band
+  oth.forEach((g,i)=>{const R=cp*Math.sqrt(g.members.length),cx=bx+i*cell+R+cp;
+    g.members.forEach((d,j)=>{const p=spiral(0,j,cx,cy,cp);inst.push({k:d.k,q:keyOf(g),x:p[0],y:p[1],r:cr,c:contCol(d),a:DOTA(d)});});
+    rings.push({g:g,x:cx+R+cp+6,max:cell-2*R-3*cp-6});});
+  return {inst:inst,over:function(a){ctx.globalAlpha=a;rows.forEach(o=>{ctx.font='600 12px '+SANS;const ls=wrapLines(ctx,o.g.label,lab,2);
+      ls.forEach((t,i)=>text(t,b.x+lab,o.cy+(i-(ls.length-1)/2)*14,{align:'right',weight:'600',col:o.g.mark?'--accent':'--ink',max:lab}));
+      text(o.g.sub,o.end+8,o.cy,{col:'--ink-2'});});
+    if(rings.length){ctx.strokeStyle=rgba(COL['--rule']);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(b.x,band-gap/2);ctx.lineTo(b.x+b.w,band-gap/2);ctx.stroke();
+      rings.forEach(o=>{text(o.g.label,o.x,cy-8,{weight:'600',col:'--ink-2',max:o.max});text(o.g.sub,o.x,cy+8,{col:'--ink-3',max:o.max});});}
+    ctx.globalAlpha=1;}};
+}
+
+function mapDots(b,cam,want,size){
+  const byCity={},pitch=size||Math.max(1.5,Math.min(3,cam.s*0.0125)),inst=[];
+  DOTS.forEach(d=>d.cs.forEach((c,q)=>{const lv=want(d,c);if(!lv)return;const j=byCity[c]=(byCity[c]||0)+1,o=at(cam,CITY[c].lon,CITY[c].lat),p=spiral(0,j-1,o[0],o[1],pitch);
+    inst.push({k:d.k,q:q,x:p[0],y:p[1],r:lv===2?pitch*.62:pitch*.44,c:lv===2?COL['--accent']:COL[CONT_VAR[CITY_CONT[c]]],a:lv===2?1:DOTA(d)});}));
+  return inst;
+}
+function layMap(b){
+  const desks=['healthcare','archive'].map(k=>({k:k,d:(YR.desks||{})[k]})).filter(x=>x.d&&(x.d.at||[]).length);
+  // the key: one quiet row under the map, each sign as on the map, its name, and how many papers; two rows when one does not fit
+  ctx.font='400 11.5px '+SANS;const keys=desks.map(x=>{const n=x.d.n,t=x.k==='healthcare'?L(n===1?'Hospital':'Hospitals','医院'):L('Libraries and archives','图书馆和档案馆'),c=L(fmt(n)+(n===1?' paper':' papers'),fmt(n)+' 篇');
+      return {k:x.k,t:t,c:c,w:16+ctx.measureText(t).width+6+ctx.measureText(c).width};}),
+    oneRow=keys.reduce((a,x)=>a+x.w,0)+(keys.length-1)*22<=b.w,keyH=keys.length?(oneRow?1:keys.length)*18:0;
+  // the map leaves room under its outline (which runs below the land, to the pole) for the key
+  const low=Math.max(0,proj(0,-90)[1]-WORLD[3]),c0=camFor(b),cam=keyH?camFor({x:b.x,y:b.y,w:b.w,h:b.h-keyH-14-low*c0.s}):c0,fog=fogFor(cam),far=YR.places.far,home=D.home,arc=far&&home?greatCircle(home.lat,home.lon,CITY[far.c].lat,CITY[far.c].lon):null;
+  return {cam:cam,inst:mapDots(b,cam,()=>1),base:function(a){drawLand(cam,a);ctx.globalAlpha=a;ctx.drawImage(fog,0,0,SW,SH);ctx.globalAlpha=1;},
+    over:function(a){ctx.globalAlpha=a;
+      // hospitals are a cross, libraries and archives a book; the key under the map, at its left edge
+      const ss=WIDE?6:5,placed=D.home?[at(cam,D.home.lon,D.home.lat)]:[],keyY=cam.ty+Math.max(WORLD[3],proj(0,-90)[1])*cam.s+16,keyX=Math.max(b.x,cam.tx+WORLD[0]*cam.s);
+      desks.forEach((x,i)=>{x.d.at.forEach(q=>{const o=at(cam,q[0],q[1]);if(placed.some(p=>Math.hypot(p[0]-o[0],p[1]-o[1])<2.3*(ss+2)))return;placed.push(o);sign(x.k,o[0],o[1],ss);});
+        });
+      let kx=keyX;keys.forEach((x,i)=>{const ky=keyY+(oneRow?0:i*18);if(!oneRow)kx=keyX;sign(x.k,kx+6,ky,4.5);ctx.font='400 11.5px '+SANS;const tw=ctx.measureText(x.t).width;
+        text(x.t,kx+16,ky,{col:'--ink-2',halo:0});text(x.c,kx+16+tw+6,ky,{col:'--ink-3',halo:0});kx+=x.w+22;});
+      if(!arc){ctx.globalAlpha=1;return;}ctx.strokeStyle=rgba(COL['--accent'],.9);ctx.lineWidth=1.2;strokeArc(cam,arc,a);
+      const p=at(cam,CITY[far.c].lon,CITY[far.c].lat),h=at(cam,home.lon,home.lat),left=p[0]>b.x+b.w-120;
+      text(cityName(far.c)+' · '+fmt(far.km)+' km',p[0]+(left?-8:8),p[1]-10,{weight:'600',col:'--ink',align:left?'right':'left'});
+      text(homeLabel(),h[0]+7,h[1]-9,{col:'--ink-2'});ctx.globalAlpha=1;}};
+}
+// a small sign on the map, like a road sign: a rounded ink square with a white cross for a hospital, an open book for a library or archive
+function sign(kind,x,y,s){const h=s+2,r=h*.45;ctx.fillStyle=rgba(COL['--ink']);ctx.beginPath();
+  ctx.roundRect?ctx.roundRect(x-h,y-h,2*h,2*h,r):ctx.rect(x-h,y-h,2*h,2*h);ctx.fill();ctx.fillStyle=ctx.strokeStyle=rgba(COL['--bg']);
+  if(kind==='healthcare'){const a=h*.62,t=h*.21;ctx.fillRect(x-a,y-t,2*a,2*t);ctx.fillRect(x-t,y-a,2*t,2*a);return;}
+  ctx.lineWidth=Math.max(.9,h*.15);ctx.lineJoin='round';ctx.beginPath();
+  ctx.moveTo(x,y-s*.35);ctx.lineTo(x,y+s*.55);ctx.moveTo(x,y-s*.35);ctx.quadraticCurveTo(x-s*.35,y-s*.6,x-s*.75,y-s*.4);ctx.lineTo(x-s*.75,y+s*.35);ctx.quadraticCurveTo(x-s*.35,y+s*.2,x,y+s*.55);
+  ctx.moveTo(x,y-s*.35);ctx.quadraticCurveTo(x+s*.35,y-s*.6,x+s*.75,y-s*.4);ctx.lineTo(x+s*.75,y+s*.35);ctx.quadraticCurveTo(x+s*.35,y+s*.2,x,y+s*.55);
+  ctx.stroke();}
+// the new cities on the globe turned to put home in the middle: an azimuthal equidistant map, as on the Reach page.
+// Direction from home is true (north up) and the rim is the far side of the earth; the distance from the middle grows
+// with the square root of the kilometres, so that the many cities near home are not lost in it. The land is drawn
+// the same way, and the places reached before stay where they are, faint, so the world map seems to turn.
+// City ids are kept as strings, so where[c] answers for an id of either kind
+const HALF=20015;     // km to the far side of the earth
+let AZ=null;     // home's land in (distance 0..1, bearing) pairs: {flat: [rings], wrap: [polygons that circle home's far side]}
+function azi(lat,lon){const r=Math.PI/180,h=D.home,p0=h.lat*r,ph=lat*r,dl=(lon-h.lon)*r,cc=Math.max(-1,Math.min(1,Math.sin(p0)*Math.sin(ph)+Math.cos(p0)*Math.cos(ph)*Math.cos(dl)));
+  return [Math.acos(cc)/Math.PI,Math.atan2(Math.sin(dl)*Math.cos(ph),Math.cos(p0)*Math.sin(ph)-Math.sin(p0)*Math.cos(ph)*Math.cos(dl))];}
+function aziLand(){if(AZ)return AZ;const r=Math.PI/180,v3=(la,lo)=>[Math.cos(la*r)*Math.cos(lo*r),Math.cos(la*r)*Math.sin(lo*r),Math.sin(la*r)],
+    xy=p=>[p[0]*Math.sin(p[1]),-p[0]*Math.cos(p[1])],
+    dense=ring=>{const out=[];for(let i=0;i<ring.length;i++){const a=ring[i],b2=ring[(i+1)%ring.length],pa=azi(a[1],a[0]),pb=azi(b2[1],b2[0]);out.push(pa[0],pa[1]);     // long edges are cut along the great circle
+      const qa=xy(pa),qb=xy(pb),d=Math.hypot(qa[0]-qb[0],qa[1]-qb[1]);if(d>.012){const n=Math.min(80,Math.ceil(d/.012)),va=v3(a[1],a[0]),vb=v3(b2[1],b2[0]);
+        for(let k=1;k<n;k++){const u=k/n,v=[va[0]+(vb[0]-va[0])*u,va[1]+(vb[1]-va[1])*u,va[2]+(vb[2]-va[2])*u],m=Math.hypot(v[0],v[1],v[2]),q=azi(Math.asin(v[2]/m)/r,Math.atan2(v[1],v[0])/r);out.push(q[0],q[1]);}}}
+      return out;},
+    turn=arr=>{let t=0;for(let i=1;i<arr.length;i+=2){let d=arr[(i+2)%arr.length]-arr[i];while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;t+=d;}return t;},
+    inside=(ring,lon,lat)=>{let o=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];if((yi>lat)!==(yj>lat)&&lon<(xj-xi)*(lat-yi)/(yj-yi)+xi)o=!o;}return o;};
+  AZ={flat:[],wrap:[]};(D.land||[]).forEach(f=>f.polygons.forEach(poly=>{if(!poly.length||poly[0].length<3)return;const rings=poly.map(dense);
+    if(Math.abs(turn(rings[0]))>Math.PI&&!inside(poly[0],D.home.lon,D.home.lat))AZ.wrap.push(rings);else rings.forEach(x=>AZ.flat.push(x));}));
+  return AZ;}
+function layCompass(b){
+  const cx=b.x+b.w/2,cy=b.y+b.h/2,Rm=Math.max(40,Math.min(b.w,b.h)/2-(WIDE?22:10)),rad=rho=>Rm*Math.sqrt(rho),
+    put=(p,o)=>{o=o||0;const q=rad(p[0])+o;return [cx+q*Math.sin(p[1]),cy-q*Math.cos(p[1])];};
+  const fresh=Object.keys(NEW_CITY).filter(c=>CITY[c]),where={};Object.keys(CITY).forEach(c=>{where[c]=azi(CITY[c].lat,CITY[c].lon);});
+  const pitch=WIDE?3.2:2.6,old=.12,seen={},inst=[];     // the places reached before: stacked almost on one point and faint, so a busy city is a darker speck, not a disc
+  DOTS.forEach(d=>d.cs.forEach((c,q)=>{const j=seen[c]=(seen[c]||0)+1,o=put(where[c]),nw=NEW_CITY[c],p=spiral(0,j-1,o[0],o[1],nw?pitch:old);
+    inst.push({k:d.k,q:q,x:p[0],y:p[1],r:nw?pitch*.62:WIDE?.6:.45,c:nw?COL['--accent']:COL[CONT_VAR[CITY_CONT[c]]],a:nw?1:WIDE?.16:.12});}));
+  // the land, traced once for this size
+  const az=aziLand(),trace=(path,ring)=>{for(let i=0;i<ring.length;i+=2){const q=put([ring[i],ring[i+1]]);i?path.lineTo(q[0],q[1]):path.moveTo(q[0],q[1]);}path.closePath();};
+  const flat=new Path2D();az.flat.forEach(x=>trace(flat,x));
+  const wrap=az.wrap.map(rings=>{const w=new Path2D();w.arc(cx,cy,Rm+2,0,6.2832);w.closePath();rings.forEach(x=>trace(w,x));return w;});
+  // named: the farthest, the nearest, the first city of each new country, and the year's firsts
+  const pl=YR.places,names=[],add=c=>{c=c==null?c:String(c);if(c!=null&&NEW_CITY[c]&&where[c]&&!names.includes(c))names.push(c);};
+  add(fresh.reduce((m,c)=>where[c][0]>where[m][0]?c:m,fresh[0]));if(pl.near)add(pl.near.c);pl.firsts.forEach(f=>add(f.c));pl.new_countries.slice(0,WIDE?10:4).forEach(n=>add(n.c));
+  const rings=WIDE?[500,2000,5000,10000,15000]:[500,2000,5000,10000];
+  return {inst:inst,
+    base:function(a){ctx.globalAlpha=a;ctx.save();ctx.beginPath();ctx.arc(cx,cy,Rm,0,6.2832);ctx.fillStyle=rgba(COL['--sea']);ctx.fill();ctx.clip();
+      ctx.fillStyle=rgba(COL['--land']);ctx.fill(flat,'nonzero');wrap.forEach(w=>ctx.fill(w,'evenodd'));
+      ctx.strokeStyle=rgba(COL['--land-line']);ctx.lineWidth=.5;ctx.stroke(flat);ctx.restore();
+      ctx.strokeStyle=rgba(COL['--rule']);ctx.lineWidth=1;rings.forEach(k=>{ctx.beginPath();ctx.arc(cx,cy,rad(k/HALF),0,6.2832);ctx.stroke();});
+      ctx.strokeStyle=rgba(COL['--land-line']);ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(cx,cy,Rm,0,6.2832);ctx.stroke();ctx.globalAlpha=1;},
+    over:function(a){ctx.globalAlpha=a;
+      rings.forEach(k=>text(L(fmt(k)+' km',fmt(k)+' 公里'),cx,cy-rad(k/HALF)-7,{align:'center',col:'--ink-3',size:10.5}));
+      text(L('N','北'),cx,cy-Rm-10,{align:'center',col:'--ink-3',weight:'600',size:10.5});
+      ctx.fillStyle=rgba(COL['--ink']);ctx.beginPath();ctx.arc(cx,cy,3.5,0,6.2832);ctx.fill();text(homeLabel(),cx+7,cy+10,{col:'--ink',weight:'600'});
+      // near the rim a name turns inward, to stay on the disc
+      const used=[[cx,cy+10,60]];names.forEach(c=>{const p=put(where[c]),left=Math.hypot(p[0]-cx,p[1]-cy)>Rm*.7?p[0]<cx:p[0]>cx,t=cityName(c),x=p[0]+(left?7:-7);ctx.font='600 11.5px '+SANS;const w=ctx.measureText(t).width,x0=left?x:x-w;
+        if(x0<Math.max(2,b.x-20)||x0+w>Math.min(SW-2,b.x+b.w+20))return;if(used.some(u=>Math.abs(u[1]-(p[1]-6))<13&&x0<u[0]+(u[2]||0)&&x0+w>u[0]-4))return;used.push([x0,p[1]-6,w]);
+        text(t,x,p[1]-6,{weight:'600',col:'--ink',align:left?'left':'right'});});
+      ctx.globalAlpha=1;}};
+}
+let HEAD=null;     // the plane's last heading
+// a paper plane pointing along `ang`: a white sheet with its fold, outlined in ink
+function plane(x,y,ang,s){ctx.save();ctx.translate(x,y);ctx.rotate(ang);ctx.lineJoin='round';ctx.lineWidth=1.1;ctx.strokeStyle=rgba(COL['--ink']);
+  ctx.fillStyle=rgba(COL['--card']);ctx.beginPath();ctx.moveTo(s,0);ctx.lineTo(-s*.8,-s*.62);ctx.lineTo(-s*.42,0);ctx.lineTo(-s*.8,s*.62);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle=rgba(COL['--ink'],.18);ctx.beginPath();ctx.moveTo(s,0);ctx.lineTo(-s*.42,0);ctx.lineTo(-s*.62,s*.3);ctx.closePath();ctx.fill();     // the underside of one wing, in shade
+  ctx.beginPath();ctx.moveTo(s,0);ctx.lineTo(-s*.42,0);ctx.stroke();ctx.restore();}
+// the papers born this year: the conferences they went to, in order
+function layRoute(b){
+  const cam=camFor(b),route=YR.papers.route,born={};YR.papers.born.forEach(x=>{if(x.p!=null)born[x.p]=x;});
+  const legs=[];for(let k=1;k<route.length;k++)legs.push(greatCircle(route[k-1].lat,route[k-1].lon,route[k].lat,route[k].lon));
+  const inst=mapDots(b,cam,d=>d.ps.some(p=>born[p])?1:0,Math.max(2.4,Math.min(4,cam.s*0.018)));
+  return {cam:cam,inst:inst,live:legs.length>0,base:function(a,now){drawLand(cam,a*.9);ctx.globalAlpha=a;
+      ctx.strokeStyle=rgba(COL['--accent']);ctx.lineWidth=1.6;ctx.setLineDash([5,4]);legs.forEach(s=>strokeArc(cam,s));ctx.setLineDash([]);
+      // a paper folded into a plane flies from one meeting to the next, climbing a little on the way and banking along the route
+      if(legs.length&&a>.6&&!RM.matches&&!STILL){const t=((now||0)/1900)%(legs.length+.6),k=Math.min(legs.length-1,Math.floor(t)),f=Math.min(1,t-k),e=ease(f),
+          p=pointOn(cam,legs[k],e),q=pointOn(cam,legs[k],Math.min(1,e+.02)),r0=pointOn(cam,legs[k],Math.max(0,e-.02)),hop=Math.sin(Math.PI*f)*10;
+        // where the route crosses the map's edge the two samples straddle the jump: the heading is kept from the last frame
+        const jump=Math.hypot(q[0]-r0[0],q[1]-r0[1])>b.w*.3,head=jump&&HEAD!=null?HEAD:Math.atan2(q[1]-r0[1],q[0]-r0[0]);HEAD=head;
+        plane(p[0],p[1]-hop,head+Math.sign(Math.cos(head)||1)*Math.sin(Math.PI*(f-.5))*.3*Math.sin(Math.PI*f),WIDE?11:9);}     // nose up while climbing, down while landing, level at each stop, whichever way it flies
+      ctx.globalAlpha=1;},
+    over:function(a){ctx.globalAlpha=a;const taken=[];
+      const path=[];legs.forEach(l=>l.forEach(seg=>seg.forEach(q=>path.push([cam.tx+q[0]*cam.s,cam.ty+q[1]*cam.s]))));     // points along the dashed route
+      route.forEach(s=>{const p=at(cam,s.lon,s.lat);taken.push([p[0]-6,p[1]-6,p[0]+6,p[1]+6]);});
+      // the meeting on one line, the city under it
+      route.forEach((s,k)=>{const p=at(cam,s.lon,s.lat),ls=WIDE?[(k+1)+'  '+s.name,stopCity(s)+(s.papers.length>1?'  ×'+s.papers.length:'')]:[(k+1)+' '+s.name];
+        ctx.fillStyle=rgba(COL['--bg']);ctx.strokeStyle=rgba(COL['--accent']);ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(p[0],p[1],5,0,7);ctx.fill();ctx.stroke();
+        ctx.font='600 11.5px '+SANS;const w=Math.max.apply(null,ls.map(t=>ctx.measureText(t).width)),h=(ls.length-1)*14;
+        // the first of eight places around the stop that stays on the map and clear of the other labels; y is the first line's
+        const spots=[[10,-11-h,'left'],[-10,-11-h,'right'],[10,13,'left'],[-10,13,'right'],[12,-h/2,'left'],[-12,-h/2,'right'],[10,-27-h,'left'],[-10,-27-h,'right']];
+        // a spot clear of the route's lines too comes first; failing that, one clear of the labels
+        let pick=null,second=null;for(const o of spots){const x0=o[2]==='left'?p[0]+o[0]:p[0]+o[0]-w,r=[x0-2,p[1]+o[1]-8,x0+w+2,p[1]+o[1]+h+8];
+          if(r[0]<b.x||r[2]>b.x+b.w||taken.some(q=>r[0]<q[2]&&r[2]>q[0]&&r[1]<q[3]&&r[3]>q[1]))continue;
+          if(!path.some(q=>q[0]>r[0]&&q[0]<r[2]&&q[1]>r[1]&&q[1]<r[3])){pick=[o,r];break;}if(!second)second=[o,r];}
+        pick=pick||second||[spots[0],null];if(pick[1])taken.push(pick[1]);pick=pick[0];
+        ls.forEach((t,i)=>text(t,p[0]+pick[0],p[1]+pick[1]+i*14,{weight:i?'400':'600',col:i?'--ink-2':'--ink',align:pick[2]}));});ctx.globalAlpha=1;}};
+}
+// without a route to draw, the new papers stand side by side, each with the dots of its readers
+function layBorn(b){
+  const groups=YR.papers.born.slice().sort((x,y)=>y.n-x.n).slice(0,WIDE?12:6).map((x,j)=>({q:j+1,p:x.p,label:shortTitle(x.t,26),members:[],sub:'',keep:1}));
+  DOTS.forEach(d=>groups.forEach(g=>{if(g.p!=null&&d.ps.indexOf(g.p)>=0)g.members.push(d);}));groups.forEach(g=>{g.sub=fmt(g.members.length);});
+  return layClusters(b,groups,g=>g.q);
+}
+// one stamp for every country or region reached for the first time, with the dot of the paper that got there
+// a country's outline as a stamp: its own shape, centred on (cx, cy), fitted in a square of side `art`
+function stampShape(iso,cx,cy,art){const shape=new Path2D(),polys=[];let ref=null;
+  (D.land||[]).filter(x=>x.iso===iso).forEach(x=>(x.polygons||[]).forEach(poly=>{const o={rings:[],x0:1e9,x1:-1e9,y0:1e9,y1:-1e9};
+    poly.forEach(ring=>{const out=[];ring.forEach(p=>{if(ref==null)ref=p[0];let lon=p[0];while(lon-ref>180)lon-=360;while(lon-ref<-180)lon+=360;out.push([lon,p[1]]);
+      if(lon<o.x0)o.x0=lon;if(lon>o.x1)o.x1=lon;if(p[1]<o.y0)o.y0=p[1];if(p[1]>o.y1)o.y1=p[1];});o.rings.push(out);});if(o.rings.length&&o.x1>=o.x0)polys.push(o);}));
+  if(!polys.length){shape.arc(cx,cy,art*.36,0,6.2832);shape.at=()=>[cx,cy];return shape;}     // too small for the base map: a plain round mark
+  // the largest piece and whatever lies near it; territories far overseas would shrink the rest to a speck
+  const main=polys.reduce((m,o)=>(o.x1-o.x0)*(o.y1-o.y0)>(m.x1-m.x0)*(m.y1-m.y0)?o:m),mw=Math.max(2,main.x1-main.x0),mh=Math.max(2,main.y1-main.y0);
+  const kept=polys.filter(o=>Math.abs((o.x0+o.x1-main.x0-main.x1)/2)<=mw*1.1&&Math.abs((o.y0+o.y1-main.y0-main.y1)/2)<=mh*1.1);
+  let x0=1e9,x1=-1e9,ya=1e9,yb=-1e9;kept.forEach(o=>{if(o.x0<x0)x0=o.x0;if(o.x1>x1)x1=o.x1;if(o.y0<ya)ya=o.y0;if(o.y1>yb)yb=o.y1;});
+  const k=Math.cos((ya+yb)/2*Math.PI/180)||1,s=Math.min(art/Math.max(.01,(x1-x0)*k),art/Math.max(.01,yb-ya)),ox=cx-(x0+x1)/2*k*s,oy=cy+(ya+yb)/2*s;
+  kept.forEach(o=>o.rings.forEach(r=>{r.forEach((p,i)=>{i?shape.lineTo(ox+p[0]*k*s,oy-p[1]*s):shape.moveTo(ox+p[0]*k*s,oy-p[1]*s);});shape.closePath();}));
+  // where a place falls on the outline, or null when it is on a part that is not drawn
+  shape.at=(lon,lat)=>{while(lon-ref>180)lon-=360;while(lon-ref<-180)lon+=360;return lon<x0-1||lon>x1+1||lat<ya-1||lat>yb+1?null:[ox+lon*k*s,oy-lat*s];};return shape;}
+// a stamp: perforated paper with a fine frame. In it the outline of the country with the city marked, and, when landmarks.json has one, a line drawing of that city beside it
+const MARKS={},STAMP_F=.54;
+const stampOutline=(c,cx,cy,fw)=>stampShape(c.iso,c.art?cx-fw*.275:cx,cy,fw*(c.art?.27:.36));
+// the edge of a stamp: half-round notches along all four sides
+function stampEdge(g,x,y,w,h,r){const nx=Math.max(5,Math.round(w/(r*3.5))),ny=Math.max(3,Math.round(h/(r*3.5))),dx=w/nx,dy=h/ny;g.beginPath();g.moveTo(x,y);
+  for(let i=0;i<nx;i++){const u=x+(i+.5)*dx;g.lineTo(u-r,y);g.arc(u,y,r,Math.PI,0,true);}g.lineTo(x+w,y);
+  for(let i=0;i<ny;i++){const v=y+(i+.5)*dy;g.lineTo(x+w,v-r);g.arc(x+w,v,r,-Math.PI/2,Math.PI/2,true);}g.lineTo(x+w,y+h);
+  for(let i=nx-1;i>=0;i--){const u=x+(i+.5)*dx;g.lineTo(u+r,y+h);g.arc(u,y+h,r,0,Math.PI,true);}g.lineTo(x,y+h);
+  for(let i=ny-1;i>=0;i--){const v=y+(i+.5)*dy;g.lineTo(x,v+r);g.arc(x,v,r,Math.PI/2,-Math.PI/2,true);}g.closePath();}
+const stampPaper=()=>isDark()?'#20252f':'#fffdf9';
+const stampR=fw=>Math.max(2,Math.min(4.6,fw*.022));
+function stampBlank(g,cx,cy,fw){const fh=fw*STAMP_F,x=cx-fw/2,y=cy-fh/2,r=stampR(fw),dk=isDark();
+  g.save();g.shadowColor=dk?'rgba(0,0,0,.34)':'rgba(40,28,16,.1)';g.shadowBlur=fw*.05;g.shadowOffsetY=fw*.014;stampEdge(g,x,y,fw,fh,r);g.fillStyle=stampPaper();g.fill();g.restore();
+  g.strokeStyle=rgba(COL[dk?'--land-line':'--rule']);g.lineWidth=Math.max(1,fw*.0075);g.stroke();}
+function stamp(g,c,cx,cy,fw,shape){const fh=fw*STAMP_F,m=Math.max(fw*.05,stampR(fw)+2.5),ix=cx-fw/2+m,iy=cy-fh/2+m,iw=fw-2*m,ih=fh-2*m,dk=isDark();
+  stampBlank(g,cx,cy,fw);g.strokeStyle=rgba(COL['--accent'],dk?.36:.3);g.lineWidth=Math.max(.8,fw*.006);g.strokeRect(ix,iy,iw,ih);
+  shape=shape||stampOutline(c,cx,cy,fw);g.fillStyle=dk?'rgb(52,60,74)':rgba(COL['--land']);g.strokeStyle=rgba(COL['--accent'],.9);g.lineWidth=Math.max(1,fw*.008);g.lineJoin='round';g.fill(shape);g.stroke(shape);
+  const o=CITY[c.c]&&shape.at(CITY[c.c].lon,CITY[c.c].lat);
+  if(o){g.fillStyle=stampPaper();g.beginPath();g.arc(o[0],o[1],fw*.025,0,6.2832);g.fill();g.fillStyle=rgba(COL['--accent']);g.beginPath();g.arc(o[0],o[1],fw*.016,0,6.2832);g.fill();}
+  if(c.art){const path=MARKS[c.iso]||(MARKS[c.iso]=new Path2D(c.art.d)),rw=iw*.53,s=Math.min(rw/100,ih*.8/70);
+    g.save();g.translate(ix+iw*.435+(rw-100*s)/2,cy-35*s);g.scale(s,s);g.lineWidth=Math.max(1.1,fw*.0095)/s;g.lineJoin=g.lineCap='round';g.strokeStyle=rgba(COL['--ink']);g.stroke(path);g.restore();}}
+// the postmark on a stamp's corner: a ring, and in it the month; the dot of the paper that got there sits above the month
+const postR=fw=>Math.max(Math.min(14,fw*.14),Math.min(24,fw*.1)),stampMonth=c=>c.yo?'':L(MONTHS[+c.date.slice(5,7)-1].slice(0,3).toUpperCase(),(+c.date.slice(5,7))+'月');
+function postmark(g,x,y,pr,mon){g.strokeStyle=rgba(COL['--accent'],.85);g.lineWidth=Math.max(1,pr*.07);g.beginPath();g.arc(x,y,pr,0,6.2832);g.stroke();
+  if(mon){g.font='700 '+Math.max(6.5,pr*.5)+'px '+SANS;g.textAlign='center';g.textBaseline='middle';g.fillStyle=rgba(COL['--accent']);g.fillText(mon,x,y+pr*.42);}}
+function layStamps(b){
+  const list=YR.places.new_countries.slice(0,80),n=list.length,want=WIDE?(list.some(c=>c.art)?4:3):2;let best=null;
+  // the number of columns that gives the widest stamps, without giving up the line that names the city
+  for(let k=1;k<=n;k++){const r=Math.ceil(n/k),w=b.w/k,h=Math.min(b.h/r,w),ln=Math.max(1,Math.min(want,Math.floor((h-22-40*STAMP_F)/15))),f=Math.min(w*.9,(h-ln*15-22)/STAMP_F),score=f*(ln>=Math.min(want,2)?1:.6);
+    if(!best||score>best.score)best={score:score,cols:k,rows:r,cw:w,ch:h,lines:ln,fw:Math.max(24,f)};}
+  const cols=best.cols,rows=best.rows,cw=best.cw,ch=best.ch,lines=best.lines,fw=best.fw,fh=fw*STAMP_F,y0=b.y+(b.h-rows*ch)/2,inst=[],cells=[];
+  const pr=postR(fw);     // the postmark: a ring on the corner, the dot of the paper and the month in it
+  list.forEach((c,j)=>{const cx=b.x+(j%cols+.5)*cw,top=y0+Math.floor(j/cols)*ch+8,cy=top+fh/2,d=BYI[c.i],m=c.art,post=[cx+fw/2-3,top+3],mon=stampMonth(c);
+    if(d)inst.push({k:d.k,q:Math.max(0,d.cs.findIndex(x=>String(x)===String(c.c))),x:post[0],y:post[1]-(mon&&pr>=11?pr*.3:0),r:Math.min(3.4,fw*.042),c:COL['--accent'],a:1});
+    const when=WIDE?day(c.date,c.yo):c.yo?String(year):LANG==='zh'?day(c.date):(+c.date.slice(8,10))+' '+MONTHS[+c.date.slice(5,7)-1].slice(0,3);
+    const t=[[stampCountry(c.iso),1]];if(lines>1)t.push([[cityName(c.c),when].filter(Boolean).join(' · ')]);
+    if(lines>3&&m)t.push([L(m.name,m.zh||m.name)]);if(lines>2&&c.p.length)t.push([shortTitle(P[c.p[0]].t,24)]);
+    cells.push({c:c,cx:cx,cy:cy,post:d?post:null,mon:pr>=11?mon:'',shape:stampOutline(c,cx,cy,fw),y:top+fh+16,t:t,max:cw-10});});
+  return {inst:inst,base:function(a){ctx.globalAlpha=a;cells.forEach(c=>stamp(ctx,c.c,c.cx,c.cy,fw,c.shape));ctx.globalAlpha=1;},
+    over:function(a){ctx.globalAlpha=a;cells.forEach(c=>{if(c.post)postmark(ctx,c.post[0],c.post[1],pr,c.mon);
+      c.t.forEach((l,i)=>text(l[0],c.cx,c.y+i*15,{align:'center',weight:l[1]?'600':'400',col:l[1]?'--ink':'--ink-3',max:c.max}));});ctx.globalAlpha=1;}};
+}
+// everyone who wrote a citing paper this year, rolling by in the order they arrived; the dots wait behind them.
+// A name that is found or pointed at holds the roll, and the dots of its papers light up with a line to each
+let FOUND=-1,POINT=-1;
+// a page sent to someone: ?for=Name lights the dots of that name's papers in every scene, and the list of names stops on it
+let GIFT=-1,GIFTS=null;
+// the ring's rim is a dial: SCRUB is the day the hand points at (0 for none); DRAG while it is held
+let SCRUB=0,HOVER=0,DRAG=null,JUST=0;     // HOVER: the day the pointer previews on the rim
+function layCredits(b){
+  const names=YR.credits||[],works=YR.credit_works||[],reg=new Set(YR.regulars||[]),cols=WIDE?3:2,lh=WIDE?25:22,cw=b.w/cols,rows=Math.ceil(names.length/cols),loop=rows*lh+b.h,fs=WIDE?15:13.5;
+  let clock=0,prev=null,lit=-2;const hits=[];
+  const inst=DOTS.map(d=>({k:d.k,q:0,x:b.x+hash(d.k+.37)*b.w,y:b.y+hash(d.k*1.618+7)*b.h,r:1.4,c:contCol(d),a:.2}));
+  const pre=function(){const i=POINT>=0?POINT:FOUND;if(i===lit)return;lit=i;const on=new Set(i>=0?works[i]||[]:[]);inst.forEach(d=>{const m=on.has(d.k);d.a=m?1:i>=0?.12:.2;d.r=m?3.4:1.4;});};
+  return {inst:inst,pre:pre,live:true,
+    hit:function(x,y){for(const h of hits)if(x>=h.x&&x<=h.x+h.w&&Math.abs(y-h.y)<=lh/2)return h.i;return -1;},
+    over:function(a,now){hits.length=0;if(a<.03){prev=null;clock=0;return;}now=now||0;
+    let off;const i=POINT>=0?POINT:FOUND;
+    if(FOUND>=0){off=b.h/2+Math.floor(FOUND/cols)*lh;clock=(off-b.h*.5)/.042;}     // the found name in the middle
+    else if(RM.matches||STILL)off=b.h;
+    else{if(prev!=null&&POINT<0)clock+=now-prev;off=(clock*.042+b.h*.5)%loop;}
+    prev=now;
+    const fr=Math.max(0,Math.floor((off-b.h)/lh)),lr=Math.min(rows-1,Math.ceil(off/lh)),yOf=r=>b.y+b.h+r*lh-off;
+    if(i>=0){const y=yOf(Math.floor(i/cols));if(y>b.y&&y<b.y+b.h){ctx.font='700 '+fs+'px '+SERIF;const x=b.x+(i%cols)*cw+4+Math.min(cw-16,ctx.measureText(names[i]).width)+6;
+      ctx.globalAlpha=a*.55;ctx.strokeStyle=rgba(COL['--accent']);ctx.lineWidth=.9;ctx.beginPath();(works[i]||[]).forEach(k=>{const d=inst[k];if(d){ctx.moveTo(x,y);ctx.lineTo(d.x,d.y);}});ctx.stroke();}}
+    for(let r=fr;r<=lr;r++){const y=yOf(r),edge=Math.min(1,(y-b.y)/50,(b.y+b.h-y)/50);if(edge<=0)continue;
+      for(let c=0;c<cols;c++){const j=r*cols+c,n=names[j];if(!n)continue;const g=reg.has(j),me=j===i;ctx.globalAlpha=a*edge*(me||i<0?1:.4);
+        text(n,b.x+c*cw+4,y,{serif:1,size:fs,col:me?'--accent':g?'--ink':'--ink-2',weight:me||g?'700':'400',halo:0,max:cw-16});
+        if(edge>.6)hits.push({i:j,x:b.x+c*cw,y:y,w:Math.min(cw-12,ctx.measureText(n).width+10)});}}
+    ctx.globalAlpha=1;}};
+}
+// the search under the list of names
+const LETTERS={'đ':'d','ı':'i','ł':'l','ø':'o','æ':'ae','œ':'oe','ß':'ss','þ':'th','ð':'d'};     // letters an accent cannot be taken off
+const fold=t=>String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\u2010-\u2015]/g,'-').replace(/[đıłøæœßþð]/g,c=>LETTERS[c]);
+let FOLDED=null,FINDUI=null;
+function findBox(){const box=el('div','find'),inp=el('input'),list=el('div','hits'),acts=el('div','acts'),card=el('button',null,L('Save name card','保存名字卡片'));
+  inp.type='search';inp.placeholder=L('Find a name','找一个名字');inp.setAttribute('aria-label',L('Find a name in the list','在名单里找一个名字'));inp.autocomplete='off';inp.spellcheck=false;
+  card.type='button';card.addEventListener('click',()=>{if(FOUND>=0)shareName(FOUND,false);});acts.appendChild(card);
+  const link=el('button',null,L('Copy link for them','复制给 TA 的链接'));link.type='button';link.addEventListener('click',()=>copyLink(link));acts.appendChild(link);
+  const show=()=>{list.textContent='';const q=fold(inp.value).trim();if(q.length<2&&!/[\u3000-\u9fff\uac00-\ud7af]/.test(q))return;FOLDED=FOLDED||(YR.credits||[]).map(fold);
+    const got=[];for(let j=0;j<FOLDED.length&&got.length<400;j++){const at=FOLDED[j].indexOf(q);if(at>=0)got.push([at===0||FOLDED[j].charAt(at-1)===' '?0:1,j]);}
+    got.sort((m,n)=>m[0]-n[0]||m[1]-n[1]);
+    got.slice(0,6).forEach(g=>{const j=g[1],bt=el('button',null,YR.credits[j]);bt.type='button';bt.addEventListener('click',()=>pickName(j));list.appendChild(bt);});
+    if(!got.length)list.appendChild(el('span','none',L('Not in this year’s list','今年的名单里没有')));};
+  inp.addEventListener('input',()=>{if(FOUND>=0){FOUND=-1;syncFind();TR=[];ask();}show();});
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){const f=list.querySelector('button');if(f)f.click();}else if(e.key==='Escape'){inp.value='';list.textContent='';pickName(-1);}});
+  box.appendChild(inp);box.appendChild(list);box.appendChild(acts);FINDUI={inp:inp,list:list,acts:acts};syncFind();return box;}
+function giftFrom(){const q=Q.get('for');if(!q)return;const cr=YR.credits||[],f=fold(q).trim();let j=cr.indexOf(q.trim());if(j<0)j=cr.findIndex(n=>fold(n)===f);if(j<0)return;     // the exact name first, then one that differs in case or accents
+  GIFT=j;GIFTS=new Set((YR.credit_works||[])[j]||[]);if(!GIFTS.size){GIFT=-1;GIFTS=null;return;}FOUND=j;}
+function giftLink(j){return location.href.split(/[?#]/)[0]+'?for='+encodeURIComponent(YR.credits[j])+(LANG==='zh'?'&lang=zh':'');}
+function copyLink(bt){if(FOUND<0)return;const u=giftLink(FOUND),done=()=>{bt.textContent=L('Link copied','链接已复制');setTimeout(()=>{bt.textContent=L('Copy link for them','复制给 TA 的链接');},1800);};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(done,()=>window.prompt(L('Copy this link','复制这个链接'),u));else window.prompt(L('Copy this link','复制这个链接'),u);}
+function syncFind(){if(!FINDUI)return;FINDUI.acts.hidden=FOUND<0;if(FOUND>=0){FINDUI.inp.value=YR.credits[FOUND];FINDUI.list.textContent='';}}
+function pickName(j){FOUND=j;if(j<0&&FINDUI)FINDUI.inp.value='';syncFind();TR=[];ask();}
+// the longest run of first years whose papers together were still fewer than this year's: {to, n, top}, or null when it is under three years
+function earlyYears(){let n=0,top=0,to=null;for(let y=ALL[0];y<year-1;y++){const v=HIST[y]||0;if(n+v>=N)break;n+=v;top=Math.max(top,v);to=y;}
+  return to!=null&&to-ALL[0]>=2?{to:to,n:n,top:top}:null;}
+// the year as one column of the whole record
+function layClose(b){
+  const ys=[];for(let y=ALL[0];y<=ALL[ALL.length-1];y++)ys.push(y);const top=Math.max.apply(null,ys.map(y=>HIST[y]||0)),cw=b.w/ys.length,floorY=b.y+b.h-24,room=b.h-56;
+  const hgt=n=>room*n/top,col=ys.indexOf(year),wd=cw*.74,h=Math.max(6,hgt(N)),pitch=Math.sqrt(h*wd/Math.max(1,N)),across=Math.max(1,Math.floor(wd/pitch)),step=h/Math.ceil(N/across);
+  const inst=DOTS.map((d,j)=>({k:d.k,q:0,x:b.x+col*cw+(cw-wd)/2+(j%across+.5)*(wd/across),y:floorY-(Math.floor(j/across)+.5)*step,r:Math.max(.7,Math.min(pitch,step)*.42),c:contCol(d),a:DOTA(d)}));
+  const early=earlyYears();
+  return {inst:inst,
+    over:function(a){ctx.globalAlpha=a;
+    ys.forEach((y,k)=>{const n=HIST[y]||0,x=b.x+k*cw+(cw-wd)/2;
+      if(y!==year&&n){ctx.fillStyle=rgba(COL['--ink-3'],.3);ctx.fillRect(x,floorY-hgt(n),wd,hgt(n));}
+      if(ys.length<=14||y===year||(y-ys[0])%2===0)text(ys.length>9&&!WIDE?"'"+String(y).slice(2):String(y),x+wd/2,floorY+14,{align:'center',col:y===year?'--ink':'--ink-3',weight:y===year?'600':'400'});
+      if(y===year)text(fmt(n),x+wd/2,floorY-hgt(n)-11,{align:'center',weight:'600',col:'--ink'});
+      // last year's number, kept clear of this year's column
+      else if(y===year-1&&n){ctx.font='400 11.5px '+SANS;const fit=ctx.measureText(fmt(n)).width<=cw-2;text(fmt(n),fit?x+wd/2:x+wd,floorY-hgt(n)-11,{align:fit?'center':'right',col:'--ink-3'});}});
+    // the first years that together still had fewer papers than this one, under one bracket
+    if(early){const x0=b.x+(cw-wd)/2,x1=b.x+ys.indexOf(early.to)*cw+(cw+wd)/2,by=floorY-hgt(early.top)-10;
+      ctx.strokeStyle=rgba(COL['--ink-3']);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x0,by+4);ctx.lineTo(x0,by);ctx.lineTo(x1,by);ctx.lineTo(x1,by+4);ctx.stroke();
+      const t=L(ys[0]+'–'+early.to+' together: '+fmt(early.n),ys[0]+'–'+early.to+' 年加起来：'+fmt(early.n));ctx.font='400 11.5px '+SANS;const w=ctx.measureText(t).width;
+      text(t,Math.max(b.x+w/2,Math.min(b.x+b.w-w/2,(x0+x1)/2)),by-10,{align:'center',col:'--ink-2'});}
+    ctx.strokeStyle=rgba(COL['--rule']);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(b.x,floorY+.5);ctx.lineTo(b.x+b.w,floorY+.5);ctx.stroke();ctx.globalAlpha=1;}};
+}
+
+/* ---------- sound: the year played back, two days to a step; nothing is created until Listen is pressed ---------- */
+// The notes are those of the Record page: sixteen of D Lydian, the most cited paper on D, the next two on A and F sharp.
+const AC=window.AudioContext||window.webkitAudioContext,SCALE=[62,69,66,76,71,73,80,74,81,78,88,83,85,92,86,90],STEP=.125,PER=2;
+const pitchOf=j=>440*Math.pow(2,(SCALE[j<16?j:7+(j-16)%9]-69)/12);
+let audio=null,bus=null,room=null,sound=null,STEPS=null,SPEED=1;     // SPEED: ½, 1 or 2 times two days to a beat
+// per step: how many papers, the three most cited papers among them, and where on average they were written
+function steps(){if(STEPS)return STEPS;const S=[];
+  DOTS.forEach(d=>{if(d.yo)return;const k=Math.floor((d.doy-1)/PER),o=S[k]||(S[k]={n:0,hist:{},pan:0,placed:0});o.n++;d.ps.forEach(p=>{o.hist[p]=(o.hist[p]||0)+1;});
+    if(d.cs.length){o.pan+=CITY[d.cs[0]].lon;o.placed++;}});
+  for(let k=0;k<S.length;k++){const o=S[k];if(!o)continue;o.notes=topNotes(o.hist);o.pan=o.placed?Math.max(-.72,Math.min(.72,o.pan/o.placed/180)):0;}
+  return (STEPS=S);}
+// the notes of a group of papers: its most cited papers, up to three, each cited at least a third as often as the first
+function topNotes(hist){const top=Object.keys(hist).map(Number).sort((a,b)=>hist[b]-hist[a]||a-b);return top.filter(p=>hist[p]>=.35*hist[top[0]]).slice(0,3);}
+function hall(seconds,decay){const rate=audio.sampleRate,length=Math.floor(rate*seconds),impulse=audio.createBuffer(2,length,rate);   // a noise burst that fades and darkens: the room
+  for(let ch=0;ch<2;ch++){const data=impulse.getChannelData(ch);let lp=0,seed=ch?0x2468ace0:0x13579bdf;
+    for(let i=0;i<length;i++){seed=(Math.imul(seed,1664525)+1013904223)|0;const t=i/length;lp+=(.16+.55*(1-t))*(((seed>>>8)/8388608)-1-lp);
+      data[i]=lp*Math.pow(1-t,decay)*(i<rate*.035?i/(rate*.035):1)*.65;}}
+  return impulse;}
+function startAudio(){if(!AC)return false;
+  try{if(!audio||audio.state==='closed'){audio=new AC();bus=null;}if(audio.state!=='running')audio.resume();
+    if(!bus){const lim=audio.createDynamicsCompressor(),master=audio.createGain(),wet=audio.createGain();
+      lim.threshold.value=-6;lim.knee.value=10;lim.ratio.value=6;lim.attack.value=.003;lim.release.value=.16;master.gain.value=.95;wet.gain.value=.42;
+      bus=audio.createGain();bus.gain.value=.88;room=audio.createConvolver();room.buffer=hall(2.1,2.7);
+      bus.connect(master);bus.connect(room);room.connect(wet);wet.connect(master);master.connect(lim);lim.connect(audio.destination);}
+    return true;}catch(e){return false;}}
+function bell(j,when,gain,level,dest){const freq=Math.max(180,Math.min(2200,pitchOf(j))),ring=.78-.26*level;
+  const osc=audio.createOscillator(),over=audio.createOscillator(),mod=audio.createOscillator(),modGain=audio.createGain(),overGain=audio.createGain(),lp=audio.createBiquadFilter(),env=audio.createGain();
+  osc.type='triangle';osc.frequency.setValueAtTime(freq,when);over.type='sine';over.frequency.setValueAtTime(freq*2,when);overGain.gain.setValueAtTime(.28,when);
+  mod.type='sine';mod.frequency.setValueAtTime(freq*3,when);modGain.gain.setValueAtTime(freq*(.75+.5*level),when);modGain.gain.exponentialRampToValueAtTime(.5,when+.14);
+  lp.type='lowpass';lp.frequency.setValueAtTime(Math.min(9000,freq*(6+3*level)),when);lp.frequency.exponentialRampToValueAtTime(Math.max(420,freq*2.1),when+ring*.8);
+  env.gain.setValueAtTime(.0001,when);env.gain.linearRampToValueAtTime(gain,when+.008);env.gain.exponentialRampToValueAtTime(.0003,when+ring);
+  mod.connect(modGain);modGain.connect(osc.frequency);osc.connect(lp);over.connect(overGain);overGain.connect(lp);lp.connect(env);env.connect(dest);
+  [osc,over,mod].forEach(o=>{o.start(when);o.stop(when+ring+.04);});}
+function swell(when){const env=audio.createGain(),lp=audio.createBiquadFilter();lp.type='lowpass';lp.frequency.setValueAtTime(520,when);     // a low note as a new month begins
+  env.gain.setValueAtTime(.0001,when);env.gain.linearRampToValueAtTime(.05,when+.18);env.gain.exponentialRampToValueAtTime(.0001,when+1.5);
+  [73.42,146.83].forEach(f=>{const o=audio.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(f,when);o.connect(lp);o.start(when);o.stop(when+1.55);});
+  lp.connect(env);env.connect(room);}
+const playDay=()=>sound?(audio.currentTime-sound.t0)/sound.step*PER+1:null;      // the day of the year under the line, or null
+// called every frame while playing: hand the next quarter second of notes to the audio clock
+function pump(){if(!sound)return;const S=steps();
+  if(audio.currentTime<sound.t0&&performance.now()-sound.wall>1500)return stopSound();      // the audio clock never started
+  while(sound.next<S.length&&sound.t0+sound.next*sound.step<audio.currentTime+.3){const k=sound.next++,when=sound.t0+k*sound.step,o=S[k];
+    if(when<audio.currentTime-.02)continue;      // the page was away: what was missed stays silent
+    const m=new Date(Date.UTC(year,0,1+k*PER)).getUTCMonth();if(m!==sound.month){if(sound.month!=null)swell(when);sound.month=m;}
+    if(!o)continue;const level=Math.min(1,Math.log(1+o.n)/sound.full);let dest=bus;
+    if(audio.createStereoPanner){const pn=audio.createStereoPanner();pn.pan.setValueAtTime(o.pan,when);pn.connect(bus);dest=pn;}
+    o.notes.forEach((j,i)=>bell(j,when+i*.024,.55*(.4+.6*level)/Math.sqrt(o.notes.length)*(j<16?1:.7),level,dest));}
+  if(audio.currentTime>sound.t0+S.length*sound.step+.9)stopSound();}
+// the notes of one day, struck at once: the day's most cited papers, as Listen plays them
+let DAYTOP=0,hush=0,struck=0;
+function dayChord(t){const now=performance.now();if(now-struck<90||!startAudio())return;struck=now;const hist={};let n=0;DOTS.forEach(d=>{if(d.yo||d.doy!==t)return;n++;d.ps.forEach(p=>{hist[p]=(hist[p]||0)+1;});});if(!n)return;
+  if(!DAYTOP){const per={};DOTS.forEach(d=>{if(!d.yo)per[d.doy]=(per[d.doy]||0)+1;});DAYTOP=Math.max.apply(null,Object.values(per).concat([1]));}
+  const notes=topNotes(hist),level=Math.min(1,Math.log(1+n)/Math.log(1+DAYTOP)),when=audio.currentTime+.02;
+  notes.forEach((j,i)=>bell(j,when+i*.024,.5*(.4+.6*level)/Math.sqrt(notes.length)*(j<16?1:.7),level,bus));
+  clearTimeout(hush);hush=setTimeout(()=>{if(!sound&&audio&&audio.state==='running')audio.suspend();},3000);}
+function setListen(){const pl=$('player');if(sound)pl.setAttribute('data-on','');else pl.removeAttribute('data-on');
+  $('ppBtn').setAttribute('aria-label',sound?L('Stop','停止'):L('Listen to the year','听这一年'));$('speeds').setAttribute('aria-label',L('Speed','速度'));
+  $('ppLbl').textContent=L('Listen','听');$('speeds').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(+b.value===SPEED)));}
+function stopSound(){if(!sound)return;sound=null;TR=[];setListen();ask();setTimeout(()=>{if(!sound&&audio&&audio.state==='running')audio.suspend();},2600);}   // after the last note has rung
+// from: the day to start on (the dial, or a change of speed); without it the button starts or stops the year
+// next: the first step still to schedule (after a change of speed, the steps already handed to the audio clock are not played again)
+function listen(from,next){if(sound&&from==null)return stopSound();if(!startAudio())return;stop();if(Math.abs(pos()-CAL_K)>.02)window.scrollTo(0,CAL_K*vh());let top=1;steps().forEach(o=>{if(o&&o.n>top)top=o.n;});
+  const step=STEP/SPEED,f=from>1?(from-1)/PER:0,lead=from>1?0:.12;
+  sound={t0:audio.currentTime+lead-f*step,wall:performance.now(),next:next!=null?next:Math.ceil(f),month:null,full:Math.log(1+top),step:step};TR=[];setListen();ask();}
+function setSpeed(v){if(v===SPEED)return;SPEED=v;setListen();if(sound){const d=playDay(),n=sound.next;sound=null;listen(Math.max(1,d),n);}}
+
+/* ---------- what each scene says (every number comes from year.js) ---------- */
+// a paragraph from parts: strings, {b: bold}, {q: a paper title}
+// in Chinese, a space stays only between a Chinese character and a Latin word or number, not between two Chinese characters
+const CJK=/[\u3000-\u9fff\uff00-\uffef]/,partText=x=>x==null?'':typeof x==='string'?x:String(x.b!=null?x.b:x.q!=null?x.q:'');
+function para(parts,cls){const p=el('p',cls);parts=parts.filter(x=>x!=null&&x!=='');
+  if(LANG==='zh')parts=parts.map((x,i)=>{if(typeof x!=='string')return x;const prev=partText(parts[i-1]),next=partText(parts[i+1]);
+    return x.replace(/ +/g,(sp,at)=>{const a=at?x.charAt(at-1):prev.charAt(prev.length-1),b=at+sp.length<x.length?x.charAt(at+sp.length):next.charAt(0);return CJK.test(a)&&CJK.test(b)?'':sp;});});
+  parts.forEach(x=>{if(x==null||x==='')return;if(typeof x==='string')p.appendChild(document.createTextNode(x));
+  else if(x.b!=null)p.appendChild(el('b',null,x.b));else if(x.q!=null)p.appendChild(el('q',null,x.q));});return p;}
+let asof='';
+function setAsof(){asof=SNAP.toLocaleDateString(LANG==='zh'?'zh-CN':'en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});}
+const title=p=>({q:shortTitle(P[p].t,64)});
+// "The year's first citing paper came on 2 January from …; the latest so far, on 26 November, from …"
+function ends(E){if(!E||!E.first)return null;const f=E.first,l=E.last&&E.last.i!==f.i?E.last:null,from=x=>placeOf(x)?L((x===l?', ':' ')+'from '+placeOf(x),'，来自 '+placeOf(x)):'';
+  return para(L(['The year’s first citing paper arrived on ',{b:day(f.date)},from(f),l?(YR.complete?'; the last, on ':'; the latest so far, on '):'',l?{b:day(l.date)}:'',l?from(l):'','.'],
+                ['这一年的第一篇引用论文在 ',{b:day(f.date)},from(f),l?(YR.complete?'；最后一篇在 ':'；目前最近的一篇在 '):'',l?{b:day(l.date)}:'',l?from(l):'','。']));}
+function bigKm(k){return LANG==='zh'?(k>=1e4?(k/1e4).toFixed(k>=1e6?0:1)+' 万公里':fmt(k)+' 公里'):(k>=1e6?(k/1e6).toFixed(1)+' million km':fmt(k)+' km');}
+function rounds(e){return e>=10?fmt(Math.round(e)):e.toFixed(1);}
+const never=()=>L(['The authors may never have been to most of these places. The papers have.'],['这些地方，作者大多没有去过。论文去了。']);
+const say=p=>{if(p)p.say=1;return p;};
+// writing systems other than Latin: in a sentence, the name in its own script, and the row's note. Chinese titles are left out: on this page they are nothing unusual
+const SCRIPT={cyrillic:['in Cyrillic','用西里尔字母','Кириллица','Cyrillic','西里尔字母'],ja:['in Japanese','是日文','日本語','Japanese','日文'],ko:['in Korean','是韩文','한국어','Korean','韩文'],
+  arabic:['in Arabic','是阿拉伯文','العربية','Arabic','阿拉伯文'],greek:['in Greek','是希腊文','Ελληνικά','Greek','希腊文'],devanagari:['in Devanagari','用天城文','देवनागरी','Devanagari','天城文'],
+  thai:['in Thai','是泰文','ภาษาไทย','Thai','泰文'],hebrew:['in Hebrew','是希伯来文','עברית','Hebrew','希伯来文']};     // the sentence a scene's picture carries
+function scenes(){
+  const S=[],pl=YR.places,rd=YR.readers,pp=YR.papers,totalSoFar=YR.before+N,now=year===SNAP_Y,few=!WIDE;
+  const TY=L(now?'this year':'that year',now?'今年':'这一年');
+  const gn=GIFTS?GIFTS.size:0,gname=GIFT>=0?YR.credits[GIFT]:'';
+  S.push({h:String(year),lay:layCover,order:'time',text:[
+    gn?para(L(['To ',{b:gname},': of these ',fmt(N),' dots, ',gn===1?'the one that glows is yours':'the '+fmt(gn)+' that glow are yours','. Scroll down to see where they went.'],
+              ['致 ',{b:gname},'：这 ',fmt(N),' 个点里，',gn===1?'亮着的那一个是你的':'亮着的 '+fmt(gn)+' 个是你的','。往下滚，看看它们去了哪里。']),'gift'):null,
+    para(L([{b:fmt(N)},N===1?' paper cited ':' papers cited ',OWNER,'’s work in ',String(year),'.',YR.before?' That is '+Math.round(100*N/totalSoFar)+'% of everything since the first citation.':''],
+           [String(year),' 年，有 ',{b:fmt(N)},' 篇论文引用了 ',OWNER,' 的工作。',YR.before?'占第一次被引用以来总数的 '+Math.round(100*N/totalSoFar)+'%。':''])),
+    para(L(['Each dot is one of them, in the order they appeared, coloured by the continent it was written on.'],['每个点是其中一篇，按出现的先后排列，颜色表示它写于哪个大洲。'])),
+    YR.complete?null:para(L(['Counted up to ',asof,'.'],['统计到 ',asof,'。']),'note')]});
+
+  if(pp.born.length){const withReaders=pp.born.filter(x=>x.first),co=pp.companions,stops=pp.route,atConf=stops.reduce((a,s)=>a+s.papers.length,0);
+    const ex=pp.born.filter(x=>x.first&&placeOf(x.first)).sort((a,b)=>b.n-a.n).slice(0,few&&pp.companions?0:few||(pp.companions&&pp.route.length)?1:2);
+    S.push({h:L(pp.born.length===1?'One new paper':fmt(pp.born.length)+' new papers',fmt(pp.born.length)+' 篇新论文'),lay:stops.length?layRoute:layBorn,order:'mix',text:[
+      stops.length?para(L([{b:fmt(atConf)},pp.born.length===1?' was presented at ':atConf===1?' of them was presented at ':' of them were presented at ',join(stops.map(s=>s.name+' in '+s.city+(s.papers.length>1?' ('+s.papers.length+')':''))),'.'],
+                          stops.length===1?[pp.born.length===1?'':'其中 ',{b:fmt(atConf)},' 篇发表在 ',stopCity(stops[0]),'（',stops[0].name,'）。']
+                                          :['其中 ',{b:fmt(atConf)},' 篇发表在会议上，一路经过 ',join(stops.map(s=>stopCity(s)+'（'+s.name+(s.papers.length>1?'，'+s.papers.length+' 篇':'')+'）')),'。'])):null,
+      co&&co.n>=2?para(L([pp.born.length===1?'It was written with ':'They were written with ',co.cut?'at least ':'',{b:fmt(co.n)},' co-authors',co.new?'; ':'.',co.new&&co.unsure?'about ':'',co.new?{b:fmt(co.new)}:'',co.new?(co.new===1?' is a co-author':' are co-authors')+' for the first time.':''],
+                           ['一起写下',pp.born.length===1?'它':'它们','的，',co.cut?'至少有 ':'有 ',{b:fmt(co.n)},' 位合作者',co.new?'；其中':'。',co.new&&co.unsure?'大约 ':' ',co.new?{b:fmt(co.new)}:'',co.new?' 位是第一次合作。':''])):null,
+      withReaders.length?para(L([{b:fmt(withReaders.length)},withReaders.length===1?' has':' have',' been cited by someone outside the author list.'],
+                                [{b:fmt(withReaders.length)},' 篇已经被作者之外的人引用。'])):null]
+      .concat(ex.map(x=>para(L([{q:shortTitle(x.t,64)},' was first cited from ',placeOf(x.first),', ',day(x.first.date,x.first.yo),'; its readers are in ',fmt(x.countries),x.countries===1?' country.':' countries and regions.'],
+                               [{q:shortTitle(x.t,64)},'的第一位读者在 ',placeOf(x.first),'，',day(x.first.date,x.first.yo),'。它的读者分布在 ',fmt(x.countries),' 个国家和地区。']))))});}
+
+  {const dd=YR.days,dated=N-YR.yo,b=dd.busiest[0],mk=YR.marks[0];
+    S.push({h:L('Day by day','一天一天'),lay:layRing,order:'time',listen:!!AC&&dated>=20,text:[
+      b&&b[1]>1?para(L(['The busiest day was ',{b:day(b[0])},', with ',{b:fmt(b[1])},' papers. Each ray is a day, from 1 January at the top, clockwise.'],['最忙的一天是 ',{b:day(b[0])},'，有 ',{b:fmt(b[1])},' 篇。每一道是一天，1 月 1 日在正上方，顺时针走。'])):null,
+      dated>=100&&dd.quiet<=dd.span*.5&&!(few&&dd.run&&dd.run.n>=14)?para(L(['Of ',fmt(dd.span),' days, only ',{b:fmt(dd.quiet)},' passed without a new citation.'],
+                                               [fmt(dd.span),' 天里，只有 ',{b:fmt(dd.quiet)},' 天没有新的引用。'])):null,
+      dd.run&&dd.run.n>=14?say(para(!YR.complete&&dd.run.end>=String(Y.snapshot).slice(0,10)
+        ?L(['Every day since ',day(dd.run.start),' has brought a new citing paper: ',{b:fmt(dd.run.n)+' days in a row'},' so far.'],['从 ',day(dd.run.start),'起，每天都有新的引用，已经连续 ',{b:fmt(dd.run.n)+' 天'},'。'])
+        :L(['Every day from ',day(dd.run.start),' to ',day(dd.run.end),' brought a new citing paper: ',{b:fmt(dd.run.n)+' days in a row'},'.'],['从 ',day(dd.run.start),'到 ',day(dd.run.end),'，每天都有新的引用，连续 ',{b:fmt(dd.run.n)+' 天'},'。']))):null,
+      few&&dd.run&&dd.run.n>=14?null:ends(YR.ends),
+      !few&&mk?para(mk.yo?L(['The ',{b:fmt(mk.mark)+'th'},' citing paper of all time arrived ',TY,'.'],['有记录以来的第 ',{b:fmt(mk.mark)},' 篇引用论文出现在',TY,'。'])
+                   :L(['The ',{b:fmt(mk.mark)+'th'},' citing paper of all time arrived around ',day(mk.date),'.'],['有记录以来的第 ',{b:fmt(mk.mark)},' 篇引用论文出现在 ',day(mk.date),'前后。'])):null,
+      YR.yo?para(L([fmt(YR.yo),YR.yo===1?' paper is':' papers are',' dated only by year and sit in the middle.'],[fmt(YR.yo),' 篇只知道年份，放在中间。']),'note'):null]});}
+
+  {const c=pp.counts,t=c[0],old=pp.oldest,deep=rd.deep,marks={};pp.crossed.forEach(x=>{(marks[x.mark]=marks[x.mark]||[]).push(x.p);});
+    const lv=Object.keys(marks).map(Number).sort((a,b)=>b-a).filter(m=>m>=100).slice(0,2);if(!lv.length){const m=Object.keys(marks).map(Number).sort((a,b)=>b-a)[0];if(m)lv.push(m);}
+    S.push({h:L(pp.cited===1?'One paper was cited':fmt(pp.cited)+' papers were cited',fmt(pp.cited)+' 篇论文被引用'),lay:layPapers,order:'mix',text:[
+      say(para(L(['Each cluster is one paper, standing in the year it was written in: the more it was cited ',TY,', the larger. ',title(t[0]),' drew the most, ',{b:fmt(t[1])},t[2]&&t[1]>t[2]?', up from '+fmt(t[2])+' the year before':'','.'],
+             ['每一团点是一篇论文，站在它写成的那一年里；',TY,'被引用得越多，这一团越大。被引用最多的是',title(t[0]),'，',{b:fmt(t[1])},' 次',t[2]&&t[1]>t[2]?'，上一年是 '+fmt(t[2])+' 次':'','。']))),
+      old&&year-old.y>=8?para(L([title(old.p),' was written in ',{b:String(old.y)},'. ',{b:fmt(year-old.y)+' years on'},', ',old.n===1?'one paper':fmt(old.n)+' papers',' still cited it ',TY,'.'],
+                                [{b:old.y+' 年'},'写下的',title(old.p),'，',{b:fmt(year-old.y)+' 年后'},'的',TY,'，还有 ',fmt(old.n),' 篇论文在引用。'])):null,
+      deep?para(L(['One citing paper cited ',{b:fmt(deep.n)+' of these papers'},' at once',deep.to>deep.from&&!few?'; they were written between '+deep.from+' and '+deep.to:'','. The lines run from it to each.'],
+                  ['有一篇论文一次引用了其中 ',{b:fmt(deep.n)+' 篇'},deep.to>deep.from&&!few?'，它们写于 '+deep.from+' 到 '+deep.to+' 年之间':'','。图上的线从它连到每一篇。'])):null]
+      .concat(lv.slice(0,few&&old&&deep?0:few||(old&&deep)?1:2).map(m=>{const ps=marks[m].slice(0,few?2:3),more=marks[m].length-ps.length;
+        return para(L(['Passed ',{b:fmt(m)},' citing papers ',TY,': '].concat(ps.map((p,i)=>[i?', ':'',title(p)]).flat(),[more>0?' and '+fmt(more)+' more':'','.']),
+                      [TY,'过了 ',{b:fmt(m)},' 次的：'].concat(ps.map((p,i)=>[i?'、':'',title(p)]).flat(),[more>0?'，还有 '+fmt(more)+' 篇':'','。'])));}))});}
+
+  {const outside=DOTS.filter(d=>!d.own),firstNow=outside.filter(d=>(YR.works[d.k][4]||year)===year).length,st=rd.streaks,best=st.length?st[st.length-1]:null,lasting=best&&best[0]>=5,back=rd.back&&rd.back.gap>=5?rd.back:null,top=3;
+    S.push({h:L('Readers, new and returning','新读者，老读者'),lay:layReaders,order:'mix',text:[
+      say(para(L(['Each column is the year a paper’s longest-standing reader first cited this work; ',{b:fmt(firstNow)},firstNow===1?' paper comes':' papers come',' from people who first did so ',TY,'.'],
+             ['每一列是论文作者里最早那位引用者第一次引用的年份；',{b:fmt(firstNow)},' 篇论文的作者都是',TY,'第一次来。']))),
+      back||lasting?para(L([back?{b:fmt(back.n)}:'',back?(back.n===1?' person came back':' people came back')+' after five years or more away':'',back&&lasting?', and ':'',lasting?{b:fmt(best[1])}:'',lasting?(best[1]===1?' has':' have')+' come every year for '+best[0]+' years':'','.'],
+                           [back?{b:fmt(back.n)}:'',back?' 个人隔了五年以上又回来了':'',back&&lasting?'，':'',lasting?{b:fmt(best[1])}:'',lasting?' 个人连续 '+best[0]+' 年每年都来':'','。'])):null,
+      rd.citers.length&&!few?para(L(['Most often ',TY,': ',join(rd.citers.slice(0,top).map(c=>c.name+' ('+fmt(c.n)+')')),'.'],[TY,'引用最多的人：',join(rd.citers.slice(0,top).map(c=>c.name+'（'+fmt(c.n)+' 篇）')),'。'])):null,
+      rd.own&&!few?para(L(['Papers by ',OWNER,' or a co-author are counted apart and left out of these names.'],[OWNER,' 和合作者写的论文单独计数，上面的名字里不包括它们。']),'note'):null]});}
+
+  if(YR.topics.length>=3){const scripts=(YR.scripts||[]).filter(x=>SCRIPT[x[0]]).slice(0,few?2:4),up=YR.topics.filter(t=>t.fresh||(t.rise!=null&&t.rise>=2)).sort((a,b)=>b.rise-a.rise).slice(0,few?1:2);
+    S.push({h:L('What they were working on','他们在做什么'),lay:layTopics,order:'mix',text:[
+      para(L(['The phrases that recur most in the titles of ',TY,'’s citing papers. A paper whose title uses several sits in each group.'],
+             [TY,'引用论文的标题里，出现最多的说法。标题里用了几个说法的论文，在每一组里各出现一次。'])),
+      scripts.length?para(L(['Not every title is written in Latin letters: ',join(scripts.map(x=>fmt(x[1])+' '+(SCRIPT[x[0]]||[x[0]])[0])),'.'],
+                            ['也不是每个标题都用拉丁字母：',join(scripts.map(x=>fmt(x[1])+' 个'+(SCRIPT[x[0]]||[0,x[0]])[1])),'。'])):null]
+      .concat(up.map(t=>para(t.fresh?L(['“',{b:t.t},'” is in ',fmt(t.n),' titles; no earlier title used it.'],['“',{b:t.t},'”出现在 ',fmt(t.n),' 个标题里，往年的标题里从没出现过。'])
+                               :L(['“',{b:t.t},'” is in ',fmt(t.n),' titles, about ',{b:(t.rise>=3?fmt(Math.round(t.rise)):t.rise.toFixed(1))+' times'},' its share in earlier years.'],
+                                  ['“',{b:t.t},'”出现在 ',fmt(t.n),' 个标题里，所占比例约是往年的 ',{b:(t.rise>=3?fmt(Math.round(t.rise)):t.rise.toFixed(1))+' 倍'},'。']))))});}
+
+  if(pl.cities){const far=pl.far,hosp=(YR.desks||{}).healthcare,arch=(YR.desks||{}).archive;
+    S.push({h:L('Where it was read','它去了哪里'),lay:layMap,order:'mix',text:[
+      para(L([{b:fmt(pl.cities)},pl.cities===1?' city in ':' cities in ',{b:fmt(pl.countries)},pl.countries===1?' country.':' countries and regions.',' The fog covers every place no reader has been placed in yet.'],
+             [{b:fmt(pl.cities)},' 个城市，',{b:fmt(pl.countries)},' 个国家和地区。迷雾盖着的，是还没有读者出现过的地方。'])),
+      far&&D.home&&far.km>=50?para(L(['The farthest ',TY,' was ',{b:cityFull(far.c)},', ',{b:fmt(far.km)+' km'},' from ',homeLabel(),far.p.length?', reached by ':'',far.p.length?title(far.p[0]):'','.'],
+                         [TY,'最远到了 ',{b:cityFull(far.c)},'，离 ',homeLabel(),' ',{b:fmt(far.km)+' 公里'},far.p.length?'，是':'',far.p.length?title(far.p[0]):'',far.p.length?'到的':'','。'])):null,
+      YR.distance&&D.home&&YR.distance.earths>=1?para(L(['Measured from ',homeLabel(),' to the nearest author of each paper, ',TY,'’s readers add up to ',{b:bigKm(YR.distance.km)},': ',{b:rounds(YR.distance.earths)},' times around the Earth.'],
+                         ['从 ',homeLabel(),' 到每篇论文最近的一位作者，',TY,'的读者加起来有 ',{b:bigKm(YR.distance.km)},'，绕地球 ',{b:rounds(YR.distance.earths)},' 圈。'])):null,
+      !few&&hosp?para(L(['Not only at universities: ',{b:fmt(hosp.n)},hosp.n===1?' paper came':' papers came',' from hospitals',hosp.names.length?', such as '+hosp.names[0]:'',arch?'; '+(arch.n===1?'one':fmt(arch.n))+' from '+(arch.names.length&&arch.names.length>=Math.min(arch.n,3)?join(arch.names):'archives and libraries'):'','.'],
+                        ['不只在大学里：',{b:fmt(hosp.n)},' 篇来自医院',hosp.names.length?'，比如 '+hosp.names[0]:'',arch?'；'+fmt(arch.n)+' 篇来自'+(arch.names.length&&arch.names.length>=Math.min(arch.n,3)?' '+join(arch.names):'档案馆和图书馆'):'','。'])):null]});}
+
+  if(pl.new_cities.length&&YR.before&&D.home){const nc=pl.new_countries,near=pl.near,fs=pl.firsts,show=few?6:12;
+    const firstLine=f=>f.kind==='arctic'?L(['For the first time it was cited from inside the Arctic Circle: ',{b:cityFull(f.c)},', ',day(f.date,f.yo),'.'],['第一次进入北极圈：',{b:cityFull(f.c)},'，',day(f.date,f.yo),'。'])
+      :f.kind==='south'?L(['For the first time it was cited from south of the equator: ',{b:cityFull(f.c)},'.'],['第一次越过赤道：',{b:cityFull(f.c)},'。'])
+      :L(['A new continent, ',{b:f.name},': ',cityFull(f.c),'.'],['一个新的大洲，',{b:CONT_ZH[f.name]||f.name},'：',cityFull(f.c),'。']);
+    S.push({h:L(pl.new_cities.length===1?'One new city':fmt(pl.new_cities.length)+' new cities',fmt(pl.new_cities.length)+' 个新城市'),lay:layCompass,order:'mix',text:[
+      para(L(['The places reached for the first time, with ',homeLabel(),' in the middle: each in its true direction, farther out the farther away it is, and the rim is the far side of the earth. They come from ',{b:fmt(pl.new_works)},pl.new_works===1?' paper':' papers','; the places reached before stay faint where they are.'],
+             ['第一次到达的地方，以',homeLabel(),'为中心：方向是真实的方向，离得越远就越靠外，边缘是地球的另一面。它们来自 ',{b:fmt(pl.new_works)},' 篇论文；以前到过的地方淡淡地留在原处。'])),
+      nc.length?para(L([{b:fmt(nc.length)},nc.length===1?' country or region is new: ':' countries and regions are new: ',join(nc.slice(0,show).map(c=>country(c.iso).name)),nc.length>show?' and others':'','.'],
+                       ['新到了 ',{b:fmt(nc.length)},' 个国家和地区：',join(nc.slice(0,show).map(c=>country(c.iso).name)),nc.length>show?' 等':'','。'])):null,
+      !few&&near&&D.home&&near.km>=50&&near.km<=1000?para(L(['The nearest new city is ',{b:cityFull(near.c)},', ',{b:fmt(near.km)+' km'},' from ',homeLabel(),'.'],
+                                            ['最近的新城市是 ',{b:cityFull(near.c)},'，离 ',homeLabel(),' ',{b:fmt(near.km)+' 公里'},'。'])):null]
+      .concat(fs.slice(0,few?1:2).map(f=>para(firstLine(f))))});}
+
+  if(pl.new_countries.length&&YR.before){const op=pl.opened[0];
+    S.push({h:L(pl.new_countries.length===1?'One new stamp':fmt(pl.new_countries.length)+' new stamps',fmt(pl.new_countries.length)+' 张新邮票'),lay:layStamps,order:'mix',text:[
+      para(few?L(['One stamp for each country or region reached for the first time: the city the paper arrived in, and the day.'],['每个第一次到达的国家或地区一张邮票：论文到的那座城市，和到的日期。'])
+              :L(['One stamp for each country or region reached for the first time: the city the paper arrived in, the day, and which paper it was.'],['每个第一次到达的国家或地区一张邮票：论文到的那座城市，日期，以及是哪一篇论文。'])),
+      op?para(L(['Of the ',fmt(pl.new_cities.length),' cities reached for the first time, ',{b:fmt(op[1])},' were reached by a paper citing ',title(op[0]),'.'],
+                [fmt(pl.new_cities.length),' 个第一次到达的城市里，有 ',{b:fmt(op[1])},' 个是引用',title(op[0]),'的论文最先带到的。'])):null,
+      say(para(never()))]});}
+
+  S.push({h:L(year+', among the years',year+' 年，在所有年份里'),lay:layClose,order:'time',text:[
+    para(L(['The same ',fmt(N),N===1?' dot':' dots',', as one column of the whole record: ',{b:fmt(totalSoFar)},' dated citing papers by the end of ',String(year),'.'],
+           ['还是这 ',fmt(N),' 个点，现在是全部记录里的一根柱子：到 ',String(year),' 年为止共 ',{b:fmt(totalSoFar)},' 篇有日期的引用论文。'])),
+    // the biggest year yet, against the year before (its share of the record is in the opening)
+    (()=>{const last=HIST[year-1]||0,most=ALL.filter(y=>y<year).every(y=>(HIST[y]||0)<N),up=last?Math.round(100*(N-last)/last):0;
+      if(!last||!most||up<1)return null;
+      return para(L(['The biggest year yet: ',{b:(YR.complete?'':'already ')+up+'% more'},' than ',String(year-1),'.'],
+                    ['这是最多的一年：比 ',String(year-1),' 年',{b:(YR.complete?'多 ':'已经多了 ')+up+'%'},'。']));})()]});
+  {const cr=YR.credits||[];if(cr.length>=3)S.push({h:L('In order of appearance','按出场顺序'),lay:layCredits,order:'mix',text:[
+    para(L([{b:fmt(cr.length)},' different names signed ',TY,'’s citing papers. Here they are, in the order they arrived; namesakes share a line.'],
+           [TY,'的引用论文上署着 ',{b:fmt(cr.length)},' 个不同的名字。这是它们，按到来的先后；同名的人合为一行。'])),
+    para(L(['Each name is someone who read one of these papers and took it a step further.'],['每个名字后面，都是读过其中某一篇、又往前走了一步的人。'])),
+    (YR.regulars||[]).length?para(L(['The ',{b:fmt(YR.regulars.length)},' names in bold have come back every year for three years or more.'],['粗体的 ',{b:fmt(YR.regulars.length)},' 个名字，已经连续三年以上每年都来。'])):null],find:true});}
+  S.push({h:L('A card to keep','留一张卡片'),lay:layCard,order:'mix',close:true,text:[
+    para(L(['The same dots, gathered on one card: to send to someone, or to keep until next year.'],['还是这些点，收进一张卡片：寄给谁，或者留到明年再看。']))]});
+  return S;
+}
+
+/* ---------- build the page ---------- */
+let SC=[],LAY=[],TR=[],cards=[],CAL_K=-1;
+function buildText(){stopSound();
+  document.documentElement.lang=LANG;document.title=L(year+' in citations · '+OWNER,OWNER+' 的 '+year+' 年');
+  setAsof();cur=-1;
+  const main=$('scenes'),rail=$('rail');main.textContent='';rail.textContent='';SC=scenes();cards=[];
+  FINDUI=null;SC.forEach((s,k)=>{const sec=el('section','scene'),t=el('div','text');t.appendChild(el('h2',null,s.h));s.text.forEach(p=>{if(p)t.appendChild(p);});if(s.find)t.appendChild(findBox());
+    if(s.close){const a=el('div','acts');
+      if(navigator.canShare){const sh=el('button',null,L('Share','分享'));sh.type='button';sh.addEventListener('click',()=>shareCard(true));a.appendChild(sh);}
+      const save=el('button',null,L('Save image','保存图片'));save.type='button';save.addEventListener('click',()=>shareCard(false));a.appendChild(save);
+      const pdf=el('button',null,L('Save PDF','保存 PDF'));pdf.type='button';pdf.addEventListener('click',savePdf);a.appendChild(pdf);
+      const all=el('a',null,L('All views','全部视图'));all.href='index.html';a.appendChild(all);t.appendChild(a);}
+
+    sec.appendChild(t);main.appendChild(sec);cards.push(t);
+    const b=el('button');b.type='button';b.title=s.h;b.setAttribute('aria-label',(k+1)+'. '+s.h);b.addEventListener('click',()=>{stop();window.scrollTo({top:k*vh(),behavior:RM.matches?'auto':'smooth'});});rail.appendChild(b);});
+  CAL_K=SC.findIndex(x=>x.lay===layRing);setListen();$('saveBtn').setAttribute('aria-label',L('Save this scene as an image','把这一幕存成图片'));$('saveBtn').title=L('Save image','保存图片');
+  $('footRepo').textContent=L('Make your own with CiteStory','用 CiteStory 做一份你自己的');
+  $('langBtn').textContent=LANG==='zh'?'EN':'中';$('langBtn').setAttribute('aria-label',LANG==='zh'?'Switch to English':'切换到中文');
+  $('playBtn').setAttribute('aria-label',L('Play','播放'));$('picBtn').setAttribute('aria-label',L('Save this scene as an image','把这一幕存成图片'));$('picBtn').title=L('Save image','保存图片');$('homeBtn').title=L('All views','全部视图');$('footHome').textContent=L('All views','全部视图');
+  $('themeBtn').setAttribute('aria-label',L('Switch theme','切换主题'));
+  stage.setAttribute('aria-label',L('Each dot is one paper that cited this work in '+year+'; the text of each section gives the numbers.','每个点是 '+year+' 年引用这些工作的一篇论文，数字见每一幕的文字。'));
+  $('aboutTitle').textContent=L('About the data','关于数据');const ab=$('aboutBody');ab.textContent='';
+  L(['Every dot is a paper that cites one of '+OWNER+'’s papers and is dated '+year+' in OpenAlex. A paper counts once, however many of these papers it cites; in the scene that sorts dots by cited paper it appears once under each.',
+     'A date that OpenAlex gives as 1 January means that only the year is known. Those papers are placed on a fixed day of the year so that they stay in the same place on every page, are drawn lighter, and are described by year only. Co-authors of the new papers are counted from the names as the Scholar profile writes them (initial and family name), which cuts long author lists short. A citing paper dated two or more years before the paper it cites is treated as undated.',
+     'A paper is placed in the cities of its authors’ institutions, once in each, so the maps hold more dots than there are papers. Papers without a listed affiliation do not appear on the maps. A place is new when no earlier citing paper in the record has an author there. A dot takes the colour of the continent of its first listed city, and on a map the continent of the city it sits in; the rust colour, on a dot, is kept for places reached for the first time.',
+     'Readers are counted over every author, by OpenAlex author id. Papers signed by '+OWNER+' or by a co-author of any of these papers are shown apart and left out of the names and institutions. Author ids are imperfect: one person can be split in two, or two merged. The list of names near the end gives every name on the year’s citing papers once, as OpenAlex spells it: people who share a name share a line, and so does one person whom OpenAlex splits in two; '+OWNER+' and co-authors are not in it.',
+     'Listen plays the year at two days to a beat. Each note is a cited paper, the most cited on the lowest D; a busier beat is louder and brighter, and the sound sits left or right with the average longitude of where the papers were written. A low note marks each new month.',
+     'The conference route lists only the meetings in code/venues.json; other new papers are counted but not drawn on it. The drawings on the stamps are simplified sketches made by hand, kept in code/landmarks.json; a city without one shows the outline of its country. Snapshot: '+asof+'. A year still in progress is incomplete, and the newest months fill in over the following weeks.'],
+    ['每个点是一篇引用了 '+OWNER+' 某篇论文、在 OpenAlex 里日期为 '+year+' 年的论文。一篇论文不管引用了几篇，只算一次；按被引论文分组的那一幕里，它在每一组各出现一次。',
+     'OpenAlex 把日期写成 1 月 1 日，表示只知道年份。这些论文放在当年一个固定的日子上，在每个页面的位置相同，画得更淡，文字里只说年份。新论文的合作者按 Scholar 主页上的写法（名的首字母加姓）计数，那里较长的作者名单会被截断。日期比被引论文早两年以上的引用论文，按没有日期处理。',
+     '论文放在作者所在机构的城市，每个城市一个点，所以地图上的点比论文多。没有列出机构的论文不出现在地图上。“新地方”指记录里此前没有任何引用论文的作者在那里。点的颜色是论文第一个城市所在的大洲，在地图上则是它所在城市的大洲；点上的橙红色只用于第一次到达的地方。',
+     '读者按 OpenAlex 的作者 id 统计，包括每一位作者。'+OWNER+' 本人或任何一位合作者署名的论文单独显示，不计入人名和机构。作者 id 并不完美：一个人可能被拆成两个，两个人也可能被合成一个。快结束时的名单里，这一年引用论文上的每个名字出现一次，按 OpenAlex 的写法：同名的人合为一行，被 OpenAlex 拆成两个的同一个人也是；'+OWNER+' 和合作者不在其中。',
+     '“听这一年”按两天一拍播放。每个音是一篇被引用的论文，被引最多的那篇是最低的 D；越忙的一拍越响、越亮，声音偏左还是偏右取决于这些论文所在地的平均经度。每到新的一个月有一个低音。',
+     '会议路线只包括 code/venues.json 里列出的会议；其他新论文照常计数，但不画在路线上。邮票上的线稿是手画的简化图，存放在 code/landmarks.json；没有线稿的城市显示所在国家的轮廓。快照日期：'+asof+'。还没过完的年份并不完整，最近几个月的数字会在之后几周里补上。'])
+    .forEach(t=>ab.appendChild(el('p',null,t)));
+}
+
+/* ---------- from one layout to the next: the same dot keeps going; a dot with no twin splits from or folds into its paper ---------- */
+function layout(k){return LAY[k]||(LAY[k]=SC[k].lay(plot()));}
+function transition(k){if(TR[k])return TR[k];const A=layout(k).inst,B=layout(k+1).inst,aKey=new Map(),aDot=new Map(),bDot=new Map(),used=new Uint8Array(A.length),T=[];
+  A.forEach((d,i)=>{aKey.set(d.k*64+d.q,i);if(!aDot.has(d.k))aDot.set(d.k,i);});B.forEach((d,j)=>{if(!bDot.has(d.k))bDot.set(d.k,j);});
+  const byTime=SC[k+1].order==='time'||SC[k].order==='time',sp=.34,st=d=>sp*(byTime?.8*d.k/Math.max(1,N-1)+.2*hash(d.k):hash(d.k));
+  B.forEach(d=>{let i=aKey.get(d.k*64+d.q);if(i!=null){used[i]=1;T.push({f:A[i],t:d,fa:A[i].a,ta:d.a,st:st(d)});return;}
+    i=aDot.get(d.k);if(i!=null)T.push({f:A[i],t:d,fa:A[i].a,ta:d.a,st:st(d)});else T.push({f:d,t:d,fa:0,ta:d.a,st:st(d)});});
+  A.forEach((d,i)=>{if(used[i])return;const j=bDot.get(d.k);if(j!=null)T.push({f:d,t:B[j],fa:d.a,ta:0,st:st(d),gone:1});else T.push({f:d,t:d,fa:d.a,ta:0,st:st(d),gone:1});});
+  T.sp=sp;return (TR[k]=T);}
+const cssCache=new Map();
+function dotStyle(c,a){const q=Math.round(a*24),key=(c[0]<<16|c[1]<<8|c[2])*32+q;let s=cssCache.get(key);if(!s){s=rgba(c,(q/24).toFixed(3));cssCache.set(key,s);}return s;}
+function disc(x,y,r,c,a){if(a<.02)return;ctx.fillStyle=dotStyle(c,a);if(r<1.15){ctx.fillRect(x-r,y-r,2*r,2*r);return;}ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fill();}
+let scroll=0,raf=0,cur=-1;
+function vh(){return Math.max(1,cards.length?cards[0].parentNode.offsetHeight:SH);}
+function pos(){return Math.max(0,Math.min(SC.length-1,window.scrollY/vh()||0));}
+function draw(now){raf=0;if(!SC.length)return;const s=pos(),k=Math.min(SC.length-1,Math.floor(s+1e-6)),f=s-k;
+  let p=k>=SC.length-1?0:Math.max(0,Math.min(1,(f-.14)/.72));if(RM.matches)p=f<.5?0:1;const e=ease(p);
+  ctx.setTransform(DPR,0,0,DPR,0,0);ctx.clearRect(0,0,SW,SH);ctx.globalAlpha=1;
+  const A=layout(k),B=p>0?layout(k+1):null;
+  if(sound&&Math.abs(s-CAL_K)>.3)stopSound();
+  if((SCRUB||HOVER)&&!DRAG&&(p>0||!A.scrub)){SCRUB=0;HOVER=0;TR=[];}     // leaving the ring: undialled before a transition keeps the dimmed dots
+  if(A.pre)A.pre();if(B&&B.pre)B.pre();
+  if(A.base)A.base(1-e,now);if(B&&B.base)B.base(e,now);
+  const G=[];
+  if(!B)for(let i=0;i<A.inst.length;i++){const d=A.inst[i];disc(d.x,d.y,d.r,d.c,d.a);if(GIFTS&&d.a>.3&&GIFTS.has(d.k))G.push(d.x,d.y,d.r);}
+  else{const T=transition(k),sp=T.sp;for(let i=0;i<T.length;i++){const m=T[i],q=ease(Math.max(0,Math.min(1,(p-m.st)/(1-sp)))),a=m.fa+(m.ta-m.fa)*q;if(a<.02)continue;
+    const dx=m.t.x-m.f.x,dy=m.t.y-m.f.y;let x=m.f.x+dx*q,y=m.f.y+dy*q;
+    if(q>0&&q<1){const dist=Math.sqrt(dx*dx+dy*dy);if(dist>24){const lift=Math.sin(Math.PI*q)*Math.min(dist*.1,40)*(m.f.k&1?1:-1);x-=dy/dist*lift;y+=dx/dist*lift;}}
+    const c=q<.5?m.f.c:m.t.c,rr=m.f.r+(m.t.r-m.f.r)*q;disc(x,y,rr,c,a);if(GIFTS&&GIFTS.has(m.f.k)&&a>.3)G.push(x,y,rr);}}
+  if(G.length)glow(G,now);
+  if(A.over)A.over(1-e,now);if(B&&B.over)B.over(e,now);ctx.globalAlpha=1;
+  const near=Math.round(s);if(near!==cur){cur=near;$('rail').querySelectorAll('button').forEach((b,i)=>{if(i===near)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});}
+  cards.forEach((c,i)=>{c.style.opacity=String(Math.max(0,Math.min(1,1.25-Math.abs(s-i)*2.6)));});
+  placeTools(s);
+  rest=p===0?A:(p===1?B:null);
+  if(((A.live&&p<.5)||(B&&B.live&&p>=.5))&&!RM.matches&&!document.hidden)ask();
+  if(sound&&!document.hidden)ask();
+  if(G.length&&!RM.matches&&!document.hidden)ask();}     // the halos breathe
+let rest=null;
+// the tools follow the scene in view and fade with its text; below the picture's right edge on a wide screen, at its top right on a phone
+function placeTools(s){const k=Math.round(s),sc=SC[k],op=Math.max(0,Math.min(1,1.25-Math.abs(s-k)*2.6)),T=$('tools'),b=plot();
+  $('player').hidden=!(sc&&sc.listen);$('saveBtn').hidden=!sc||!!sc.close;
+  T.style.opacity=String(op);T.style.pointerEvents=op>.5?'auto':'none';T.style.right=Math.round(SW-(b.x+b.w))+'px';T.style.top=Math.round(WIDE?b.y+b.h+12:b.y+b.h-34)+'px';T.style.visibility=op<.05?'hidden':'';}     // on a phone, the lower right corner of the picture, clear of the dial
+// a soft gold halo that breathes, around each dot of the name the page was sent to
+function glow(G,now){const b=RM.matches?1:.5+.5*Math.sin((now||0)/520),gold=COL['--gold'];
+  for(let i=0;i<G.length;i+=3){const x=G[i],y=G[i+1],r=G[i+2],e=Math.max(1.2,Math.min(2.2,r*1.3));     // the halo grows with the dot, so that small ones do not run together
+    ctx.fillStyle=rgba(gold,.12+.14*b);ctx.beginPath();ctx.arc(x,y,r+e*(2+b),0,6.2832);ctx.fill();
+    ctx.strokeStyle=rgba(gold,.55+.4*b);ctx.lineWidth=Math.min(1.4,.5+r*.5);ctx.beginPath();ctx.arc(x,y,r+e*(1+.5*b),0,6.2832);ctx.stroke();}}
+function ask(){if(!raf)raf=requestAnimationFrame(draw);}
+function rebuild(){const was=WIDE;size();if(was!==WIDE)buildText();LAY=[];TR=[];ask();}
+
+/* ---------- hover: which paper is this dot ---------- */
+const tip=$('tip');let hot=null;
+function nearest(x,y,lim){if(!rest)return null;let best=null,bd=(lim||12)*(lim||12);const a=rest.inst;for(let i=0;i<a.length;i++){if(a[i].a<.25)continue;const dx=a[i].x-x,dy=a[i].y-y,d=dx*dx+dy*dy;if(d<bd){bd=d;best=a[i];}}return best;}
+function showTip(d){hot=d;if(!d){tip.classList.remove('on');stage.style.cursor='';return;}const dot=DOTS[d.k],w=dot.w;tip.textContent='';
+  tip.appendChild(el('b',null,w.title||L('Loading the title…','正在载入标题…')));
+  const who=w.authors&&w.authors.length?w.authors[0].name+(w.authors.length>1?L(' et al.',' 等'):''):'';
+  tip.appendChild(el('span',null,[who,dot.yo?String(year):day(w.date||''),dot.cs.length?cityFull(dot.cs[0]):''].filter(Boolean).join(' · ')));
+  tip.style.left=Math.max(150,Math.min(SW-150,d.x))+'px';tip.style.top=Math.max(70,d.y)+'px';tip.classList.add('on');stage.style.cursor=workUrl(w)?'pointer':'';}
+const nameAt=(x,y)=>rest&&rest.hit?rest.hit(x,y):-1;
+const dayAt=(x,y)=>rest&&rest.scrub?rest.scrub(x,y):0;     // the rim of the ring at rest, or 0
+// held, the hand follows the pointer round the year and each day rings; let go during Listen, the year plays on from there
+stage.addEventListener('pointerdown',e=>{if(DRAG)return;const sd=dayAt(e.clientX,e.clientY);if(!sd)return;e.preventDefault();try{stage.setPointerCapture(e.pointerId);}catch(x){}
+  DRAG={was:!!sound,id:e.pointerId};if(sound){sound=null;setListen();}SCRUB=sd;HOVER=0;showTip(null);stage.style.cursor='grabbing';dayChord(sd);TR=[];ask();});
+const letGo=e=>{if(!DRAG||e.pointerId!==DRAG.id)return;const was=DRAG.was,d=SCRUB;DRAG=null;JUST=performance.now();stage.style.cursor='';
+  if(was&&Math.abs(pos()-CAL_K)<.3){SCRUB=0;listen(d);}else if(e.pointerType==='touch'){SCRUB=0;TR=[];}ask();};
+stage.addEventListener('pointerup',letGo);stage.addEventListener('pointercancel',letGo);
+stage.addEventListener('touchstart',e=>{const t=e.touches[0];if(t&&dayAt(t.clientX,t.clientY))e.preventDefault();},{passive:false});     // a touch on the rim turns the dial instead of scrolling
+stage.addEventListener('pointermove',e=>{
+  if(DRAG){if(e.pointerId!==DRAG.id)return;const sd=rest&&rest.scrub?rest.scrub(e.clientX,e.clientY,true):0;if(sd&&sd!==SCRUB){SCRUB=sd;dayChord(sd);ask();}return;}
+  if(e.pointerType==='touch')return;
+  const on=dayAt(e.clientX,e.clientY),hv=sound?0:on;if(hv!==HOVER||(SCRUB&&!on)){HOVER=hv;if(!on&&SCRUB){SCRUB=0;TR=[];}ask();}     // a day dialled and let go stays until the pointer leaves the rim
+  if(on){showTip(null);stage.style.cursor='grab';return;}
+  const h=nameAt(e.clientX,e.clientY);if(h!==POINT){POINT=h;TR=[];ask();}
+  if(h>=0){showTip(null);stage.style.cursor='pointer';return;}showTip(nearest(e.clientX,e.clientY));});
+stage.addEventListener('pointerleave',()=>{showTip(null);if((SCRUB||HOVER)&&!DRAG){SCRUB=0;HOVER=0;TR=[];ask();}if(POINT>=0){POINT=-1;TR=[];ask();}});
+stage.addEventListener('click',e=>{if(performance.now()-JUST<400)return;     // the end of a turn of the dial is not a click
+  const h=nameAt(e.clientX,e.clientY);if(h>=0){POINT=-1;showTip(null);return pickName(h===FOUND?-1:h);}
+  const d=nearest(e.clientX,e.clientY);if(!d){if(FOUND>=0&&rest&&rest.hit)pickName(-1);return showTip(null);}if(hot!==d)return showTip(d);
+  const u=workUrl(DOTS[d.k].w);if(u)window.open(u,'_blank','noopener');});
+window.addEventListener('citation-details',()=>{if(hot)showTip(hot);});
+
+/* ---------- play: scroll through the scenes like a short film ---------- */
+let playing=0;
+function stop(){if(!playing)return;cancelAnimationFrame(playing);playing=0;document.documentElement.style.scrollSnapType='';$('playBtn').setAttribute('aria-pressed','false');}
+function play(){if(playing)return stop();stopSound();const last=SC.length-1;if(pos()>last-.05)window.scrollTo(0,0);
+  document.documentElement.style.scrollSnapType='none';$('playBtn').setAttribute('aria-pressed','true');
+  const k0=Math.round(pos()),HOLD=3600,MOVE=RM.matches?1:2400,t0=performance.now();
+  (function step(now){const t=now-t0,n=Math.floor(t/(HOLD+MOVE)),r=t-n*(HOLD+MOVE),at=Math.min(last,k0+n+(r<HOLD?0:ease((r-HOLD)/MOVE)));
+    window.scrollTo(0,at*vh());if(at>=last)return stop();playing=requestAnimationFrame(step);})(t0);}
+$('playBtn').addEventListener('click',play);
+$('ppBtn').addEventListener('click',()=>listen());
+$('speeds').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>setSpeed(+b.value)));
+$('saveBtn').addEventListener('click',()=>{const k=Math.round(pos());if(SC[k]&&!SC[k].close)shareScene(k,false);});
+['wheel','touchstart','keydown'].forEach(n=>window.addEventListener(n,e=>{if(n==='keydown'&&(e.target===$('playBtn')||e.key==='Tab'))return;stop();},{passive:true}));
+
+/* ---------- a picture to keep ---------- */
+const CW=1080,CH=1350,CPAD=76,CS=2,HEADY=186;   // laid out at 1080 × 1350, saved at CS times that
+const STAMP_SHORT={'CD':'DR Congo','CF':'Central African Rep.','BA':'Bosnia & Herz.','DO':'Dominican Rep.','GQ':'Eq. Guinea','AE':'UAE','TT':'Trinidad & Tobago','VC':'St Vincent','KN':'St Kitts & Nevis'};
+// the address of this page when it is on the public web (not a file, localhost or a private network)
+function publicUrl(){try{const h=location.hostname;
+  if(!/^https?:$/.test(location.protocol)||h.indexOf('.')<0||/^[\d.]+$/.test(h)||/\.(local|localhost|test|internal|lan|home)$/.test(h))return null;
+  return location.origin+location.pathname;}catch(e){return null;}}
+const ital=()=>LANG==='zh'?'':'italic ',isDark=()=>COL['--bg'][0]<80;   // no slanted Chinese
+// the line of thanks is set as a note by hand: italic, and in Chinese, which is not slanted, Kaiti
+const KAI='"Kaiti SC",STKaiti,KaiTi,BiauKai,'+SERIF,hand=px=>LANG==='zh'?(px+2)+'px '+KAI:'italic '+px+'px '+SERIF;
+// words stay whole, Chinese characters break anywhere
+function wrapLines(g,str,max,limit){const toks=String(str).match(/[　-鿿＀-￯]|[^\s　-鿿＀-￯]+|\s+/g)||[],out=[];let line='';
+  toks.forEach(t=>{const tryL=line+t;if(line&&!/^[\uff0c\u3002\uff1b\uff1a\u3001\uff09\u300b\uff01\uff1f\u201d\u300d\u300f,.;:)]$/.test(t)&&g.measureText(tryL.trimEnd()).width>max){     // a closing mark stays on its line
+    out.push(line.trimEnd());line=t.trimStart();}else line=tryL;});
+  if(line.trim())out.push(line.trimEnd());if(limit&&out.length>limit){out.length=limit;out[limit-1]=out[limit-1].replace(/\s*\S{0,3}$/,'')+'…';}return out;}
+function fitLine(g,str,max){str=String(str||'');if(g.measureText(str).width<=max)return str;
+  while(str.length>1&&g.measureText(str+'…').width>max)str=str.slice(0,-1);return str.trimEnd()+'…';}
+// the fewest lines, and then the narrowest width that still gives them, so that no line ends up a single word
+function evenLines(g,str,max,limit){let out=wrapLines(g,str,max,limit);
+  for(let w=max-16;w>max*.5;w-=16){const t=wrapLines(g,str,w,limit);if(t.length>out.length||/…$/.test(t[t.length-1]))break;out=t;}return out;}
+// a last line shorter than a quarter of the measure takes words from the line above
+function noWidow(g,str,max,limit){if(!str)return [];const base=wrapLines(g,str,max,limit);
+  for(let w=max;w>max*.7;w-=16){const t=wrapLines(g,str,w,limit);if(t.length>base.length||/…$/.test(t[t.length-1]))break;if(g.measureText(t[t.length-1]).width>=max*.25)return t;}return base;}
+function stampCountry(iso){return LANG==='en'&&STAMP_SHORT[iso]?STAMP_SHORT[iso]:country(iso).name;}
+function drawHomePin(g,cam,s){if(!D.home)return;const h=at(cam,D.home.lon,D.home.lat);s=s||1;
+  g.fillStyle=rgba(COL['--card'],.92);g.beginPath();g.arc(h[0],h[1],7.8*s,0,6.2832);g.fill();
+  g.strokeStyle=rgba(COL['--ink']);g.lineWidth=1.9*s;g.beginPath();g.arc(h[0],h[1],5.8*s,0,6.2832);g.stroke();
+  g.fillStyle=rgba(COL['--ink']);g.beginPath();g.arc(h[0],h[1],2.3*s,0,6.2832);g.fill();}
+// a two-line label beside each marked place, level with its mark: on the side away from home, else the other side. Only where that crowds
+// another label or mark, covers a line, or leaves the map does a label move: a little up or down beside its mark, then above or below it, last diagonally
+const LABEL_F=[15,12.5],LABEL_PAD=12;
+function placeLabels(g,marks,home,box,dots,lines){
+  const hit=(a,b)=>Math.max(0,Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0))*Math.max(0,Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)),
+    grow=(r,k)=>({x0:r.x0-k,x1:r.x1+k,y0:r.y0-k,y1:r.y1+k}),pts=marks.map(m=>m.p).concat(home?[home]:[]);
+  const opts=marks.map(m=>{g.font='600 '+LABEL_F[0]+'px '+SANS;let w=g.measureText(m.t[0]).width;g.font='400 '+LABEL_F[1]+'px '+SANS;w=Math.max(w,g.measureText(m.t[1]).width);
+    const x=m.p[0],y=m.p[1],away=home&&x<home[0]?-1:1,c=[],side=sd=>sd>0?'left':'right';
+    [away,-away].forEach((sd,k)=>c.push({al:side(sd),x:x+sd*13,y:y+2,pref:k*60}));                                  // level with the mark
+    [away,-away].forEach(sd=>[-12,12].forEach(dy=>c.push({al:side(sd),x:x+sd*13,y:y+2+dy,pref:400})));             // nudged up or down
+    c.push({al:'center',x:x,y:y-27,pref:1500},{al:'center',x:x,y:y+25,pref:1500});                                  // above, below
+    [away,-away].forEach(sd=>c.push({al:side(sd),x:x+sd*8,y:y-20,pref:2500},{al:side(sd),x:x+sd*8,y:y+23,pref:2500}));  // diagonal
+    return c.map(q=>{const x0=q.al==='left'?q.x:q.al==='right'?q.x-w:q.x-w/2,r={x0:x0-2,x1:x0+w+2,y0:q.y-14,y1:q.y+21};
+      let cost=q.pref;if(r.x0<box.x0||r.x1>box.x1||r.y0<box.y0||r.y1>box.y1)cost+=1e6;
+      pts.forEach(p=>{if(p!==m.p)cost+=40*hit(grow(r,8),{x0:p[0]-7,x1:p[0]+7,y0:p[1]-7,y1:p[1]+7});});     // another place's mark stays uncovered
+      (dots||[]).forEach(d=>{if(d.x>r.x0&&d.x<r.x1&&d.y>r.y0&&d.y<r.y1)cost+=1;});
+      (lines||[]).forEach(d=>{if(d.x>r.x0&&d.x<r.x1&&d.y>r.y0&&d.y<r.y1)cost+=15;});     // the journeys' lines
+      return {q:q,r:r,cost:cost};});});
+  // what a label at option o costs next to the others where they are now
+  const pick=opts.map(()=>0),costOf=(i,o)=>opts[i][o].cost+pick.reduce((a,pj,j)=>j===i?a:a+3*hit(grow(opts[i][o].r,LABEL_PAD),opts[j][pj].r),0);
+  const done=[];opts.forEach((os,i)=>{let b=0,bc=Infinity;os.forEach((o,k)=>{const c=o.cost+done.reduce((a,j)=>a+3*hit(grow(o.r,LABEL_PAD),opts[j][pick[j]].r),0);if(c<bc){bc=c;b=k;}});pick[i]=b;done.push(i);});
+  for(let pass=0;pass<8;pass++){let moved=false;opts.forEach((os,i)=>{let b=pick[i],bc=costOf(i,b);os.forEach((o,k)=>{const c=costOf(i,k);if(c<bc-1e-6){bc=c;b=k;}});if(b!==pick[i]){pick[i]=b;moved=true;}});if(!moved)break;}
+  return marks.map((m,i)=>{const q=opts[i][pick[i]].q;return Object.assign({},m,{lx:q.x,ly:q.y,al:q.al});});}
+function drawMapMark(g,m){const C=k=>rgba(COL[k]),x=m.p[0],y=m.p[1];g.lineJoin='round';
+  if(m.k==='meet'){g.fillStyle=C('--card');g.beginPath();g.moveTo(x,y-8);g.lineTo(x+8,y);g.lineTo(x,y+8);g.lineTo(x-8,y);g.closePath();g.fill();
+    g.fillStyle=C('--ink');g.beginPath();g.moveTo(x,y-5.5);g.lineTo(x+5.5,y);g.lineTo(x,y+5.5);g.lineTo(x-5.5,y);g.closePath();g.fill();}
+  else{g.strokeStyle=C('--ink');g.lineWidth=1.3;g.beginPath();g.arc(x,y,5.2,0,6.2832);g.stroke();if(m.k==='first'){g.fillStyle=C('--ink');g.beginPath();g.arc(x,y,2,0,6.2832);g.fill();}}
+  g.textAlign=m.al;g.textBaseline='alphabetic';g.lineWidth=4.5;g.strokeStyle=rgba(COL['--card'],.92);
+  g.font='600 '+LABEL_F[0]+'px '+SANS;g.strokeText(m.t[0],m.lx,m.ly);g.fillStyle=C('--ink');g.fillText(m.t[0],m.lx,m.ly);
+  g.font='400 '+LABEL_F[1]+'px '+SANS;g.strokeText(m.t[1],m.lx,m.ly+17);g.fillStyle=C('--ink-2');g.fillText(m.t[1],m.lx,m.ly+17);}
+// everything the card shows and where, in card pixels (1080 × 1350)
+function cardPlan(){
+  const g=document.createElement('canvas').getContext('2d'),W=CW-2*CPAD,pl=YR.places,nc=YR.before?pl.new_countries:[],newC=YR.before?pl.new_cities.length:0,far=pl.far,dist=YR.distance,
+    crN=(YR.credits||[]).length,zh=LANG==='zh',plan={};
+  // the heading says where the papers went; its second sentence stands on a line of its own, in the colour of the journeys on the map
+  const nv=never()[0],cut=nv.search(/[.。]/)+1;plan.headFs=zh?54:48;plan.headLh=zh?72:59;g.font='500 '+plan.headFs+'px '+SERIF;
+  if(pl.cities>=20&&cut>0&&cut<nv.length){plan.headLines=evenLines(g,nv.slice(0,cut).trim(),W,2);plan.headHot=plan.headLines.length;plan.headLines.push(nv.slice(cut).trim());}
+  else{plan.headLines=evenLines(g,pl.cities?L('Read in '+fmt(pl.cities)+(pl.cities===1?' city':' cities')+' this year.','这一年，论文在 '+fmt(pl.cities)+' 座城市被读到。')
+      :L(fmt(N)+(N===1?' paper':' papers')+' cited this work.','这一年，共有 '+fmt(N)+' 篇论文引用了这些工作。'),W,2);plan.headHot=null;}
+  // the figures go from the owner outwards: what was written, how often it was cited, by how many people, in how many places
+  const born=YR.papers.born.length;
+  plan.tiles=[born?{v:fmt(born),l:L(born===1?'new paper':'new papers','篇新论文')}:null,
+    {v:fmt(N),l:L(N===1?'citation':'citations','次引用')},
+    crN?{v:fmt(crN),l:L(crN===1?'reader':'readers','位读者')}:null,
+    pl.cities?{v:fmt(pl.cities),l:L(pl.cities===1?'city':'cities','座城市')}:null,
+    pl.countries?{v:fmt(pl.countries),l:L(pl.countries===1?'country or region':'countries & regions','个国家和地区')}:null,
+    born||crN?null:{v:fmt(YR.papers.cited),l:L(YR.papers.cited===1?'cited work':'cited works','篇被引论文')}].filter(Boolean);
+  // what the accent means, and under it one stamp for each country reached for the first time, in rows from the left
+  plan.key=newC?L('First arrivals this year: ','今年第一次到达：')+[nc.length?L(fmt(nc.length)+(nc.length===1?' country or region':' countries & regions'),fmt(nc.length)+' 个国家和地区'):'',
+      L(fmt(newC)+(newC===1?' city':' cities'),fmt(newC)+' 座城市')].filter(Boolean).join(L(', ','，')):'';
+  const maxS=18,gap=16;plan.stamps=nc.slice(0,nc.length>maxS?maxS-1:maxS);plan.more=nc.length-plan.stamps.length;
+  const slots=plan.slots=plan.stamps.length+(plan.more>0?1:0);
+  plan.stampCols=slots<=4?4:6;plan.stampRows=Math.ceil(slots/plan.stampCols);plan.showCity=plan.stampRows<=2;
+  plan.stampPitch=(W+gap)/plan.stampCols;plan.stampW=plan.stampPitch-gap;plan.stampH=plan.stampW*STAMP_F;plan.stampRowH=plan.stampH+(plan.showCity?56:42);
+  // without stamps, a sentence on how far the year reached and what its readers wrote about
+  const fallback=[];
+  if(!slots){if(dist&&D.home&&dist.earths>=1)fallback.push(L('Measured from '+homeLabel()+' to the nearest author of each citing paper, this year’s readers add up to '+bigKm(dist.km)+' — '+rounds(dist.earths)+' times around the Earth.',
+      '从'+homeLabel()+'到每篇引用论文最近的一位作者，这一年的距离加起来有 '+bigKm(dist.km)+'，绕地球 '+rounds(dist.earths)+' 圈。'));
+    if(YR.topics.length>=3)fallback.push(L('Recurring in their titles: '+YR.topics.slice(0,3).map(t=>t.t).join(' · ')+'.','读者标题里最常出现的词：'+YR.topics.slice(0,3).map(t=>t.t).join(' · ')+'。'));}
+  g.font=ital()+'23.5px '+SERIF;plan.extraLines=[];let ey=0;fallback.forEach((s,i)=>{if(i)ey+=14;noWidow(g,s,W,2).forEach(l=>{plan.extraLines.push({t:l,y:ey});ey+=36;});});plan.extraH=Math.max(0,ey-36);
+  // from the bottom up: colophon, thanks, stamps (or the sentences), the key, the figures; the map takes what is left under the heading
+  plan.footRuleY=CH-150;plan.thanksY=CH-104;plan.footY=CH-60;
+  let b=plan.footRuleY-25;
+  if(slots){plan.stampY=b-(plan.stampRows-1)*plan.stampRowH-plan.stampH-(plan.showCity?41:23);b=plan.stampY-44;}
+  else if(plan.extraLines.length){plan.extraY=b-plan.extraH-4;b=plan.extraY-(plan.key?46:60);}
+  if(plan.key){plan.keyY=b;b-=66;}
+  plan.tileY=b;b-=30+42+26;
+  plan.mapTop=HEADY+(plan.headLines.length-1)*plan.headLh+40;
+  // the map runs past the text margins, almost to the edges of the card
+  const cam=plan.cam=camFor({x:20,y:plan.mapTop,w:CW-40,h:Math.max(160,b-plan.mapTop)});
+  plan.inst=mapDots(null,cam,(d,c)=>YR.before&&NEW_CITY[c]?2:1,N<60?7:N<300?4.5:N<1000?3.2:0);
+  plan.arcs=D.home?nc.filter(c=>CITY[c.c]).map(c=>greatCircle(D.home.lat,D.home.lon,CITY[c.c].lat,CITY[c.c].lon)):[];
+  // places named on the map: the farthest one, the first citation of the year, and the meetings where the owner's papers were presented
+  const marks=[],h0=D.home?at(cam,D.home.lon,D.home.lat):null;
+  if(D.home&&far&&far.km>=50&&CITY[far.c]){const fc=CITY[far.c];marks.push({k:'far',p:at(cam,fc.lon,fc.lat),t:[cityName(far.c),L('farthest · '+fmt(far.km)+' km','最远 · '+fmt(far.km)+' 公里')]});
+    plan.farArc=nc.some(c=>c.c===far.c)?null:greatCircle(D.home.lat,D.home.lon,fc.lat,fc.lon);}
+  {const f=YR.ends&&YR.ends.first;
+    const short=iso=>{const m=+iso.slice(5,7),d=+iso.slice(8,10);return L(d+' '+MONTHS[m-1].slice(0,3),m+'月'+d+'日');};
+    if(f&&f.c!=null&&CITY[f.c]&&!(far&&far.c===f.c))marks.push({k:'first',p:at(cam,CITY[f.c].lon,CITY[f.c].lat),t:[L('First citation','第一篇引用'),[cityName(f.c),f.yo?'':short(f.date)].filter(Boolean).join(' · ')]});
+    (YR.papers.route||[]).slice(0,8).forEach(st=>{marks.push({k:'meet',p:at(cam,st.lon,st.lat),t:[st.name,stopCity(st)+' · '+short(st.start)]});});}
+  const lines=[];plan.arcs.concat(plan.farArc?[plan.farArc]:[]).forEach(segs=>segs.forEach(sg=>sg.forEach(q=>lines.push({x:cam.tx+q[0]*cam.s,y:cam.ty+q[1]*cam.s}))));
+  plan.marks=placeLabels(g,marks,h0,{x0:24,x1:CW-24,y0:plan.mapTop-12,y1:cam.ty+WORLD[3]*cam.s+8},plan.inst,lines);
+  return plan;}
+// card stock, masthead and heading; lines from `hot` on are in the accent
+function cardHead(g,lines,fs,lh,hot){const C=k=>rgba(COL[k]);fs=fs||54;lh=lh||64;
+  g.fillStyle=C('--card');g.fillRect(0,0,CW,CH);
+  g.textBaseline='alphabetic';g.textAlign='left';g.font='600 21px '+SANS;g.fillStyle=C('--ink');
+  if('letterSpacing' in g)g.letterSpacing=CJK.test(OWNER)?'1.5px':'3px';
+  g.fillText(OWNER.toUpperCase(),CPAD,92);const nw=g.measureText(OWNER.toUpperCase()).width;
+  if('letterSpacing' in g)g.letterSpacing='0px';
+  const hl=homeLabel();if(hl){g.font='400 19px '+SANS;g.fillStyle=C('--ink-3');g.fillText('  ·  '+hl,CPAD+nw,92);}
+  g.textAlign='right';g.font='600 23px '+SANS;g.fillStyle=C('--accent');
+  if('letterSpacing' in g)g.letterSpacing='2.5px';g.fillText(String(year),CW-CPAD,92);if('letterSpacing' in g)g.letterSpacing='0px';
+  g.fillStyle=C('--rule');g.fillRect(CPAD,112,CW-2*CPAD,1.2);
+  g.textAlign='left';g.font='500 '+fs+'px '+SERIF;lines.forEach((l,i)=>{g.fillStyle=C(hot!=null&&i>=hot?'--accent':'--ink');g.fillText(l,CPAD,HEADY+i*lh);});}
+// the source on the left; on the right an invitation: where this page lives, or, when it is not on the web, where to make one
+function cardFoot(g,y){const C=k=>rgba(COL[k]);g.textAlign='left';g.textBaseline='alphabetic';
+  const snapStr=LANG==='zh'?SNAP.getUTCFullYear()+' 年 '+(SNAP.getUTCMonth()+1)+' 月 '+SNAP.getUTCDate()+' 日':asof;
+  const src='CiteStory'+(YR.complete?'':' · '+L('up to ','截至 ')+snapStr);g.font='400 18px '+SANS;g.fillStyle=C('--ink-3');g.fillText(src,CPAD,y);
+  const room=CW-2*CPAD-g.measureText(src).width-36,u=publicUrl(),lines=u?[u.replace(/^https?:\/\/(www\.)?/,'')]:['github.com/FeiSun/CiteStory'];
+  for(const t of lines){let fs=18;g.font='500 18px '+SANS;while(fs>14&&g.measureText(t).width>room){fs--;g.font='500 '+fs+'px '+SANS;}
+    if(g.measureText(t).width<=room){g.textAlign='right';g.fillStyle=C('--ink-2');g.fillText(t,CW-CPAD,y);g.textAlign='left';break;}}}
+function drawCard(g,plan,withDots){const C=k=>rgba(COL[k]),W=CW-2*CPAD,cam=plan.cam,dk=isDark(),line=segs=>{g.beginPath();segs.forEach(sg=>sg.forEach((p,k)=>{const x=cam.tx+p[0]*cam.s,y=cam.ty+p[1]*cam.s;k?g.lineTo(x,y):g.moveTo(x,y);}));g.stroke();};
+  cardHead(g,plan.headLines,plan.headFs,plan.headLh,plan.headHot);
+  // the map: land alone on the paper, countries parted by hairlines of the paper; no sea, no frame
+  g.save();g.beginPath();g.rect(0,plan.mapTop-16,CW,cam.ty+WORLD[3]*cam.s-plan.mapTop+17);g.clip();
+  g.transform(cam.s,0,0,cam.s,cam.tx,cam.ty);g.clip(OUTLINE);g.fillStyle=dk?'rgb(39,45,56)':C('--land');g.fill(LAND,'nonzero');g.strokeStyle=C('--card');g.lineWidth=.7/cam.s;g.lineJoin='round';g.stroke(LAND);g.restore();
+  // the journeys: a dashed line to the farthest place, a line in the accent to each country reached for the first time
+  if(plan.farArc){g.save();g.setLineDash([4,4]);g.strokeStyle=rgba(COL['--ink-2'],dk?.5:.42);g.lineWidth=1.15;line(plan.farArc);g.restore();}
+  g.strokeStyle=rgba(COL['--accent'],dk?.6:.5);g.lineWidth=1.35;plan.arcs.forEach(line);
+  if(withDots){plan.inst.forEach(d=>{g.fillStyle=rgba(d.c,d.a);g.beginPath();g.arc(d.x,d.y,Math.max(.9,d.r),0,6.2832);g.fill();});drawHomePin(g,cam,1);}
+  plan.marks.forEach(m=>drawMapMark(g,m));
+  // the figures, on four columns with the gutter of the stamps, or spaced by their widths when there are five
+  g.textAlign='left';g.textBaseline='alphabetic';const tp=(W+16)/Math.max(4,plan.tiles.length);
+  const vf=plan.tiles.length>4?40:46,xs=plan.tiles.map((t,i)=>CPAD+i*tp);
+  // five figures do not fit four columns: each is as wide as its number or its word, with equal space between them
+  if(plan.tiles.length>4){const ws=plan.tiles.map(t=>{g.font='500 '+vf+'px '+SERIF;const a=g.measureText(t.v).width;g.font='400 17px '+SANS;return Math.max(a,g.measureText(t.l).width);}),
+      sp=(W-ws.reduce((a,b)=>a+b,0))/(ws.length-1);let x=CPAD;ws.forEach((w,i)=>{xs[i]=x;x+=w+sp;});}
+  plan.tiles.forEach((t,i)=>{const x=xs[i];g.font='500 '+vf+'px '+SERIF;g.fillStyle=C('--ink');g.fillText(t.v,x,plan.tileY-30);
+    g.font='400 17px '+SANS;g.fillStyle=C('--ink-2');g.fillText(fitLine(g,t.l,tp-16),x,plan.tileY);});
+  if(plan.key){g.fillStyle=C('--accent');g.beginPath();g.arc(CPAD+7,plan.keyY-9,7,0,6.2832);g.fill();g.font='400 28px '+SERIF;g.fillStyle=C('--ink');g.fillText(fitLine(g,plan.key,W-30),CPAD+30,plan.keyY);}
+  if(plan.slots){const fw=plan.stampW,pr=postR(fw);
+    for(let i=0;i<plan.slots;i++){const cx=CPAD+(i%plan.stampCols)*plan.stampPitch+fw/2,ry=plan.stampY+Math.floor(i/plan.stampCols)*plan.stampRowH,cy=ry+plan.stampH/2;
+      if(i<plan.stamps.length){const st=plan.stamps[i],cn=stampCountry(st.iso),ct=cityName(st.c),mon=pr>=11?stampMonth(st):'';
+        stamp(g,st,cx,cy,fw);
+        if(BYI[st.i]){g.fillStyle=C('--accent');g.beginPath();g.arc(cx+fw/2-3,ry+3-(mon?pr*.3:0),Math.max(Math.min(3.4,fw*.042),pr*.24),0,6.2832);g.fill();postmark(g,cx+fw/2-3,ry+3,pr,mon);}
+        g.textAlign='center';g.textBaseline='alphabetic';g.font='500 15.5px '+SANS;g.fillStyle=C('--ink');g.fillText(fitLine(g,cn,fw+8),cx,ry+plan.stampH+19);
+        if(plan.showCity&&ct&&ct!==cn){g.font='400 13px '+SANS;g.fillStyle=C('--ink-3');g.fillText(fitLine(g,ct,fw+8),cx,ry+plan.stampH+37);}}
+      else{stampBlank(g,cx,cy,fw);g.textAlign='center';g.textBaseline='middle';g.font='500 '+Math.round(fw*.19)+'px '+SERIF;g.fillStyle=C('--ink-2');g.fillText('+'+fmt(plan.more),cx,cy+1);
+        g.textBaseline='alphabetic';g.font='400 14.5px '+SANS;g.fillStyle=C('--ink-3');g.fillText(L('more','更多地区'),cx,ry+plan.stampH+19);}}
+    g.textAlign='left';}
+  else if(plan.extraLines.length){g.font=ital()+'23.5px '+SERIF;g.fillStyle=C('--ink-2');plan.extraLines.forEach(l=>g.fillText(l.t,CPAD,plan.extraY+l.y));}
+  g.fillStyle=C('--rule');g.fillRect(CPAD,plan.footRuleY,W,1.2);
+  g.textBaseline='alphabetic';g.font=hand(29);g.fillStyle=C('--ink');
+  g.fillText(L('To every reader, near and far: thank you.','致每一位读者，无论远近：谢谢你。'),CPAD,plan.thanksY);
+  cardFoot(g,plan.footY);}
+// a stand-in for the 2D context that writes what is drawn as SVG: paths, text, clips and dashes (what the card uses)
+function svgContext(w,h){const meas=document.createElement('canvas').getContext('2d'),out=[],defs=[],fx={},esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'),
+    n2=v=>String(Math.round(v*100)/100),mul=(m,a)=>[m[0]*a[0]+m[2]*a[1],m[1]*a[0]+m[3]*a[1],m[0]*a[2]+m[2]*a[3],m[1]*a[2]+m[3]*a[3],m[0]*a[4]+m[2]*a[5]+m[4],m[1]*a[4]+m[3]*a[5]+m[5]];
+  let path='',has=false,ids=0,stack=[];
+  const g={fillStyle:'#000',strokeStyle:'#000',lineWidth:1,font:'10px sans-serif',textAlign:'start',textBaseline:'alphabetic',globalAlpha:1,lineJoin:'miter',lineCap:'butt',letterSpacing:'0px',
+    shadowColor:'rgba(0,0,0,0)',shadowBlur:0,shadowOffsetX:0,shadowOffsetY:0,_m:[1,0,0,1,0,0],_dash:[],_open:0};
+  const KEYS=Object.keys(g),tp=(x,y)=>{const m=g._m;return [m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]];},sc=()=>Math.sqrt(Math.abs(g._m[0]*g._m[3]-g._m[1]*g._m[2]))||1,
+    mat=()=>'matrix('+g._m.map(v=>Math.round(v*1e5)/1e5).join(' ')+')';
+  // a colour as rgb and an opacity, which every SVG reader understands
+  function paint(c){const m=/rgba?\(([^)]+)\)/.exec(c);let col=c,a=1;if(m){const v=m[1].split(',').map(Number);col='rgb('+v[0]+','+v[1]+','+v[2]+')';if(v.length>3)a=v[3];}return [col,a*g.globalAlpha];}
+  // shadows are left out: a print engine turns a filtered shape into a picture, and the card is to stay vector
+  const shadow=()=>'';
+  function strokeAttrs(wd){const c=paint(g.strokeStyle);return ' fill="none" stroke="'+c[0]+'"'+(c[1]<1?' stroke-opacity="'+c[1]+'"':'')+' stroke-width="'+n2(wd*1e3)/1e3+'"'+
+    (g.lineJoin!=='miter'?' stroke-linejoin="'+g.lineJoin+'"':'')+(g.lineCap!=='butt'?' stroke-linecap="'+g.lineCap+'"':'')+(g._dash.length?' stroke-dasharray="'+g._dash.map(v=>n2(v*(wd===g.lineWidth?1:sc()))).join(' ')+'"':'');}
+  function fillAttrs(rule){const c=paint(g.fillStyle);return ' fill="'+c[0]+'"'+(c[1]<1?' fill-opacity="'+c[1]+'"':'')+(rule==='evenodd'?' fill-rule="evenodd"':'');}
+  // a Path2D is drawn in its own units under the current transform; the current path is kept in card units
+  const shape=(p,attrs)=>p&&p.d!=null?'<path d="'+p.d+'" transform="'+mat()+'"'+attrs+'/>':'<path d="'+path+'"'+attrs+'/>';
+  Object.assign(g,{
+    save(){stack.push(KEYS.reduce((o,k)=>{o[k]=Array.isArray(g[k])?g[k].slice():g[k];return o;},{}));g._open=0;},
+    restore(){const o=stack.pop();if(!o)return;for(let i=0;i<g._open;i++)out.push('</g>');KEYS.forEach(k=>{g[k]=o[k];});},
+    setTransform(a,b,c,d,e,f){g._m=[a,b,c,d,e,f];},transform(a,b,c,d,e,f){g._m=mul(g._m,[a,b,c,d,e,f]);},
+    scale(x,y){g.transform(x,0,0,y,0,0);},translate(x,y){g.transform(1,0,0,1,x,y);},
+    setLineDash(a){g._dash=a.slice();},getLineDash(){return g._dash.slice();},
+    beginPath(){path='';has=false;},
+    moveTo(x,y){const p=tp(x,y);path+='M'+n2(p[0])+' '+n2(p[1]);has=true;},lineTo(x,y){const p=tp(x,y);path+=(has?'L':'M')+n2(p[0])+' '+n2(p[1]);has=true;},
+    closePath(){path+='Z';},rect(x,y,w,h){g.moveTo(x,y);g.lineTo(x+w,y);g.lineTo(x+w,y+h);g.lineTo(x,y+h);g.closePath();},
+    arc(x,y,r,a0,a1,ccw){const p=tp(x,y);path+=svgArc(p[0],p[1],r*sc(),a0,a1,ccw,has,n2);has=true;},
+    fill(p,rule){if(typeof p==='string'){rule=p;p=null;}out.push(shape(p,fillAttrs(rule)+shadow()));},
+    stroke(p){out.push(shape(p,strokeAttrs(p&&p.d!=null?g.lineWidth:g.lineWidth*sc())+shadow()));},
+    clip(p){const id='c'+(++ids);defs.push('<clipPath id="'+id+'">'+shape(p,'')+'</clipPath>');out.push('<g clip-path="url(#'+id+')">');g._open++;},
+    fillRect(x,y,w,h){const keep=[path,has];g.beginPath();g.rect(x,y,w,h);g.fill();path=keep[0];has=keep[1];},
+    strokeRect(x,y,w,h){const keep=[path,has];g.beginPath();g.rect(x,y,w,h);g.stroke();path=keep[0];has=keep[1];},
+    measureText(t){meas.font=g.font;if('letterSpacing' in meas)meas.letterSpacing=g.letterSpacing;return meas.measureText(t);},
+    _text(t,x,y,attrs){const al={left:'start',start:'start',center:'middle',right:'end',end:'end'}[g.textAlign]||'start',
+        bl={middle:'central',top:'text-before-edge',hanging:'hanging',bottom:'text-after-edge',ideographic:'ideographic'}[g.textBaseline];
+      out.push('<text x="'+n2(x)+'" y="'+n2(y)+'" transform="'+mat()+'" style="white-space:pre;font:'+esc(g.font.trim())+'"'+(al!=='start'?' text-anchor="'+al+'"':'')+(bl?' dominant-baseline="'+bl+'"':'')+
+        (parseFloat(g.letterSpacing)?' letter-spacing="'+parseFloat(g.letterSpacing)+'"':'')+attrs+'>'+esc(t)+'</text>');},
+    fillText(t,x,y){g._text(t,x,y,fillAttrs());},
+    strokeText(t,x,y){g._text(t,x,y,strokeAttrs(g.lineWidth));},
+    svg(){while(stack.length)g.restore();return '<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'">'+
+      (defs.length?'<defs>'+defs.join('')+'</defs>':'')+out.join('')+'</svg>';}});
+  return g;}
+function cardSvg(){const g=svgContext(CW,CH);drawCard(g,cardPlan(),true);return g.svg();}
+// on the page the card is a picture without dots; the year's dots fly in and become its map
+let CARD_BLOB=null;
+function cardCanvas(){const c=document.createElement('canvas'),g=c.getContext('2d');c.width=CW*CS;c.height=CH*CS;g.scale(CS,CS);drawCard(g,cardPlan(),true);return c;}
+function makeBlob(){CARD_BLOB=null;cardCanvas().toBlob(b=>{CARD_BLOB=b;},'image/png');}
+function layCard(b){makeBlob();const plan=cardPlan(),k0=Math.min(b.w/CW,b.h/CH),bmp=document.createElement('canvas');bmp.width=Math.max(1,Math.round(CW*k0*DPR));bmp.height=Math.max(1,Math.round(CH*k0*DPR));
+  // drawn on whole device pixels, so that the picture is not resampled
+  const w=bmp.width/DPR,h=bmp.height/DPR,k=w/CW,x=Math.round((b.x+(b.w-w)/2)*DPR)/DPR,y=Math.round((b.y+(b.h-h)/2)*DPR)/DPR,g=bmp.getContext('2d');g.scale(bmp.width/CW,bmp.height/CH);drawCard(g,plan,false);
+  const inst=plan.inst.map(d=>({k:d.k,q:d.q,x:x+d.x*k,y:y+d.y*k,r:Math.max(.55,d.r*k),c:d.c,a:d.a})),
+    cam={s:plan.cam.s*k,tx:x+plan.cam.tx*k,ty:y+plan.cam.ty*k};
+  return {inst:inst,base:function(a){ctx.save();ctx.globalAlpha=a;ctx.shadowColor=isDark()?'rgba(0,0,0,.45)':'rgba(35,25,15,.14)';ctx.shadowBlur=32;ctx.shadowOffsetY=10;ctx.fillStyle=rgba(COL['--card']);ctx.fillRect(x,y,w,h);ctx.restore();
+    ctx.save();ctx.globalAlpha=a;ctx.drawImage(bmp,x,y,w,h);ctx.restore();},
+    over:function(a){ctx.save();ctx.globalAlpha=a;drawHomePin(ctx,cam,Math.max(.6,k));ctx.restore();}};}
+// any other scene as a picture: its heading, its dots drawn again at card size, and one of its sentences
+function scenePicture(k){const s=SC[k],c=document.createElement('canvas'),g=c.getContext('2d'),Z=1.6;c.width=CW*CS;c.height=CH*CS;g.scale(CS,CS);
+  g.font='500 54px '+SERIF;const head=wrapLines(g,s.h,CW-2*CPAD,2);cardHead(g,head,54,64);
+  const p=s.text.find(x=>x&&x.say)||s.text.find(x=>x&&x.className!=='note');g.font='400 30px '+SERIF;const lines=p?noWidow(g,Array.from(p.childNodes,n=>n.nodeName==='Q'?L('“','《')+n.textContent+L('”','》'):n.textContent).join(''),CW-2*CPAD,5):[],ty=CH-148-(lines.length-1)*44;
+  g.fillStyle=rgba(COL['--ink-2']);lines.forEach((l,i)=>g.fillText(l,CPAD,ty+i*44));g.fillStyle=rgba(COL['--rule']);g.fillRect(CPAD,CH-108,CW-2*CPAD,1.2);cardFoot(g,CH-60);
+  // the scene's own layout, on a screen Z times smaller than the card so that its labels come out at a readable size
+  const top=HEADY+(head.length-1)*64+44,bottom=ty-68,keep=[ctx,SW,SH,DPR,WIDE];ctx=g;DPR=CS*Z;SW=CW/Z;SH=CH/Z;WIDE=false;STILL=true;const dial=SCRUB;SCRUB=0;
+  try{g.setTransform(DPR,0,0,DPR,0,0);const lay=s.lay({x:CPAD/Z,y:top/Z,w:(CW-2*CPAD)/Z,h:(bottom-top)/Z});
+    if(lay.pre)lay.pre();if(lay.base)lay.base(1,0);lay.inst.forEach(d=>disc(d.x,d.y,d.r,d.c,d.a));if(lay.over)lay.over(1,0);}
+  finally{ctx=keep[0];SW=keep[1];SH=keep[2];DPR=keep[3];WIDE=keep[4];STILL=false;SCRUB=dial;}
+  return c;}
+// a card for one name: who they are in this year, where and when their papers came from, what they cited, and where on the map
+function nameCard(j){const c=document.createElement('canvas'),g=c.getContext('2d'),C=k=>rgba(COL[k]);c.width=CW*CS;c.height=CH*CS;g.scale(CS,CS);
+  const ks=((YR.credit_works||[])[j]||[]).filter(k=>DOTS[k]);g.font='500 54px '+SERIF;const head=wrapLines(g,YR.credits[j],CW-2*CPAD,2);cardHead(g,head,54,64);
+  let y=HEADY+(head.length-1)*64+52;g.font=ital()+'29px '+SERIF;g.fillStyle=C('--ink-2');g.fillText(L('among the readers of '+OWNER+' in '+year,'出现在 '+OWNER+' 的 '+year+' 年读者里'),CPAD,y);
+  y+=70;g.font='400 30px '+SERIF;g.fillStyle=C('--ink');
+  wrapLines(g,L('Wrote '+(ks.length===1?'one':fmt(ks.length))+' of the '+fmt(N)+' papers that cited this work in '+year+'; '+fmt((YR.credits||[]).length)+' people wrote them.',
+               fmt(N)+' 篇引用论文里有 '+fmt(ks.length)+' 篇出自这位作者；'+year+' 年写下这些论文的，一共 '+fmt((YR.credits||[]).length)+' 人。'),CW-2*CPAD,3).forEach(l=>{g.fillText(l,CPAD,y);y+=44;});
+  y+=26;const shown=ks.slice(0,4);
+  shown.forEach(k=>{const d=DOTS[k],when=d.yo?String(year):day(new Date(Date.UTC(year,0,d.doy)).toISOString().slice(0,10)),pl=d.cs.length?cityFull(d.cs[0]):'';
+    g.fillStyle=rgba(contCol(d));g.beginPath();g.arc(CPAD+9,y-8,9,0,6.2832);g.fill();
+    g.font='500 23px '+SANS;g.fillStyle=C('--ink');g.fillText([when,pl].filter(Boolean).join(' · '),CPAD+34,y);
+    const more=d.ps.length-1,t=L('cited “','引用了《')+shortTitle(P[d.ps[0]].t,52)+L('”','》')+(more>0?L(' and '+more+' more',' 等 '+(more+1)+' 篇'):'');
+    g.font=ital()+'26px '+SERIF;g.fillStyle=C('--ink-2');wrapLines(g,t,CW-2*CPAD-34,2).forEach((l,i)=>g.fillText(l,CPAD+34,y+38+i*34));y+=38+Math.min(2,wrapLines(g,t,CW-2*CPAD-34,2).length)*34+22;});
+  if(ks.length>shown.length){g.font='400 23px '+SANS;g.fillStyle=C('--ink-3');g.fillText(L('and '+fmt(ks.length-shown.length)+' more','还有 '+fmt(ks.length-shown.length)+' 篇'),CPAD+34,y);y+=40;}
+  // the map: every place of the year faint, theirs marked
+  const mt=y+10,mb=CH-196;if(mb-mt>=150){const cam=camFor({x:CPAD,y:mt,w:CW-2*CPAD,h:mb-mt});
+    g.save();g.transform(cam.s,0,0,cam.s,cam.tx,cam.ty);g.fillStyle=isDark()?'rgb(42,49,61)':C('--land');g.fill(LAND,'nonzero');g.restore();
+    g.fillStyle=rgba(COL['--ink-3'],.35);DOTS.forEach(d=>{if(d.cs.length){const o=at(cam,CITY[d.cs[0]].lon,CITY[d.cs[0]].lat);g.fillRect(o[0]-1.2,o[1]-1.2,2.4,2.4);}});
+    const mine=new Set();ks.forEach(k=>DOTS[k].cs.forEach(id=>mine.add(id)));
+    mine.forEach(id=>{const o=at(cam,CITY[id].lon,CITY[id].lat);g.fillStyle=C('--accent');g.beginPath();g.arc(o[0],o[1],7,0,6.2832);g.fill();g.strokeStyle=C('--accent');g.lineWidth=2;g.beginPath();g.arc(o[0],o[1],15,0,6.2832);g.stroke();});}
+  g.fillStyle=C('--rule');g.fillRect(CPAD,CH-150,CW-2*CPAD,1.2);
+  g.font=hand(28);g.fillStyle=C('--ink');g.fillText(L('Thank you for reading it, and for taking it a step further.','谢谢你读过它，又往前走了一步。'),CPAD,CH-104);
+  cardFoot(g,CH-60);return c;}
+// to the share sheet when there is one and it takes pictures, otherwise a download
+async function send(blob,name,share){if(!blob)return;
+  if(share){try{const f=new File([blob],name,{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]})){const u=publicUrl();await navigator.share(u?{files:[f],title:document.title,text:u}:{files:[f],title:document.title});return;}}
+    catch(e){if(e&&e.name==='AbortError')return;}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);}
+const toBlob=c=>new Promise(r=>c.toBlob(r,'image/png'));
+// a PDF through the browser's own print: the card as an SVG on a page of its size, so that lines, dots and text stay vector and the fonts are embedded
+function savePdf(){let d=$('printCard');if(!d){d=document.createElement('div');d.id='printCard';document.body.appendChild(d);}
+  d.innerHTML=cardSvg().replace(/^<\?xml[^>]*>\s*/,'');const t=document.title;document.title='citations-'+year;
+  const done=()=>{document.title=t;d.textContent='';window.removeEventListener('afterprint',done);};window.addEventListener('afterprint',done);window.print();}
+async function shareCard(share){send(CARD_BLOB||await toBlob(cardCanvas()),'citations-'+year+'.png',share);}
+async function shareName(j,share){send(await toBlob(nameCard(j)),'citations-'+year+'-'+(fold(YR.credits[j]).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'name')+'.png',share);}
+async function shareScene(k,share){send(await toBlob(scenePicture(k)),'citations-'+year+'-'+(k+1)+'.png',share);}
+$('picBtn').addEventListener('click',()=>{const k=Math.round(pos());if(!SC[k])return;SC[k].close?shareCard(true):shareScene(k,true);});
+
+/* ---------- theme, language, wiring ---------- */
+const root=document.documentElement,mq=matchMedia('(prefers-color-scheme: dark)');
+const effective=()=>root.getAttribute('data-theme')||(mq.matches?'dark':'light');
+function onTheme(){readColors();cssCache.clear();LAY=[];TR=[];ask();}
+$('themeBtn').addEventListener('click',()=>{const t=effective()==='dark'?'light':'dark';root.setAttribute('data-theme',t);try{localStorage.setItem('theme',t);}catch(e){}onTheme();});
+mq.addEventListener&&mq.addEventListener('change',onTheme);
+window.addEventListener('storage',e=>{if(e.key!=='theme')return;if(e.newValue==='light'||e.newValue==='dark')root.setAttribute('data-theme',e.newValue);else root.removeAttribute('data-theme');onTheme();});
+$('langBtn').addEventListener('click',()=>{LANG=LANG==='zh'?'en':'zh';try{localStorage.setItem('citestory-lang',LANG);}catch(e){}buildText();LAY=[];TR=[];ask();});
+window.addEventListener('scroll',ask,{passive:true});
+let rsT=0;window.addEventListener('resize',()=>{clearTimeout(rsT);rsT=setTimeout(rebuild,120);});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stopSound();ask();});
+readColors();size();giftFrom();buildText();window.scrollTo(0,0);ask();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{LAY=[];TR=[];ask();});
+})();
+</script>
+</body>
+</html>
