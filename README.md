@@ -156,6 +156,8 @@ the papers it cites, and cuts that pass together sound together: a busy year sou
 
 ### Year: the year, looked back on
 
+<p align="center"><img src="docs/screenshots/year-card.webp" width="540" alt="Year: the card at the end of the page, with the year's conferences on the map, five figures and a stamp for each new country"></p>
+
 The latest calendar year, told in a few screens with the same dots from start to end: one dot for every paper that
 cited the work that year. The dots spell the year, turn into a ring of the year's days, stack over the years the papers they cite were written in,
 split into new and returning readers, group by the phrases in their titles, and fly to the map, where fog
