@@ -61,10 +61,6 @@ h1 { margin: 0; font: 500 34px/1 var(--font-display); letter-spacing: -0.01em; }
 .fig.wide .v { font-size: 20px; line-height: 1.25; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 h2 { margin: 0 0 8px; font: 500 18px/1.2 var(--font-display); }
 h3 { margin: 14px 0 6px; font: 600 12px/1.2 var(--font-ui); color: var(--ink-3); letter-spacing: 0.04em; text-transform: uppercase; }
-.sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
-.sec-head h2 { margin: 0; }
-.readout { margin: 6px 0 0; font-size: 12.5px; color: var(--ink-2); min-height: 1.45em; }
-.readout b { color: var(--ink); font-weight: 600; }
 
 /* a ranked list whose rows are buttons */
 .rows { list-style: none; margin: 0; padding: 0; }
@@ -74,7 +70,6 @@ h3 { margin: 14px 0 6px; font: 600 12px/1.2 var(--font-ui); color: var(--ink-3);
 .row-btn .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .row-btn .sub { grid-column: 1; color: var(--ink-3); font-size: 12px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .row-btn .ct { grid-row: 1; grid-column: 2; font-weight: 600; text-align: right; }
-.row-btn .when-s { grid-column: 2; color: var(--ink-3); font-size: 12px; text-align: right; }
 
 .detail-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
 .detail-head h2 { font-size: 22px; line-height: 1.2; margin: 0; overflow-wrap: anywhere; }
@@ -148,7 +143,7 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
   var V = window.CITATION_VIEWS, root = document.documentElement;
   var $ = function (id) { return document.getElementById(id); };
   var fmt = function (n) { return Math.round(n).toLocaleString("en-US"); };
-  var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var reduceMQ = matchMedia("(prefers-reduced-motion: reduce)");     // read live: the setting can change while a page is open
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
   function svg(inner) { return '<svg viewBox="0 0 16 16" aria-hidden="true">' + inner + "</svg>"; }
   var ICON = {
@@ -180,7 +175,11 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
 
   // ---------- time ----------
   var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  var snap = new Date(V.snapshot), sy = snap.getUTCFullYear();
+  /* the snapshot is Python's isoformat ("2026-11-26T12:14:19.250349+00:00"): six fractional digits are outside the
+     ECMAScript date format, so keep three; a date that still does not parse counts from the start of its day */
+  var snap = new Date(String(V.snapshot).replace(/(\.\d{3})\d+/, "$1"));
+  if (isNaN(snap)) snap = new Date(String(V.snapshot).slice(0, 10) + "T00:00:00Z");
+  var sy = snap.getUTCFullYear();
   var tEnd = sy + (snap - Date.UTC(sy, 0, 1)) / (Date.UTC(sy + 1, 0, 1) - Date.UTC(sy, 0, 1));
   /* stored times are rounded to three decimals: never let the end of time fall before the last dated work */
   V.works.forEach(function (w) { if (w[0] != null && w[0] > tEnd) tEnd = w[0]; });
@@ -206,7 +205,7 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
   /* Play button + range slider (+ optional yearly sparkline and readout).
      o: {button, slider, when, spark, t0, t1, start, seconds, clock, bars:[{t, n}], label(t) -> [main, small], onTime(t, playing)} */
   function player(o) {
-    var time = o.t1, playing = false, raf = 0, clk = o.clock || clock(o.t0, o.t1);
+    var time = o.t1, playing = false, raf = 0, timer = 0, clk = o.clock || clock(o.t0, o.t1);
     function setRange(t0, t1, c) { o.t0 = t0; o.t1 = t1; clk = c || clock(t0, t1); o.slider.min = t0.toFixed(2); o.slider.max = t1.toFixed(2); o.slider.step = "0.01"; }
     function paint() {
       o.slider.value = time;
@@ -228,12 +227,20 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
       g.globalAlpha = 1;
     }
     function set(t, silent) { time = Math.min(o.t1, Math.max(o.t0, t)); if (!silent) o.onTime(time, playing); paint(); }
-    function stop() { if (!playing) return; playing = false; cancelAnimationFrame(raf); button(); o.onTime(time, false); }
+    function stop() { if (!playing) return; playing = false; cancelAnimationFrame(raf); clearTimeout(timer); button(); o.onTime(time, false); }
     function button() { o.button.innerHTML = playing ? ICON.pause : ICON.play; o.button.setAttribute("aria-label", playing ? "Pause" : "Play"); }
     function play() {
-      if (reduce) { set(o.t1); return; }
       playing = true; button();
       if (time >= o.t1 - 0.01) time = o.start != null ? Math.max(o.t0, o.start) : o.t0;   // o.start: where a replay begins (default t0)
+      if (reduceMQ.matches) {     // reduced motion: no tween, the clock moves a whole year every 0.7 s
+        o.onTime(time, true); paint();
+        timer = setTimeout(function next() {
+          if (!playing) return;
+          time = Math.min(o.t1, Math.floor(time) + 1); o.onTime(time, true); paint();
+          if (time >= o.t1) stop(); else timer = setTimeout(next, 700);
+        }, 700);
+        return;
+      }
       var p = clk.inverse(time), last = performance.now();
       (function step(now) {
         if (!playing) return;
@@ -249,7 +256,7 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
     themeFns.push(drawSpark);
     if (o.spark) new ResizeObserver(drawSpark).observe(o.spark);
     setRange(o.t0, o.t1, o.clock); button(); paint();
-    return { set: set, stop: stop, play: play, setRange: setRange, get time() { return time; }, get playing() { return playing; } };
+    return { set: set, stop: stop, play: play, setRange: setRange, setStart: function (t) { o.start = t; }, get time() { return time; }, get playing() { return playing; } };
   }
 
   // ---------- canvas, tooltip, details, picker, dialog ----------
@@ -261,6 +268,18 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
     var ctx = canvas.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     return { ctx: ctx, width: w, height: h, dpr: dpr };
   }
+  /* text cut to at most max pixels (measured with ctx's current font), with an ellipsis when cut */
+  function fitText(ctx, text, max) {
+    if (ctx.measureText(text).width <= max) return text;
+    var lo = 0, hi = text.length;
+    while (lo < hi) { var m = (lo + hi + 1) >> 1; if (ctx.measureText(text.slice(0, m).trimEnd() + "…").width <= max) lo = m; else hi = m - 1; }
+    return lo ? text.slice(0, lo).trimEnd() + "…" : "";
+  }
+  /* calls f whenever the window moves to a screen of another pixel density, for a sharper backing store */
+  function onDensityChange(f) {
+    (function watch() { matchMedia("(resolution: " + devicePixelRatio + "dppx)").addEventListener("change", function () { f(); watch(); }, { once: true }); })();
+  }
+  function chip(value, key) { var c = el("div", "chip"); c.append(el("b", null, value), el("span", null, key)); return c; }
   function tip(container) {
     var t = el("div", "tip"); t.hidden = true; container.appendChild(t);
     return {
@@ -273,14 +292,15 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
       hide: function () { t.hidden = true; }
     };
   }
-  var detailsPromise = null;
-  /* titles, bylines and links of the citing works, aligned with V.works; loaded on first use */
+  var detailsPromise = null, detailsFailed = false;
+  /* titles, bylines and links of the citing works, aligned with V.works; loaded on first use. A failed load stays
+     failed (the promise stays rejected), so callers asking on every pointer move do not insert the script again. */
   function details() {
     if (!detailsPromise) detailsPromise = new Promise(function (ok, fail) {
       if (window.CITATION_VIEW_DETAILS) return ok(window.CITATION_VIEW_DETAILS);
       var s = document.createElement("script"); s.src = "views-details.js"; s.async = true;
-      s.onload = function () { ok(window.CITATION_VIEW_DETAILS); };
-      s.onerror = function () { detailsPromise = null; fail(new Error("views-details.js failed to load")); };
+      s.onload = function () { if (window.CITATION_VIEW_DETAILS) ok(window.CITATION_VIEW_DETAILS); else s.onerror(); };
+      s.onerror = function () { detailsFailed = true; fail(new Error("views-details.js failed to load")); };
       document.head.appendChild(s);
     });
     return detailsPromise;
@@ -294,12 +314,15 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
     var cut = title.slice(0, max), sp = cut.lastIndexOf(" ");
     return (sp > max * 0.5 ? cut.slice(0, sp) : cut).replace(/[\s,;:\-]+$/, "") + "…";
   }
-  function picker(button, onSelect) {
-    var cited = V.papers.map(function (p, i) { return { key: String(i), title: p.t, year: p.y, n: p.n, yearly: p.yr }; })
+  /* `here` names the view, so the choice is kept in ?paper= and linked to the other views; initial() gives
+     the paper ?paper= names (-1 for none) */
+  function picker(button, onSelect, here) {
+    var cited = V.papers.map(function (p, i) { return { key: String(i), pid: p.id, title: p.t, year: p.y, n: p.n, yearly: p.yr }; })
       .filter(function (p) { return p.n > 0; });     // same list as the map pages: papers with at least one citing paper
-    return window.PaperPicker({ button: button, total: V.stats.works, allLabel: "All " + cited.length + " cited papers",
-      papers: cited,
+    var pk = window.PaperPicker({ button: button, total: V.stats.works, allLabel: "All " + cited.length + " cited papers",
+      papers: cited, here: here,
       onSelect: function (k) { onSelect(k === "" ? -1 : +k); } });
+    return { set: pk.set, open: pk.open, initial: function () { var k = pk.initial(); return k === "" ? -1 : +k; } };
   }
   function about(button, dialog) {
     button.addEventListener("click", function () { dialog.showModal(); });
@@ -312,8 +335,8 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
       buttons.forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); }); onPick(b.dataset[attr]); }); });
   }
   /* run fn (which rebuilds lists inside root) and put focus back on the same row of the same list */
-  function keepFocus(root, fn) {
-    var a = document.activeElement, list = a && root.contains(a) && a.closest ? a.closest("ol, ul") : null, i = list && list.id ? [].indexOf.call(list.querySelectorAll("button, a"), a) : -1, id = list && list.id;
+  function keepFocus(scope, fn) {
+    var a = document.activeElement, list = a && scope.contains(a) && a.closest ? a.closest("ol, ul") : null, i = list && list.id ? [].indexOf.call(list.querySelectorAll("button, a"), a) : -1, id = list && list.id;
     fn();
     if (i < 0) return;
     var again = document.getElementById(id), items = again && !again.closest("[hidden]") ? again.querySelectorAll("button, a") : [];
@@ -331,8 +354,8 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
   });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { themeFns.forEach(function (f) { f(C); }); });
 
-  window.Shell = { V: V, C: C, $: $, fmt: fmt, el: el, reduce: reduce, ICON: ICON, tEnd: tEnd, monthLabel: monthLabel, monthOf: monthOf, safeLink: safeLink, keepFocus: keepFocus, workDate: workDate, upTo: upTo,
-    clock: clock, linear: linear, player: player, size: size, tip: tip, details: details, paperLink: paperLink, shortName: shortName,
+  window.Shell = { V: V, C: C, $: $, fmt: fmt, el: el, get reduce() { return reduceMQ.matches; }, get detailsFailed() { return detailsFailed; }, tEnd: tEnd, monthLabel: monthLabel, monthOf: monthOf, safeLink: safeLink, keepFocus: keepFocus, workDate: workDate, upTo: upTo,
+    clock: clock, linear: linear, player: player, size: size, fitText: fitText, onDensityChange: onDensityChange, chip: chip, tip: tip, details: details, paperLink: paperLink, shortName: shortName,
     picker: picker, about: about, onEscape: onEscape, seg: seg, announce: announce, onTheme: function (f) { themeFns.push(f); } };
 })();
 </script>

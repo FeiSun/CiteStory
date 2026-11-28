@@ -51,6 +51,9 @@
 
 每个视图为什么采用现在的形式、试过又放弃了什么、Record 的声音如何设计，见 [DESIGN.zh-CN.md](DESIGN.zh-CN.md)。
 
+在 Atlas、Reach、Story、Flow、Constellation、Race 或 Record 里选中的论文会记在地址里（`?paper=`），下方的"Open in"
+链接会在其他视图里打开同一篇论文。
+
 ### Atlas：在世界的哪里
 
 ![Atlas：每个出现过引用论文的城市，弧线从家乡机构出发](docs/screenshots/atlas.webp)
@@ -70,7 +73,7 @@
 
 以一个点为中心重画世界。Reach 使用以主人所在城市为中心的方位等距投影：每个城市都在真实的距离和真实的方位上，
 圆盘边缘就是对跖点，也就是地球上正对面的那个点。圆环标出 2,000、5,000、10,000 和 15,000 公里；一个开关可以用平方根比例把拥挤的中心拉开。
-右侧的直方图回答"想法传了多远"：距离中位数、超过 5,000 公里的比例，以及最远的城市。
+右侧的直方图回答"想法传了多远"：距离中位数、超过 5,000 公里的比例，以及最远的城市。论文选择器可以只看一篇论文传了多远。
 
 ### Story：怎样传开
 
@@ -152,12 +155,12 @@ python3 code/citestory.py update profiles/me
 open profiles/me/site/index.html        # macOS；其他系统用浏览器打开这个文件
 ```
 
-第一次运行时，会为主页上的每篇论文发一次 OpenAlex 搜索，然后分页抓取引用论文（11,000 篇引用论文大约 60 次请求），
+第一次运行时，先把主页上的论文对应到 OpenAlex：按标题找到几篇之后，会列出作者本人在 OpenAlex 的各个作者 id 下的全部作品（每 200 篇一次请求），只有在那里找不到的论文才按标题搜索。一个 108 篇论文的主页用了 59 次请求，原来要 108 次。然后分页抓取引用论文（11,000 篇引用论文大约 60 次请求），
 最后查询机构信息。大概需要几分钟。
 
 **请先申请一个免费的 OpenAlex API key。** OpenAlex 给每个用户一份每日额度，在 UTC 零点重置：
 没有 key 时是 0.10 美元，同一 IP 地址的所有人共用；有免费 key 时是 1 美元。每次标题搜索 0.001 美元，
-每页结果 0.0001 美元。一个 100 篇论文、11,000 篇引用论文的主页，第一次运行约 0.12 美元：100 次搜索，
+每页结果 0.0001 美元。一个 100 篇论文、11,000 篇引用论文的主页，第一次运行约 0.07 美元：不到 60 次搜索和列表，
 再加上引用论文和机构约 100 页。没有 key 时，大约 95 次搜索后当天额度就用完了，运行会停下，第二天再继续。
 每月更新约 0.02 美元，因为只搜索新增的标题。有免费 key 时两者都远在每日额度之内，不需要付费。
 
@@ -196,7 +199,7 @@ Google Scholar 没有 API。这个工具像浏览器一样读取公开的主页�
 | `scholar_html` | 主页网页的本地副本，在 Google 拒绝访问链接时使用 |
 | `name` | 主人的名字，如果和 Scholar 主页上的不同 |
 | `aliases` | 署名里出现的其他写法：另一种文字的名字、曾用名、"J. Smith" 这类缩写 |
-| `openalex_author_ids` | 属于主人的 OpenAlex 作者 id，用于署名太特殊、无法自动匹配的情况 |
+| `openalex_author_ids` | 属于主人的 OpenAlex 作者 id，用于署名太特殊、无法自动匹配的情况（写 `A5101467161` 或作者的 OpenAlex 网址都可以） |
 | `home` | 主人所在机构的 OpenAlex id，在自动判断出错或缺失时使用（[在这里搜索](https://openalex.org)） |
 | `deploy_to` | 每次构建后，把生成的页面复制到这个文件夹 |
 
@@ -223,15 +226,13 @@ python3 code/citestory.py build  profiles/me     # 只重新构建，比如修�
 
 ## 放到网站上
 
-`profiles/<name>/site/` 里是页面需要的全部文件，没有多余的东西：九个 HTML 文件和四个数据文件。
+`profiles/<name>/site/` 里是页面需要的全部文件，没有多余的东西：九个 HTML 文件（八个视图和首页）和四个数据文件。
 把这个文件夹复制到任何静态托管上即可，或者设置 `deploy_to`，让它自动复制。
 
 **外观沿用了 [al-folio](https://github.com/alshedivat/al-folio)**，也就是我个人主页用的 Jekyll 主题：
 - 衬线标题，安静的配色；
 - 浅色/深色主题存在同一个 `localStorage` 键（`theme`）下，所以切换网站主题时，这些页面也会跟着切换；
 - 嵌入模式 `atlas.html?embed` 会去掉页面自带的外框，使用网站的背景色，并把自己的高度告诉宿主页面，让 iframe 能自适应高度。
-
-`al-folio/` 里有一个项目页面，以及这种配置的分步说明。
 
 如果你的网站风格不同，可能需要调整设计。共用的颜色、字体和外框在 `code/templates/_shell.html` 和每个模板的开头。
 修改后运行一次 `build`。
@@ -283,7 +284,7 @@ OpenAlex 不收录的文档。差距大约在 15%；很新的论文，以及不�
   机构坐标通常是总部所在地。没有机构信息的论文会计入总数，但无法放到地图上，页面会说明有多少篇。自引也包含在内。
 - **合并地点。** OpenAlex 有时会给同一个地方两个 id，或者用区名代替城市名。同一国家内、25 公里以内同名的两个地点会合并；
   如果较小的地点位于一个论文数是它十倍的地点 8 公里以内，也会合并。规模相近的邻近城镇保持分开。
-- **家乡。** 主人最近三年里最常出现的机构，除非 `home` 另有指定。
+- **家乡。** 主人最近三年里最常出现、且有城市信息的机构，除非 `home` 另有指定。和研究所一起署名的上级机构（科学院、国家实验室体系）常常没有城市，会被跳过。
 - **日期。** OpenAlex 只知道年份时会写成 1 月 1 日。这些论文会按其 id 的稳定哈希分散到当年各个时间，
   这样动画不会每到一月就跳一下。展示单篇论文的页面会把它们标为"仅知年份"。
 
@@ -297,7 +298,7 @@ code/
   fetch_citation_geo.py  Scholar 列表、OpenAlex 匹配、引用论文、机构
   build_citation_geo.py  汇总城市，写出 data.js，填充模板
   build_views.py         论文、共引布局、作者：views.js
-  templates/             八个页面和首页；_shell.html 和 _picker.html 是共用部分
+  templates/             八个页面和首页；_shell.html、_picker.html 和 _views.html 是共用部分
   basemap/               Natural Earth 1:50m 国家边界
   test_*.py              单元测试：python3 -m unittest discover -s code -p "test_*.py"
   DATA.md                数据约定
@@ -305,8 +306,8 @@ DESIGN.zh-CN.md          各个视图为什么是现在这样
 profiles/
   example/profile.json   可以复制的示例配置
   <name>/                你自己的：profile.json、data/（快照）、site/（页面）；已被 git 忽略
-al-folio/                al-folio 网站的项目页面和说明
 docs/screenshots/        本 README 中的图片（动态 WebP 和 PNG）
+promo/                   用生成的网站录制宣传视频的脚本（见 promo/README.md）
 ```
 
 ## 致谢与灵感

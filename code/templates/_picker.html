@@ -1,3 +1,4 @@
+<!--PAPER_VIEWS-->
 <style>
 /* paper picker: a searchable list of the cited papers, opened from a button (or Ctrl/Cmd-K).
    Pages map their own colours onto --pk-bg, --pk-ink, --pk-muted, --pk-line, --pk-hover, --pk-accent, --pk-shade. */
@@ -34,21 +35,24 @@
 }
 </style>
 <script>
-/* PaperPicker({button, papers:[{key,title,year,n,yearly}], total, allLabel, value, onSelect(key)}) -> {set(key)}
-   papers come ranked; key '' means all papers. */
+/* PaperPicker({button, papers:[{key,pid,title,year,n,yearly}], total, allLabel, onSelect(key), here}) -> {set(key), open(), initial()}
+   papers come ranked; key '' means all papers. With `here` (this view's name) the choice is kept in ?paper=
+   and an "Open in" row under the button links to the other views; initial() is the key ?paper= names, or ''. */
 window.PaperPicker=function(o){
  const btn=o.button,papers=o.papers,fmt=n=>new Intl.NumberFormat('en-US').format(n),SVG='http://www.w3.org/2000/svg';
  const fold=s=>String(s||'').normalize('NFKD').replace(/[̀-ͯ]/g,'').toLowerCase();
  const MAC=/Mac|iPhone|iPad/.test(navigator.platform),TOUCH=matchMedia('(pointer:coarse)').matches;
- let value=o.value||'',back=null,dlg=null,input=null,list=null,live=null,items=[],at=0,lastFocus=null,gen=0;
+ let value='',back=null,dlg=null,input=null,list=null,live=null,items=[],at=0,lastFocus=null,gen=0;
  const mk=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;};
  const rank=new Map(papers.map((p,i)=>[p.key,i+1]));
  for(const p of papers)p._hay=fold(p.title+' '+(p.year||''));
  btn.classList.add('pk-trigger');btn.setAttribute('aria-haspopup','dialog');btn.replaceChildren();
  const now=mk('span','pk-now'),kbd=mk('kbd',null,MAC?'⌘K':'Ctrl K');kbd.setAttribute('aria-hidden','true');
  btn.append(now,kbd);
- function label(){const p=papers.find(p=>p.key===value);now.textContent=p?p.title:o.allLabel;btn.title=p?p.title:'';btn.setAttribute('aria-label','Paper: '+(p?p.title:o.allLabel));}
- label();
+ const views=o.here?PaperViews.row(o.here):null;if(views)btn.after(views.el);
+ function label(write){const p=papers.find(p=>p.key===value);now.textContent=p?p.title:o.allLabel;btn.title=p?p.title:'';btn.setAttribute('aria-label','Paper: '+(p?p.title:o.allLabel));
+  if(views){const id=p&&p.pid||'';views.show(id);if(write)PaperViews.set(id);}}
+ label(false);   // ?paper= stays until the page has read it
  function spark(p){const s=document.createElementNS(SVG,'svg');s.setAttribute('viewBox','0 0 74 20');s.setAttribute('class','pk-spark');s.setAttribute('aria-hidden','true');
   const v=p.yearly||[],mx=Math.max(1,...v),bw=74/Math.max(1,v.length);
   v.forEach((x,i)=>{if(!x)return;const h=Math.max(1.5,Math.sqrt(x/mx)*18),r=document.createElementNS(SVG,'rect');
@@ -75,7 +79,7 @@ window.PaperPicker=function(o){
   [...list.children].forEach((r,i)=>r.setAttribute('aria-selected',String(i===at)));
   input.setAttribute('aria-activedescendant','pk-o'+gen+'-'+at);if(!mouse)list.children[at]?.scrollIntoView({block:'nearest'});}
  // the page reacts first (it may rebuild the element that had focus), then focus returns
- function pick(i){const p=items[i];if(!p)return;const changed=p.key!==value;shut();if(changed){value=p.key;label();o.onSelect(value);}refocus();}
+ function pick(i){const p=items[i];if(!p)return;const changed=p.key!==value;shut();if(changed){value=p.key;label(true);o.onSelect(value);}refocus();}
  function refocus(){(lastFocus&&lastFocus!==document.body&&document.contains(lastFocus)?lastFocus:btn).focus({preventScroll:true});}
  function close(){if(!back)return;shut();refocus();}
  function shut(){if(!back)return;back.remove();back=null;document.documentElement.style.overflow='';document.removeEventListener('keydown',keys,true);visualViewport?.removeEventListener('resize',fit);}
@@ -103,7 +107,8 @@ window.PaperPicker=function(o){
   document.addEventListener('keydown',keys,true);visualViewport?.addEventListener('resize',fit);fit();
   render();input.focus();}
  btn.addEventListener('click',open);
- if(o.shortcut!==false)document.addEventListener('keydown',e=>{if(e.repeat||e.isComposing||e.altKey||e.key.toLowerCase()!=='k'||!(MAC?e.metaKey:e.ctrlKey))return;e.preventDefault();back?close():open();});
- return {set(k){value=k||'';label();},open};
+ document.addEventListener('keydown',e=>{if(e.repeat||e.isComposing||e.altKey||e.key.toLowerCase()!=='k'||!(MAC?e.metaKey:e.ctrlKey))return;e.preventDefault();back?close():open();});
+ function initial(){const id=PaperViews.get(),p=id&&papers.find(p=>p.pid===id);return p?p.key:'';}
+ return {set(k){value=k||'';label(true);},open,initial};
 };
 </script>

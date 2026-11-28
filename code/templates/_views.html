@@ -1,0 +1,23 @@
+<style>
+/* the "Open in" row of links that carries one paper to the other views (?paper=) */
+.pk-views{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;margin-top:8px;font-size:12.5px;line-height:1.4;color:var(--pk-muted)}
+.pk-views[hidden],html[data-embed] .pk-views{display:none}
+.pk-views a{padding:3px 0;color:var(--pk-ink);text-decoration:none;border-bottom:1px solid var(--pk-line)}
+.pk-views a:hover{border-bottom-color:currentColor}
+</style>
+<script>
+/* PaperViews: one paper followed across the views. ?paper=<id> names it (the build's paper_id);
+   get() reads it, set(id) writes it without a reload, row(here) is the "Open in" line of links to the other views. */
+window.PaperViews=(function(){
+ const VIEWS=[['atlas','Atlas'],['reach','Reach'],['story','Story'],['flow','Flow'],['constellation','Constellation'],['race','Race'],['record','Record']];
+ const valid=id=>typeof id==='string'&&/^[0-9a-f]{8}$/.test(id);
+ function get(){try{const id=new URLSearchParams(location.search).get('paper');return valid(id)?id:'';}catch(e){return '';}}
+ function set(id){try{const u=new URL(location.href);if(valid(id))u.searchParams.set('paper',id);else u.searchParams.delete('paper');
+  if(u.href!==location.href)history.replaceState(history.state,'',u.href);}catch(e){}}   // file:// pages may refuse; the links still carry the paper
+ function row(here){const nav=document.createElement('nav');nav.className='pk-views';nav.hidden=true;nav.setAttribute('aria-label','This paper in other views');
+  nav.append(document.createTextNode('Open in'));
+  const links=VIEWS.filter(v=>v[0]!==here).map(v=>{const a=document.createElement('a');a.textContent=v[1];a.dataset.view=v[0];nav.append(a);return a;});
+  return {el:nav,show(id){nav.hidden=!valid(id);if(valid(id))for(const a of links)a.href=a.dataset.view+'.html?paper='+id;}};}
+ return {get,set,row};
+})();
+</script>

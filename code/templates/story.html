@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="referrer" content="no-referrer">
 <title>Where the Citations Came From</title>
 <meta name="description" content="An editorial scrollytelling piece on the geography of papers citing one researcher's work.">
 <script>
@@ -55,14 +57,12 @@ a{color:inherit;text-decoration-color:var(--accent);text-underline-offset:.18em;
 a:hover{color:var(--accent)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
 button,input,select{font:inherit;color:inherit}
-.sans{font-family:var(--sans)}
-.num{font-variant-numeric:tabular-nums lining-nums}
 
 /* theme toggle */
 .theme-btn{position:fixed;top:14px;right:14px;z-index:30;width:40px;height:40px;border-radius:50%;
   border:1px solid var(--rule);background:var(--card);color:var(--ink);display:grid;place-items:center;cursor:pointer;box-shadow:var(--shadow)}
 .theme-btn:hover{border-color:var(--ink-3)}
-.theme-btn{transition:opacity .2s}.theme-btn.tucked{opacity:0;pointer-events:none}
+.theme-btn{transition:opacity .2s,visibility .2s}.theme-btn.tucked{opacity:0;visibility:hidden;pointer-events:none}
 .theme-btn.home{right:62px}
 .theme-btn svg{width:18px;height:18px}
 .theme-btn .i-sun{display:none}
@@ -142,8 +142,6 @@ button,input,select{font:inherit;color:inherit}
 .field .pk-trigger{border:1px solid var(--rule);background:var(--bg);border-radius:5px;padding:8px 10px;font-size:14px;font-family:var(--sans);color:var(--ink)}
 .field .pk-trigger:hover{border-color:var(--ink-3)}
 :root{--pk-bg:var(--card);--pk-ink:var(--ink);--pk-muted:var(--ink-3);--pk-line:var(--rule);--pk-hover:var(--bg-2);--pk-accent:var(--accent);--pk-shade:rgba(20,14,8,.35)}
-.sel-wrap{position:relative}
-.sel-wrap svg{position:absolute;right:10px;top:50%;width:12px;height:12px;transform:translateY(-50%);pointer-events:none;color:var(--ink-3)}
 .city-list{list-style:none;margin:0;padding:6px 8px;overflow:auto;flex:0 0 auto;max-height:260px;border-bottom:1px solid var(--rule)}
 .city-list button{width:100%;display:grid;grid-template-columns:1fr auto;gap:10px;text-align:left;border:0;background:transparent;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:13.5px}
 .city-list button:hover{background:var(--bg-2)}
@@ -165,6 +163,7 @@ button,input,select{font:inherit;color:inherit}
 .more{margin-top:12px;border:1px solid var(--rule);background:var(--bg);border-radius:5px;padding:7px 12px;font-size:13px;cursor:pointer}
 .more:hover{border-color:var(--ink-3)}
 .hint{color:var(--ink-3);font-size:14px;margin:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* about */
 .foot{max-width:1180px;margin:0 auto;padding:28px 24px 56px;border-top:1px solid var(--rule);font-family:var(--sans);font-size:13px;color:var(--ink-3)}
@@ -249,7 +248,8 @@ button,input,select{font:inherit;color:inherit}
         <div class="field"><label for="citySearch">City</label><input id="citySearch" type="search" placeholder="City, country or region" autocomplete="off"></div>
       </div>
       <ul class="city-list" id="cityList" aria-label="Cities"></ul>
-      <div class="detail" id="detail" aria-live="polite"></div>
+      <div class="detail" id="detail"></div>
+      <p class="sr" id="exLive" aria-live="polite"></p>
     </div>
   </div>
 </section>
@@ -275,9 +275,6 @@ function fmt(n){return NF.format(Math.round(n));}
 function pct(a,b){return b?Math.round(100*a/b)+'%':'0%';}
 function $(id){return document.getElementById(id);}
 function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
-var SVGNS='http://www.w3.org/2000/svg';
-function sv(tag,attrs){var e=document.createElementNS(SVGNS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);return e;}
-function norm(s){return String(s||'').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu,'');}
 function listJoin(a){if(a.length<2)return a.join('');return a.slice(0,-1).join(', ')+' and '+a[a.length-1];}
 function safeUrl(u){try{var x=new URL(u);if(x.protocol==='http:'||x.protocol==='https:')return x.href;}catch(e){}return null;}
 function workUrl(w){return (w.doi&&safeUrl(w.doi))||(/^W\d+$/.test(w.id)?'https://openalex.org/'+w.id:null);}
@@ -286,31 +283,28 @@ function hav(la1,lo1,la2,lo2){var r=Math.PI/180,a=Math.sin((la2-la1)*r/2),b=Math
   var h=a*a+Math.cos(la1*r)*Math.cos(la2*r)*b*b;return 2*6371.0088*Math.asin(Math.min(1,Math.sqrt(h)));}
 
 /* ---------- data model ---------- */
-var ASOF=new Date(D.manifest&&D.manifest.as_of||Date.now());
+var ASOF=(function(s){var d=new Date(String(s).replace(/(\.\d{3})\d+/,'$1'));return isNaN(d)?new Date(String(s).slice(0,10)+'T00:00:00Z'):d;})(D.manifest.as_of);
 var ASOF_Y=ASOF.getUTCFullYear();
 var asofText=ASOF.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});
 var OWNER=D.owner||'the author';
-// Fallback for codes missing from the shared country table.
-var COUNTRY_FIX={MO:{name:'Macao',continent:'Asia'}};
+if(D.owner&&document.title.indexOf(D.owner)<0)document.title+=' · '+D.owner;
 var CONTS=['Asia','North America','Europe','Africa','South America','Oceania','Other'];
 var CONT_VAR={'Asia':'--c-asia','North America':'--c-na','Europe':'--c-eu','Africa':'--c-af','South America':'--c-sa','Oceania':'--c-oc','Other':'--c-ot'};
-var NAME_FULL={'Dem. Rep. Congo':'Democratic Republic of the Congo','Bosnia and Herz.':'Bosnia and Herzegovina','Cayman Is.':'Cayman Islands','Central African Rep.':'Central African Republic','Dominican Rep.':'Dominican Republic','Eq. Guinea':'Equatorial Guinea','S. Sudan':'South Sudan','Solomon Is.':'Solomon Islands'};
-function fullName(n){return NAME_FULL[n]||String(n).replace(/\bIs\.$/,'Islands').replace(/\bRep\./,'Republic');}
-function country(iso){var c=D.countries&&D.countries[iso];if(!c&&COUNTRY_FIX[iso])return COUNTRY_FIX[iso];
-  var cont=c&&c.continent;if(CONTS.indexOf(cont)<0)cont='Other';return {name:fullName((c&&c.name)||iso),continent:cont};}
+function country(iso){var c=D.countries&&D.countries[iso];     // the build gives full names ("Dem. Rep. Congo" spelled out)
+  var cont=c&&c.continent;if(CONTS.indexOf(cont)<0)cont='Other';return {name:(c&&c.name)||iso,continent:cont};}
 
 var CITIES=D.cities, NC=CITIES.length, cityIdx={};
 CITIES.forEach(function(c,i){cityIdx[c.id]=i;});
 var TGT={};D.targets.forEach(function(t){TGT[t.id]=t;});
 var GROUPS={},GLIST=[];
-D.targets.forEach(function(t){var g=t.key||norm(t.title)||t.id;if(!GROUPS[g]){GROUPS[g]={key:g,title:t.title,year:t.publication_year,n:0,placed:0};GLIST.push(GROUPS[g]);}
+D.targets.forEach(function(t){var g=t.key||t.id;if(!GROUPS[g]){GROUPS[g]={key:g,pid:t.pid,title:t.title,year:t.publication_year,n:0,placed:0};GLIST.push(GROUPS[g]);}
   var G=GROUPS[g];if(t.publication_year&&(!G.year||t.publication_year<G.year))G.year=t.publication_year;});
 var INST=D.institutions||{};
 
 var W=D.works.map(function(w){
   var y=w.year;if(y!=null&&y>ASOF_Y)y=ASOF_Y;
   var ci=[];(w.cities||[]).forEach(function(id){var i=cityIdx[id];if(i!=null&&ci.indexOf(i)<0)ci.push(i);});
-  var gs=[];(w.targets||[]).forEach(function(t){var T=TGT[t];if(T){var g=T.key||norm(T.title)||T.id;if(gs.indexOf(g)<0)gs.push(g);}});
+  var gs=[];(w.targets||[]).forEach(function(t){var T=TGT[t];if(T){var g=T.key||T.id;if(gs.indexOf(g)<0)gs.push(g);}});
   var cs={},ks={};ci.forEach(function(i){var iso=CITIES[i].country;cs[iso]=1;ks[country(iso).continent]=1;});
   var inst={};(w.inst||[]).forEach(function(x){inst[x]=1;});
   return {raw:w,yr:y,date:w.date||'',ci:ci,gs:gs,countries:Object.keys(cs),conts:Object.keys(ks),inst:Object.keys(inst)};
@@ -347,10 +341,9 @@ F.first=dated.filter(function(w){return w.yr===F.y0;}).sort(function(a,b){return
   var kc={};placed.forEach(function(w){w.conts.forEach(function(k){kc[k]=(kc[k]||0)+1;});});
   F.firstCont=Object.keys(kc).sort(function(a,b){return kc[b]-kc[a];})[0];F.firstContN=kc[F.firstCont]||0;
   var names=[],seen={};placed.forEach(function(w){w.ci.forEach(function(i){if(!seen[i]){seen[i]=1;names.push(i);}});});F.firstCities=names;})();
-// before the takeoff
 // the takeoff: the year before the sharpest rise, counting only rises to at least 5% of the busiest year
 F.split=(function(){var peak=Math.max.apply(null,F.perYear.concat([0])),best=-1,bestR=0;
-  for(var i=0;i+1<F.years.length&&F.years[i+1]<=ASOF_Y;i++){var r=F.perYear[i+1]/Math.max(1,F.perYear[i]);if(F.perYear[i+1]>=peak*0.05&&r>bestR){bestR=r;best=i;}}
+  for(var i=0;i+1<F.years.length;i++){var r=F.perYear[i+1]/Math.max(1,F.perYear[i]);if(F.perYear[i+1]>=peak*0.05&&r>bestR){bestR=r;best=i;}}
   return best<0?F.y0-1:F.years[best];})();
 F.slow=F.split>F.y0&&F.years.length>=4;     // at least two slow years before it, or the chapter is left out
 F.pre=counts(function(w){return w.yr!=null&&w.yr<=F.split;});
@@ -364,7 +357,7 @@ var HOME_ISO=D.home.country;
 F.P=GLIST.filter(function(G){return G.n>0;}).slice(0,3).map(function(G,k){
   var a=counts(function(w){return w.gs.indexOf(G.key)>=0;});
   var ct=countryTally(function(w){return w.gs.indexOf(G.key)>=0;});
-  return {G:G,counts:a,cities:nz(a),countries:Object.keys(ct).length,cn:ct[HOME_ISO]||0,col:['--pa','--pb','--pc'][k]};
+  return {G:G,cities:nz(a),countries:Object.keys(ct).length,cn:ct[HOME_ISO]||0,col:['--pa','--pb','--pc'][k]};
 });
 // continents
 F.contYear={};CONTS.forEach(function(k){F.contYear[k]=F.years.map(function(){return 0;});});
@@ -372,15 +365,16 @@ F.contTot={};CONTS.forEach(function(k){F.contTot[k]=0;});
 W.forEach(function(w){w.conts.forEach(function(k){F.contTot[k]++;if(w.yr!=null)F.contYear[k][w.yr-F.y0]++;});});
 F.contsUsed=CONTS.filter(function(k){return F.contTot[k]>0;});
 F.contRank=F.contsUsed.slice().sort(function(a,b){return F.contTot[b]-F.contTot[a];});
-function shareBetween(keys,lo,hi){var a=0,t=0;F.years.forEach(function(y,i){if(y<lo||y>hi)return;F.contsUsed.forEach(function(k){var v=F.contYear[k][i];t+=v;if(keys.indexOf(k)>=0)a+=v;});});return pct(a,t);}
+function shareOf(keys,lo,hi){var a=0,t=0;F.years.forEach(function(y,i){if(y<lo||y>hi)return;F.contsUsed.forEach(function(k){var v=F.contYear[k][i];t+=v;if(keys.indexOf(k)>=0)a+=v;});});return t?Math.round(100*a/t):0;}
+function shareBetween(keys,lo,hi){return shareOf(keys,lo,hi)+'%';}
 // home
-(function(){var h=D.home||{};var best=-1;CITIES.forEach(function(c,i){if(c.name===h.label&&c.country===h.country&&(best<0||c.count>CITIES[best].count))best=i;});
+(function(){var h=D.home;var best=-1;CITIES.forEach(function(c,i){if(c.id===h.city)best=i;});   // the build names the home city
   F.homeExact=best>=0;     // false: no citing paper from the home city; the nearest citing city stands in on maps only
   if(best<0){var dm=Infinity;CITIES.forEach(function(c,i){var d=hav(h.lat,h.lon,c.lat,c.lon);if(d<dm){dm=d;best=i;}});}
   F.home=best;F.homeN=F.ALL[best];
-  var cn=[];CITIES.forEach(function(c,i){if(c.country===CITIES[best].country&&i!==best)cn.push(i);});
+  var cn=[];CITIES.forEach(function(c,i){if(c.country===HOME_ISO&&i!==best)cn.push(i);});     // the owner's country, even when a stand-in city is across a border
   cn.sort(function(a,b){return F.ALL[b]-F.ALL[a];});F.homePeers=cn.slice(0,3);
-  F.homeCountryN=F.countryT[CITIES[best].country]||0;})();
+  F.homeCountryN=F.countryT[HOME_ISO]||0;})();
 // institutions
 (function(){var ic={};W.forEach(function(w){w.inst.forEach(function(x){ic[x]=(ic[x]||0)+1;});});
   F.instCount=Object.keys(ic).length;
@@ -393,8 +387,6 @@ function shareBetween(keys,lo,hi){var a=0,t=0;F.years.forEach(function(y,i){if(y
   F.farAnti=F.far.length?Math.PI*6371.0088-F.far[0].d:0;})();
 // countries seen once
 F.once=Object.keys(F.countryT).filter(function(k){return F.countryT[k]===1;}).sort(function(a,b){return country(a).name<country(b).name?-1:1;});
-F.onceCounts=counts(function(w){return w.countries.some(function(c){return F.countryT[c]===1;});});
-(function(){var a=new Float32Array(NC);var set={};F.once.forEach(function(c){set[c]=1;});for(var i=0;i<NC;i++)if(set[CITIES[i].country])a[i]=F.ALL[i];F.onceCounts=a;})();
 
 /* ---------- projection: Equal Earth, centred on 10°E ---------- */
 var L0=10,A1=1.340264,A2=-0.081106,A3=0.000893,A4=0.003796,MM=Math.sqrt(3)/2;
@@ -404,6 +396,7 @@ function proj(lr,lat){var l=lr*Math.PI/180,p=Math.max(-90,Math.min(90,lat))*Math
   return [l*Math.cos(t)/(MM*(A1+3*A2*t2+t6*(7*A3+9*A4*t2))),-t*(A1+A2*t2+t6*(A3+A4*t2))];}
 var CX=new Float32Array(NC),CY=new Float32Array(NC);
 CITIES.forEach(function(c,i){var p=proj(rel(c.lon),c.lat);CX[i]=p[0];CY[i]=p[1];});
+var HOME_XY=isFinite(D.home.lat)&&isFinite(D.home.lon)?proj(rel(D.home.lon),D.home.lat):[CX[F.home],CY[F.home]];
 var LAND=new Path2D(),LANDISO={};
 (function(){
   (D.land||[]).forEach(function(f){
@@ -443,50 +436,33 @@ function rgba(c,a){return 'rgba('+c[0]+','+c[1]+','+c[2]+','+(a==null?1:a)+')';}
 function lerpC(a,b,t){return [a[0]+(b[0]-a[0])*t|0,a[1]+(b[1]-a[1])*t|0,a[2]+(b[2]-a[2])*t|0];}
 readColors();
 
-/* ---------- map view ---------- */
+/* ---------- explorer map: circles per city, home marker, selection, zoom and pan ---------- */
 function ease(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
 function MapView(canvas,opts){
   this.c=canvas;this.ctx=canvas.getContext('2d');this.opts=opts||{};this.W=1;this.H=1;this.dpr=1;
-  this.r=new Float32Array(NC);this.r0=new Float32Array(NC);this.r1=new Float32Array(NC);
-  this.h=new Float32Array(NC);this.h0=new Float32Array(NC);this.h1=new Float32Array(NC);
-  this.cnt=new Float32Array(NC);this.order=[];
-  this.colKey='--dot';this.col0=null;this.bbox=VIEWS.world;this.view=null;this.v0=null;this.v1=null;
-  this.iso=null;this.isoA=0;this.labels=[];this.arcs=[];this.t=1;this.raf=0;this.sel=-1;this.hover=-1;this.userView=false;
+  this.r=new Float32Array(NC);this.h=new Float32Array(NC);this.cnt=new Float32Array(NC);this.order=[];
+  this.colKey='--dot';this.bbox=VIEWS.world;this.view=null;this.sel=-1;this.hover=-1;this.userView=false;
   var self=this;new ResizeObserver(function(){self.resize();}).observe(canvas.parentNode);
 }
-MapView.prototype.fit=function(b){var pad=Math.min(this.W,this.H)*0.035+8,top=this.opts.top||0;
-  var s=Math.min((this.W-2*pad)/(b[2]-b[0]),(this.H-2*pad-top)/(b[3]-b[1]));
-  return {cx:(b[0]+b[2])/2,cy:(b[1]+b[3])/2-top/2/s,s:s};};
+MapView.prototype.fit=function(b){var pad=Math.min(this.W,this.H)*0.035+8;
+  var s=Math.min((this.W-2*pad)/(b[2]-b[0]),(this.H-2*pad)/(b[3]-b[1]));
+  return {cx:(b[0]+b[2])/2,cy:(b[1]+b[3])/2,s:s};};
 MapView.prototype.worldS=function(){return this.fit(VIEWS.world).s;};
 MapView.prototype.resize=function(){var r=this.c.getBoundingClientRect();if(!r.width||!r.height)return;
   this.W=r.width;this.H=r.height;this.dpr=Math.min(2,window.devicePixelRatio||1);
   this.c.width=Math.round(this.W*this.dpr);this.c.height=Math.round(this.H*this.dpr);
-  if(!this.userView){this.view=this.fit(this.bbox);if(this.t<1)this.v1=this.view;}
-  if(!this.view)this.view=this.fit(this.bbox);
-  this.computeRadii(this.r1);this.sortOrder();if(this.t>=1)this.r.set(this.r1);this.draw();};
-MapView.prototype.rUnit=function(s){var base=Math.max(0.26,Math.min(0.62,Math.sqrt(this.W*this.H)/1500));return base*Math.pow((s||this.view.s)/this.worldS(),0.38);};
-MapView.prototype.computeRadii=function(out){var tv=this.v1||this.view;if(!tv)return;var u=this.rUnit(tv.s);
-  for(var i=0;i<NC;i++){var c=this.cnt[i];out[i]=c>0?Math.max(2,Math.sqrt(c)*u):0;}};
-/* state: {counts, color, bbox, highlight:[i], iso:[codes], labels:[{i,text}], arcs:[[segs]]} */
-MapView.prototype.set=function(st,animate){
-  this.cnt=st.counts;this.bbox=st.bbox||VIEWS.world;this.userView=false;
-  this.r0.set(this.r);this.h0.set(this.h);this.v0=this.view?{cx:this.view.cx,cy:this.view.cy,s:this.view.s}:null;
-  this.col0=this.colNow||COL[st.color||'--dot'];this.colKey=st.color||'--dot';
-  this.v1=this.W>1?this.fit(this.bbox):null;this.computeRadii(this.r1);
-  this.h1.fill(0);(st.highlight||[]).forEach(function(i){this.h1[i]=1;},this);
-  this.isoPrev=this.iso;this.isoPrevA=this.isoA;this.iso=st.iso||null;
-  this.labels=st.labels||[];this.arcs=st.arcs||[];
-  this.sortOrder();
-  if(!animate||RM.matches||!this.v0){this.t=1;this.finish();this.draw();return;}
-  this.t=0;this.start=performance.now();this.dur=1000;this.loop();};
-MapView.prototype.sortOrder=function(){var o=[];for(var i=0;i<NC;i++)if(this.r1[i]>0||this.r0[i]>0)o.push(i);var r1=this.r1;o.sort(function(a,b){return r1[b]-r1[a];});this.order=o;};
-MapView.prototype.finish=function(){this.r.set(this.r1);this.h.set(this.h1);if(this.v1)this.view=this.v1;this.v1=null;this.colNow=COL[this.colKey];this.isoA=this.iso?1:0;this.isoPrev=null;};
-MapView.prototype.loop=function(){var self=this;if(this.raf)return;
-  this.raf=requestAnimationFrame(function f(now){self.raf=0;var t=Math.min(1,(now-self.start)/self.dur);self.t=t;var e=ease(t);
-    for(var i=0;i<NC;i++){self.r[i]=self.r0[i]+(self.r1[i]-self.r0[i])*e;self.h[i]=self.h0[i]+(self.h1[i]-self.h0[i])*e;}
-    if(self.v0&&self.v1){self.view={cx:self.v0.cx+(self.v1.cx-self.v0.cx)*e,cy:self.v0.cy+(self.v1.cy-self.v0.cy)*e,s:Math.exp(Math.log(self.v0.s)+(Math.log(self.v1.s)-Math.log(self.v0.s))*e)};}
-    self.colNow=lerpC(self.col0,COL[self.colKey],e);self.isoA=e;
-    if(t>=1)self.finish();self.draw();if(t<1)self.raf=requestAnimationFrame(f);});};
+  if(!this.userView||!this.view)this.view=this.fit(this.bbox);
+  this.computeRadii();this.sortOrder();this.draw();};
+MapView.prototype.rUnit=function(){var base=Math.max(0.26,Math.min(0.62,Math.sqrt(this.W*this.H)/1500));return base*Math.pow(this.view.s/this.worldS(),0.38);};
+MapView.prototype.computeRadii=function(){if(!this.view)return;var u=this.rUnit();
+  for(var i=0;i<NC;i++){var c=this.cnt[i];this.r[i]=c>0?Math.max(2,Math.sqrt(c)*u):0;}};
+/* state: {counts, color, bbox, highlight:[i]} */
+MapView.prototype.set=function(st){
+  this.cnt=st.counts;this.bbox=st.bbox||VIEWS.world;this.userView=false;this.colKey=st.color||'--dot';
+  this.h.fill(0);(st.highlight||[]).forEach(function(i){this.h[i]=1;},this);
+  if(this.W>1)this.view=this.fit(this.bbox);
+  this.computeRadii();this.sortOrder();this.draw();};
+MapView.prototype.sortOrder=function(){var o=[],r=this.r;for(var i=0;i<NC;i++)if(r[i]>0)o.push(i);o.sort(function(a,b){return r[b]-r[a];});this.order=o;};
 MapView.prototype.toScreen=function(i){var v=this.view;return [this.W/2+(CX[i]-v.cx)*v.s,this.H/2+(CY[i]-v.cy)*v.s];};
 MapView.prototype.draw=function(){
   var ctx=this.ctx,v=this.view,d=this.dpr;if(!v||this.W<2)return;
@@ -497,46 +473,28 @@ MapView.prototype.draw=function(){
   ctx.save();ctx.clip(OUTLINE);
   ctx.lineWidth=0.7/v.s;ctx.strokeStyle=rgba(COL['--grat']);ctx.stroke(GRAT);
   ctx.fillStyle=rgba(COL['--land']);ctx.fill(LAND,'nonzero');
-  var hl=function(list,a){if(!list||a<=0)return;ctx.fillStyle=rgba(COL['--accent-soft'],a);list.forEach(function(k){if(LANDISO[k])ctx.fill(LANDISO[k]);});};
-  if(this.isoPrev&&this.isoPrev!==this.iso)hl(this.isoPrev,(1-this.isoA)*(this.isoPrevA||1));
-  hl(this.iso,this.isoA);
   ctx.strokeStyle=rgba(COL['--land-line']);ctx.lineWidth=0.6/v.s;ctx.stroke(LAND);
   ctx.restore();
   ctx.strokeStyle=rgba(COL['--land-line']);ctx.lineWidth=1/v.s;ctx.stroke(OUTLINE);
   ctx.setTransform(d,0,0,d,0,0);
-  // arcs
-  if(this.arcs.length){var prog=ease(this.t);ctx.lineWidth=1.3;ctx.strokeStyle=rgba(COL['--accent'],.85);ctx.setLineDash([]);
-    this.arcs.forEach(function(segs){var total=0;segs.forEach(function(s){total+=s.length;});var lim=Math.floor(total*prog),c=0;
-      segs.forEach(function(s){ctx.beginPath();for(var k=0;k<s.length&&c<lim;k++,c++){var x=tx+s[k].x*v.s,y=ty+s[k].y*v.s;k?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();});});}
   // dots
-  var col=this.colNow||COL[this.colKey],acc=COL['--accent'],bg=COL['--bg'];
+  var col=COL[this.colKey],acc=COL['--accent'],bg=COL['--bg'];
   ctx.lineWidth=0.8;ctx.strokeStyle=rgba(bg,.8);
   for(var k=0;k<this.order.length;k++){var i=this.order[k],r=this.r[i];if(r<0.3)continue;
     var x=tx+CX[i]*v.s,y=ty+CY[i]*v.s;if(x<-r||y<-r||x>this.W+r||y>this.H+r)continue;
     var h=this.h[i];var c=h>0?lerpC(col,acc,h):col;
     ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=rgba(c,0.58+0.3*h);ctx.fill();if(r>2.2)ctx.stroke();}
   // home marker
-  if(F.home>=0){var hp=this.toScreen(F.home);ctx.beginPath();ctx.arc(hp[0],hp[1],3,0,6.2832);ctx.fillStyle=rgba(acc);ctx.fill();
+  if(F.home>=0){var hp=F.homeExact?this.toScreen(F.home):[this.W/2+(HOME_XY[0]-v.cx)*v.s,this.H/2+(HOME_XY[1]-v.cy)*v.s];   // the home city itself, cited or not
+    ctx.beginPath();ctx.arc(hp[0],hp[1],3,0,6.2832);ctx.fillStyle=rgba(acc);ctx.fill();
     ctx.beginPath();ctx.arc(hp[0],hp[1],6.5,0,6.2832);ctx.strokeStyle=rgba(acc,.9);ctx.lineWidth=1.3;ctx.stroke();}
   // selection / hover
   [[this.sel,COL['--ink'],1.8],[this.hover,COL['--ink'],1.2]].forEach(function(s){if(s[0]<0)return;var p=this.toScreen(s[0]),r=Math.max(4,this.r[s[0]])+3;
     ctx.beginPath();ctx.arc(p[0],p[1],r,0,6.2832);ctx.strokeStyle=rgba(s[1]);ctx.lineWidth=s[2];ctx.stroke();},this);
-  // labels
-  var la=this.t>=1?1:Math.max(0,(this.t-.55)/.45);
-  if(this.labels.length&&la>0){ctx.font='600 12px '+getComputedStyle(document.body).getPropertyValue('--sans');ctx.textBaseline='middle';ctx.lineJoin='round';
-    var self=this,boxes=[],obst=this.labels.map(function(L){var p=self.toScreen(L.i),r=Math.max(3,self.r[L.i]);return [p[0]-r,p[1]-r,p[0]+r,p[1]+r];});
-    function hits(b,list){for(var k=0;k<list.length;k++){var o=list[k];if(b[0]<o[2]&&b[2]>o[0]&&b[1]<o[3]&&b[3]>o[1])return true;}return false;}
-    this.labels.forEach(function(L,li){var p=self.toScreen(L.i),r=Math.max(3,self.r[L.i]),w=ctx.measureText(L.text).width,h=14;
-      var cands=[[p[0]+r+5,p[1]],[p[0]-r-5-w,p[1]],[p[0]-w/2,p[1]-r-10],[p[0]-w/2,p[1]+r+10]];if(L.left)cands.unshift(cands.splice(1,1)[0]);
-      var others=obst.filter(function(_,k){return k!==li;}),pick=null;
-      for(var pass=0;pass<2&&!pick;pass++)for(var c=0;c<cands.length;c++){var x=cands[c][0],y=cands[c][1],b=[x-2,y-h/2,x+w+2,y+h/2];
-        if(b[0]<4||b[2]>self.W-4||b[1]<(self.opts.top||0)+4||b[3]>self.H-4)continue;if(hits(b,boxes)||(pass===0&&hits(b,others)))continue;pick=[x,y,b];break;}
-      if(!pick)return;boxes.push(pick[2]);
-      ctx.lineWidth=3.5;ctx.strokeStyle=rgba(COL['--sea'],.92*la);ctx.strokeText(L.text,pick[0],pick[1]);ctx.fillStyle=rgba(COL['--ink'],la);ctx.fillText(L.text,pick[0],pick[1]);});}
-  // size key
-  if(this.opts.key){var u=this.rUnit(),ks=[10,100,1000],kx=18,ky=this.H-18;ctx.font='11px '+getComputedStyle(document.body).getPropertyValue('--sans');ctx.textBaseline='alphabetic';
+  // size key: the circles for 1,000, 100 and 10 papers, leaving out any too close to the one above it
+  if(this.opts.key){var u=this.rUnit(),kx=18,ky=this.H-18;ctx.font='11px '+SANS;ctx.textBaseline='alphabetic';
     var maxr=Math.sqrt(1000)*u;ctx.strokeStyle=rgba(COL['--ink-3'],.9);ctx.lineWidth=1;ctx.fillStyle=rgba(COL['--ink-3']);
-    var prevH=Infinity;ks=[1000,100,10].filter(function(n){var h=2*Math.max(1.5,Math.sqrt(n)*u);if(prevH-h<12)return false;prevH=h;return true;});
+    var prevH=Infinity,ks=[1000,100,10].filter(function(n){var h=2*Math.max(1.5,Math.sqrt(n)*u);if(prevH-h<12)return false;prevH=h;return true;});
     ks.forEach(function(n){var r=Math.max(1.5,Math.sqrt(n)*u);ctx.beginPath();ctx.arc(kx+maxr,ky-r,r,0,6.2832);ctx.stroke();
       ctx.beginPath();ctx.moveTo(kx+maxr,ky-2*r);ctx.lineTo(kx+2*maxr+8,ky-2*r);ctx.stroke();ctx.fillText(fmt(n),kx+2*maxr+11,ky-2*r+4);});
     ctx.fillText('citing papers',kx,ky-2*maxr-10);}
@@ -546,16 +504,16 @@ MapView.prototype.hit=function(px,py){var v=this.view,best=-1,bd=Infinity;if(!v)
     if(dd<=Math.max(r,4)+3){var score=dd-r*0.2;if(score<bd){bd=score;best=i;}}}return best;};
 MapView.prototype.zoomAt=function(f,px,py){var v=this.view,ws=this.worldS();var s2=Math.max(ws*0.85,Math.min(ws*60,v.s*f));
   if(px==null){px=this.W/2;py=this.H/2;}var ux=v.cx+(px-this.W/2)/v.s,uy=v.cy+(py-this.H/2)/v.s;
-  this.view={cx:ux-(px-this.W/2)/s2,cy:uy-(py-this.H/2)/s2,s:s2};this.userView=true;this.computeRadiiNow();this.r1.set(this.r);this.draw();};
-MapView.prototype.computeRadiiNow=function(){var u=this.rUnit();for(var i=0;i<NC;i++){var c=this.cnt[i];this.r[i]=c>0?Math.max(2,Math.sqrt(c)*u):0;}};
+  this.view={cx:ux-(px-this.W/2)/s2,cy:uy-(py-this.H/2)/s2,s:s2};this.userView=true;this.computeRadii();this.draw();};
 
-/* ---------- copy ---------- */
+/* ---------- copy helpers ---------- */
 function P(parts){var p=el('p');parts.forEach(function(x){if(typeof x==='string')p.appendChild(document.createTextNode(x));
   else if(x.b!=null)p.appendChild(el('strong',null,x.b));else if(x.q!=null)p.appendChild(el('q',null,x.q));
   else if(x.sw){var s=el('span','sw');s.style.background='var('+x.sw+')';s.setAttribute('aria-hidden','true');p.appendChild(s);}});return p;}
 var P1=F.P[0],P2=F.P[1],P3=F.P[2];
 function cnShare(p){return pct(p.cn,p.G.placed);}
-var homeC=CITIES[F.home],homeCountry=country(homeC.country).name;
+var homeC=CITIES[F.home],homeCountry=country(HOME_ISO).name;
+var HOME_HL=F.homeExact?[F.home]:[];   // a stand-in city is never highlighted as home
 var firstCityNames=F.firstCities.filter(function(i){return country(CITIES[i].country).continent===F.firstCont;}).map(function(i){return CITIES[i].name;});
 var takeYears=F.years.filter(function(y){return y>F.split;});
 var farC=F.far.length?CITIES[F.far[0].i]:null;
@@ -569,7 +527,7 @@ var homeIdx=[F.home].concat(F.homePeers);
 var homeLargest=F.ALL[F.home]>=Math.max.apply(null,Array.prototype.slice.call(F.ALL));
 var peakIdx=F.perYear.indexOf(Math.max.apply(null,F.perYear));
 
-var dek=$('dek');[OWNER+'’s work has been cited by ',{b:fmt(F.total)},' papers since '+F.y0+'. Their authors worked in ',{b:fmt(F.cities)},' cities across ',{b:fmt(F.countries)},' countries and regions. This is how that map filled in, one year and one paper at a time.']
+var dek=$('dek');[OWNER+'’s work has been cited by ',{b:fmt(F.total)},' papers'+(isFinite(F.y0)?' since '+F.y0:'')+'. Their authors worked in ',{b:fmt(F.cities)},' cities across ',{b:fmt(F.countries)},' countries and regions. This is how that map filled in, one year and one paper at a time.']
   .forEach(function(x){dek.appendChild(typeof x==='string'?document.createTextNode(x):el('strong',null,x.b));});
 $('snap').textContent='Data snapshot '+asofText;
 
@@ -585,69 +543,81 @@ CITY_ORDER.sort(function(a,b){return CITY_LIST[b].length-CITY_LIST[a].length;});
 F.mapDots=0;CITY_ORDER.forEach(function(c){F.mapDots+=CITY_LIST[c].length;});
 var DATED=[];W.forEach(function(w,k){if(w.yr!=null)DATED.push(k);});DATED.sort(byDate);
 F.unplacedDated=DATED.filter(function(k){return !W[k].ci.length;}).length;
+// how each city was first reached: by a paper that also had authors in a city already on the map, or not
+// the build gives a year-only paper a spread day of its year (mid-year only if it has no date at all)
+(function(){function fk(w){return w.yr==null?null:w.date||(w.yr+'-07-01');}
+  var firstW=CITY_LIST.map(function(l){var b=-1;l.forEach(function(k){if(fk(W[k])!=null&&(b<0||fk(W[k])<fk(W[b])))b=k;});return b;});
+  var first=firstW.map(function(k){return k<0?null:fk(W[k]);});
+  F.reached=0;F.carried=0;
+  // a year-only date is spread over its year at build time, so it only counts as earlier across a year boundary
+  var lo=firstW.map(function(k,i){return k<0?null:W[k].raw.yo?W[k].yr+'-01-01':first[i];}),
+      // a city is certainly on the map by the earliest end over all its papers (a year-only one ends with its year)
+      hi=CITY_LIST.map(function(l){var h=null;l.forEach(function(k){var e=fk(W[k]);if(e==null)return;if(W[k].raw.yo)e=W[k].yr+'-12-31';if(h==null||e<h)h=e;});return h;});
+  first.forEach(function(d,i){if(d==null)return;F.reached++;
+    if(W[firstW[i]].ci.some(function(j){return j!==i&&hi[j]!=null&&hi[j]<lo[i];}))F.carried++;});})();
 var INST_RANK={};F.instTop.forEach(function(x,r){INST_RANK[x.id]=r;});
 var QB=8192;while(QB<NC+32)QB*=2;
 var Q_PAPER=QB-1,Q_CONT=NC+1,Q_INST=NC+16; // key = paper*QB + qualifier; a city index is below NC
 function isDark(){var t=document.documentElement.getAttribute('data-theme');return t?t==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;}
 function C(k){var c=COL[k]||[128,128,128];return [c[0]/255,c[1]/255,c[2]/255];}
 
-/* ---------- copy ---------- */
+/* ---------- steps: `ch` is the chapter, and its first step that the record keeps opens it ---------- */
 var STEPS=[
- {chap:['I','Beginnings'],h:'Each dot is a citing paper',
+ {ch:1,h:'Each dot is a citing paper',
   text:[P(['Every citing paper is placed at the cities of its authors’ institutions, one dot in each. A city’s dots spiral out from its centre, oldest first, so a cluster’s area grows with its count.'+(F.homeExact?' The highlighted cluster is home, '+homeC.name+'.':'')]),
         P(['A paper written across several cities appears in each, so the map holds ',{b:fmt(F.mapDots)},' dots for ',{b:fmt(F.placed)},' papers. Another ',{b:fmt(F.unplaced)},' list no affiliation and have no place on the map.'])],
   g:['All citing cities',fmt(F.mapDots)+' dots, one per paper in each of its cities'],
-  f:{kind:'map',hl:[F.home]}},
- F.firstPlaced>0&&{h:'The first citations came from '+F.firstCont,
-  text:[P(['The first citations arrived in ',{b:String(F.y0)},'. That year ',{b:fmt(F.first.length)},' papers cited the work, ',{b:fmt(F.firstPaperN)},' of them ',{q:F.firstPaper.title},' (',String(F.firstPaper.year),').']),
+  f:{kind:'map',hl:HOME_HL}},
+ F.firstPlaced>0&&{ch:1,h:'The first citations came from '+F.firstCont,
+  text:[P(['The first citations arrived in ',{b:String(F.y0)},'. That year ',{b:fmt(F.first.length)},' papers cited the work, ',{b:fmt(F.firstPaperN)},' of them ',{q:F.firstPaper.title},F.firstPaper.year?' ('+F.firstPaper.year+')':'','.']),
         P(['Of the ',{b:fmt(F.firstPlaced)},' that can be placed, ',{b:fmt(F.firstContN)},' had authors in ',F.firstCont,': ',listJoin(firstCityNames),'.'])],
   g:['Cities citing in '+F.y0,fmt(F.first.length)+' papers'],
   f:{kind:'map',bbox:geoBox(firstIdx,40,24),pick:function(w){return w.yr===F.y0?2:0;},labels:firstIdx.map(function(i){return {i:i,text:CITIES[i].name};})}},
- F.slow&&{h:'The slow years, '+F.y0+'–'+F.split,
+ F.slow&&{ch:1,h:'The slow years, '+F.y0+'–'+F.split,
   text:[P(['By the end of ',String(F.split),', ',{b:fmt(F.preWorks)},' papers had cited the work, from ',{b:fmt(nz(F.pre))},' cities in ',{b:fmt(F.preCountries)},' countries and regions.']),
         P(['No single year before ',String(F.split+1),' brought more than ',{b:fmt(F.preMax)},' citing papers.'])],
   g:['Cities citing through '+F.split,fmt(F.preWorks)+' papers'],
   f:{kind:'map',pick:function(w){return w.yr!=null&&w.yr<=F.split?1:0;}}},
- F.slow&&{chap:['II','The breakout'],h:'Then it took off',
+ F.slow&&{ch:2,h:'Then it took off',
   text:[P([String(F.split)+' brought ',{b:fmt(yc(F.split))},' citing papers. ',String(F.split+1)+' brought ',{b:fmt(yc(F.split+1))},(function(){var up=0,n=0;for(var i=1;i<takeYears.length;i++){if(takeYears[i]>=ASOF_Y)continue;n++;if(yc(takeYears[i])>yc(takeYears[i-1]))up++;}return !n?'':up===n?(n===1?', and the full year since topped it':', and every full year since has topped the one before it'):!up?(n===1?', and the full year since did not top it':', but no full year since has topped the one before it'):', and '+up+' of the '+n+' full years since have topped the one before';}())+'.']),
         P([{b:pct(F.postWorks,dated.length)},' of all dated citing papers appeared from ',String(F.split+1),' on. ',String(F.years[peakIdx]),' has the most so far: ',{b:fmt(F.perYear[peakIdx])},(F.years[peakIdx]===ASOF_Y?', with the year not yet over when the data was taken on '+asofText+'.':'.')]),
         P(['Here each paper is a single dot, however many cities it came from, and the ',{b:fmt(F.unplacedDated)},' with no listed affiliation join in.'])],
   g:['Citing papers per year','One dot per paper'+(F.undated?'; '+fmt(F.undated)+' undated papers not shown':'')],
   f:{kind:'years'}},
- P1&&{chap:F.slow?null:['II','The papers'],h:'The paper that changed the map',
-  text:[P([{sw:P1.col},{q:P1.G.title},', published in ',String(P1.G.year),', is cited by ',{b:fmt(P1.G.n)},' papers: ',{b:pct(P1.G.n,F.total)},' of everything here.']),
+ P1&&{ch:2,h:'The paper that changed the map',
+  text:[P([{sw:P1.col},{q:P1.G.title},P1.G.year?', published in '+P1.G.year+',':'',' is cited by ',{b:fmt(P1.G.n)},' papers: ',{b:pct(P1.G.n,F.total)},' of everything here.']),
         P(['They come from ',{b:fmt(P1.cities)},' cities in ',{b:fmt(P1.countries)},' countries and regions.'])],
   g:['Cities citing '+quoted(P1.G.title),fmt(P1.G.n)+' papers'],
   f:{kind:'map',color:P1.col,pick:function(w){return w.gs.indexOf(P1.G.key)>=0?1:0;}}},
- P2&&{h:(P2.G.n<P1.G.n?'Fewer citations, ':'As many citations, ')+(P2.countries>P1.countries?'more':P2.countries===P1.countries?'as many':'fewer')+' countries',
-  text:[P([{sw:P2.col},{q:P2.G.title},' (',String(P2.G.year),') has ',{b:fmt(P2.G.n)},' citing papers, ',pct(P2.G.n,P1.G.n),' as many as the paper above.']),
-        P(['Yet they come from ',{b:fmt(P2.countries)},' countries and regions, against ',{b:fmt(P1.countries)},' for the paper above, and ',{b:fmt(P2.cities)},' cities.'])],
+ P2&&{ch:2,h:(P2.G.n<P1.G.n?'Fewer citations, ':'As many citations, ')+(P2.countries>P1.countries?'more':P2.countries===P1.countries?'as many':'fewer')+' countries',
+  text:[P([{sw:P2.col},{q:P2.G.title},P2.G.year?' ('+P2.G.year+')':'',' has ',{b:fmt(P2.G.n)},' citing papers, ',pct(P2.G.n,P1.G.n),' as many as the paper above.']),
+        P([(P2.G.n<P1.G.n&&P2.countries>=P1.countries?'Yet they come from ':'They come from '),{b:fmt(P2.countries)},' countries and regions, against ',{b:fmt(P1.countries)},' for the paper above, and ',{b:fmt(P2.cities)},' cities.'])],
   g:['Cities citing '+quoted(P2.G.title),fmt(P2.G.n)+' papers'],
   f:{kind:'map',color:P2.col,pick:function(w){return w.gs.indexOf(P2.G.key)>=0?1:0;}}},
- P3&&{h:homeShare(P3)>Math.max(homeShare(P1),homeShare(P2))?'Some papers stay closer to home':'Close to home, paper by paper',
-  text:[P([{sw:P3.col},{q:P3.G.title},' (',String(P3.G.year),') is cited by ',{b:fmt(P3.G.n)},' papers from ',{b:fmt(P3.countries)},' countries and regions.']),
+ P3&&{ch:2,h:homeShare(P3)>Math.max(homeShare(P1),homeShare(P2))?'Some papers stay closer to home':'Close to home, paper by paper',
+  text:[P([{sw:P3.col},{q:P3.G.title},P3.G.year?' ('+P3.G.year+')':'',' is cited by ',{b:fmt(P3.G.n)},' papers from ',{b:fmt(P3.countries)},' countries and regions.']),
         P([{b:cnShare(P3)},' of its placed citing papers have an author in ',homeCountry,', against ',cnShare(P1),' and ',cnShare(P2),' for the two papers above.'])],
   g:['Cities citing '+quoted(P3.G.title),fmt(P3.G.n)+' papers'],
   f:{kind:'map',color:P3.col,pick:function(w){return w.gs.indexOf(P3.G.key)>=0?1:0;}}},
- F.contRank.length>=3&&{chap:['III','Continents'],h:F.contRank[0]+' carries the weight',
+ F.contRank.length>=3&&DATED.length>0&&{ch:3,h:F.contRank[0]+' carries the weight',
   text:[P([{sw:CONT_VAR[F.contRank[0]]},F.contRank[0]+' accounts for ',{b:fmt(F.contTot[F.contRank[0]])},' of the ',fmt(F.placed),' placed papers (',pct(F.contTot[F.contRank[0]],F.placed),'). ',
           {sw:CONT_VAR[F.contRank[1]]},F.contRank[1]+' follows with ',{b:fmt(F.contTot[F.contRank[1]])},', then ',{sw:CONT_VAR[F.contRank[2]]},F.contRank[2]+' with ',{b:fmt(F.contTot[F.contRank[2]])},'.']),
         P(['A paper with authors on two continents counts once on each, so its dot splits in two.'])],
   g:['Citing papers per year, by continent','A paper on two continents counts on each, so stacks run higher than the years chart'],f:{kind:'area'}},
- F.slow&&{h:(parseInt(shareBetween(['Europe','North America'],F.y0,F.split),10)>parseInt(shareBetween(['Europe','North America'],F.split+1,ASOF_Y),10)?'Europe and North America, a shrinking share':'Europe and North America hold their share'),
-  text:[P(['Through ',String(F.split),', Europe and North America made up ',{b:shareBetween(['Europe','North America'],F.y0,F.split)},' of the yearly continent tallies. Since ',String(F.split+1),', ',{b:shareBetween(['Europe','North America'],F.split+1,ASOF_Y)},'.']),
-        P(['Asia’s share: ',{b:shareBetween(['Asia'],F.y0,F.split)},' before, ',{b:shareBetween(['Asia'],F.split+1,ASOF_Y)},' after.'])],
+ F.slow&&F.contRank.length>=2&&{ch:3,h:(function(){var k=F.contRank[0],a=shareOf([k],F.y0,F.split),b=shareOf([k],F.split+1,ASOF_Y);return k+(b>a?', a growing share':b<a?', a shrinking share':' holds its share');}()),
+  text:[P(['Through ',String(F.split),', ',F.contRank[0],' made up ',{b:shareBetween([F.contRank[0]],F.y0,F.split)},' of the yearly continent tallies. Since ',String(F.split+1),', ',{b:shareBetween([F.contRank[0]],F.split+1,ASOF_Y)},'.']),
+        P([F.contRank[1]+'’s share: ',{b:shareBetween([F.contRank[1]],F.y0,F.split)},' before, ',{b:shareBetween([F.contRank[1]],F.split+1,ASOF_Y)},' after.'])],
   g:['Share of each year’s tally, by continent','Every year stretched to the same height'],f:{kind:'share'}},
- F.homeExact&&{chap:['IV','Near and far'],h:homeLargest?'The largest cluster is home':'Home, '+homeC.name,
+ F.homeExact&&{ch:4,h:homeLargest?'The largest cluster is home':'Home, '+homeC.name,
   text:[P([{b:fmt(F.homeN)},' citing papers have an author in ',homeC.name,', where ',OWNER,' works at the ',D.home.name,': ',pct(F.homeN,F.placed),' of all placed papers.']),
         P([F.homePeers.length?listJoin(F.homePeers.map(function(i){return CITIES[i].name+' ('+fmt(F.ALL[i])+')';}))+' follow. ':'','In all, ',{b:fmt(F.homeCountryN)},' papers have an author in ',homeCountry,'.'])],
   g:[homeCountry,'All citing papers'],
   f:{kind:'map',bbox:geoBox(homeIdx,30,18),hl:[F.home],labels:homeIdx.map(function(i){return {i:i,text:CITIES[i].name};})}},
- F.instTop.length>=3&&{h:'Labs and universities',
+ F.instTop.length>=3&&{ch:4,h:'Labs and universities',
   text:[P([F.instTop[0].name+' has the most citing papers, ',{b:fmt(F.instTop[0].n)},(F.instTop[1].n>=0.9*F.instTop[0].n?', just ahead of ':', ahead of '),F.instTop[1].name,' (',fmt(F.instTop[1].n),') and ',F.instTop[2].name,' (',fmt(F.instTop[2].n),').']),
         P(['A paper counts once for each institution among its authors; ',{b:fmt(F.instCount)},' institutions appear in all.'])],
   g:['Top institutions','One dot per paper with an author there'],f:{kind:'labs'}},
- farC&&{h:'Almost the other side of the world',
+ farC&&{ch:4,h:'Almost the other side of the world',
   text:[P(['The farthest citing city is ',{b:farC.name},', ',country(farC.country).name,', ',{b:fmt(F.far[0].d)+' km'},' from ',D.home.label,'. That is about ',fmt(Math.round(F.farAnti/10)*10),' km from the point exactly opposite on the globe.']),
         P([F.farContN===F.far.length?(F.far.length===1?'The farthest city is in ':'All '+(F.far.length===10?'ten':F.far.length)+' farthest cities are in '):String(F.farContN)+' of the '+(F.far.length===10?'ten':F.far.length)+' farthest cities are in ',F.farCont,'.'])],
   g:['The farthest cities','Great circles from '+D.home.label],
@@ -655,20 +625,22 @@ var STEPS=[
     return {kind:'map',hl:far,pick:function(w,c){return far.indexOf(c)>=0?2:1;},
       labels:[{i:F.far[0].i,text:CITIES[F.far[0].i].name}].concat(F.homeExact?[{i:F.home,text:homeC.name}]:[]),
       arcs:far.map(function(i){var c=CITIES[i];return arc(h.lat,h.lon,c.lat,c.lon);})};})()},
- F.once.length>0&&{h:fmt(F.once.length)+' places, one paper each',
+ F.once.length>0&&{ch:4,h:fmt(F.once.length)+' places, one paper each',
   text:[P(['Some places appear only once. ',{b:fmt(F.once.length)},' countries and regions have exactly one citing paper: ',listJoin(F.once.map(function(c){return country(c).name;})),'.'])],
   g:['Countries and regions with a single citing paper',''],
   f:{kind:'map',iso:F.once,pick:function(w,c){return F.once.indexOf(CITIES[c].country)>=0?2:0;}}},
- {chap:['V','The whole picture'],h:'Everything, together',
-  text:[P([{b:fmt(F.placed)},' placed papers, ',{b:fmt(F.cities)},' cities, ',{b:fmt(F.countries)},' countries and regions. Below, the same map opens up: pick any city to see its institutions and the papers written there.'])],
+ {ch:5,h:'Everything, together',
+  text:[P([{b:fmt(F.placed)},' placed papers, ',{b:fmt(F.cities)},' cities, ',{b:fmt(F.countries)},' countries and regions.']),
+        F.carried>0&&P([{b:fmt(F.carried)},' of the ',fmt(F.reached),F.reached===F.cities?' cities':' cities with a dated citing paper',' were first reached by a paper that also had an author in a city already on the map. In the other ',{b:fmt(F.reached-F.carried)},', the first paper came only from cities new to the map.']),
+        P(['Below, the same map opens up: pick any city to see its institutions and the papers written there.'])].filter(Boolean),
   g:['All citing cities',fmt(F.mapDots)+' dots'],
-  f:{kind:'map',hl:[F.home]}}
+  f:{kind:'map',hl:HOME_HL}}
 ].filter(Boolean);   // a step whose facts the record lacks (too few papers, no slow years) is left out
 
 /* ---------- build steps ---------- */
 var stepsEl=$('steps'),rail=$('rail');
 STEPS.forEach(function(s,k){var st=el('section','step');st.dataset.i=k;var c=el('div','card');
-  if(s.chap&&k>0)st.classList.add('chap-start');
+  if(k>0&&s.ch!==STEPS[k-1].ch)st.classList.add('chap-start');
   c.appendChild(el('h2',null,s.h));s.text.forEach(function(p){c.appendChild(p);});
   if(k===STEPS.length-1){var a=el('a',null,'Open the explorer');a.href='#explore';var p=el('p');p.appendChild(a);c.appendChild(p);}
   st.appendChild(c);stepsEl.appendChild(st);
@@ -685,10 +657,10 @@ function fitCam(b){var pad=Math.min(SW,SH)*0.035+8,s=Math.min((SW-2*pad)/(b[2]-b
 function plotBox(){var l=Math.max(46,SW*0.07),r=Math.max(24,SW*0.05),t=TOP+36,b=42;return {x:l,y:t,w:Math.max(120,SW-l-r),h:Math.max(120,SH-t-b)};}
 var SANS=getComputedStyle(document.body).getPropertyValue('--sans');
 
-/* WebGL points, with a 2D fallback */
+/* WebGL points, with a 2D fallback. A lost context (GPU reset, a phone putting the tab away) is set up again when restored. */
 var R=(function(){
   var gl=null;try{gl=dotC.getContext('webgl',{alpha:true,premultipliedAlpha:true,antialias:false});}catch(e){}
-  if(gl){
+  function init(){
     var sh=function(t,src){var s=gl.createShader(t);gl.shaderSource(s,src);gl.compileShader(s);return s;};
     var p=gl.createProgram();
     gl.attachShader(p,sh(gl.VERTEX_SHADER,'attribute vec2 aP;attribute vec4 aC;attribute float aS;uniform vec2 uV;uniform float uD;varying vec4 vC;varying float vS;'+
@@ -696,17 +668,21 @@ var R=(function(){
     gl.attachShader(p,sh(gl.FRAGMENT_SHADER,'precision mediump float;varying vec4 vC;varying float vS;'+
       'void main(){float r=length(gl_PointCoord*2.0-1.0);float a=vC.a*(1.0-smoothstep(1.0-2.0/vS,1.0,r));if(a<0.004)discard;gl_FragColor=vec4(vC.rgb*a,a);}'));
     gl.linkProgram(p);
-    if(gl.getProgramParameter(p,gl.LINK_STATUS)){
-      gl.useProgram(p);var buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);
-      var lP=gl.getAttribLocation(p,'aP'),lC=gl.getAttribLocation(p,'aC'),lS=gl.getAttribLocation(p,'aS');
-      [lP,lC,lS].forEach(function(l){gl.enableVertexAttribArray(l);});
-      gl.vertexAttribPointer(lP,2,gl.FLOAT,false,28,0);gl.vertexAttribPointer(lC,4,gl.FLOAT,false,28,8);gl.vertexAttribPointer(lS,1,gl.FLOAT,false,28,24);
-      var uV=gl.getUniformLocation(p,'uV'),uD=gl.getUniformLocation(p,'uD');
-      gl.enable(gl.BLEND);gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
-      return function(b,n){gl.viewport(0,0,dotC.width,dotC.height);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.uniform2f(uV,SW,SH);gl.uniform1f(uD,DPR);gl.bufferData(gl.ARRAY_BUFFER,b.subarray(0,n*7),gl.DYNAMIC_DRAW);gl.drawArrays(gl.POINTS,0,n);};}
-    var fresh=dotC.cloneNode(false);dotC.parentNode.replaceChild(fresh,dotC);dotC=fresh;   // a canvas that had a WebGL context cannot give a 2D one
-  }
+    if(!gl.getProgramParameter(p,gl.LINK_STATUS))return null;
+    gl.useProgram(p);var buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+    var lP=gl.getAttribLocation(p,'aP'),lC=gl.getAttribLocation(p,'aC'),lS=gl.getAttribLocation(p,'aS');
+    [lP,lC,lS].forEach(function(l){gl.enableVertexAttribArray(l);});
+    gl.vertexAttribPointer(lP,2,gl.FLOAT,false,28,0);gl.vertexAttribPointer(lC,4,gl.FLOAT,false,28,8);gl.vertexAttribPointer(lS,1,gl.FLOAT,false,28,24);
+    var uV=gl.getUniformLocation(p,'uV'),uD=gl.getUniformLocation(p,'uD');
+    gl.enable(gl.BLEND);gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+    return function(b,n){gl.viewport(0,0,dotC.width,dotC.height);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.uniform2f(uV,SW,SH);gl.uniform1f(uD,DPR);gl.bufferData(gl.ARRAY_BUFFER,b.subarray(0,n*7),gl.DYNAMIC_DRAW);gl.drawArrays(gl.POINTS,0,n);};}
+  var draw=gl&&init();
+  if(draw){
+    dotC.addEventListener('webglcontextlost',function(e){e.preventDefault();draw=null;});
+    dotC.addEventListener('webglcontextrestored',function(){draw=init();rebuild();});
+    return function(b,n){if(draw)draw(b,n);};}
+  if(gl){var fresh=dotC.cloneNode(false);dotC.parentNode.replaceChild(fresh,dotC);dotC=fresh;}   // a canvas that had a WebGL context cannot give a 2D one
   var ctx=dotC.getContext('2d');
   return function(b,n){ctx.setTransform(DPR,0,0,DPR,0,0);ctx.clearRect(0,0,SW,SH);
     for(var i=0;i<n;i++){var o=i*7,a=b[o+5];if(a<0.01)continue;var s=Math.max(1,b[o+6]);ctx.globalAlpha=a;
@@ -742,18 +718,18 @@ function buildYears(){var P=plotBox(),ny=F.years.length,slot=P.w/ny,bw=slot*0.74
 function buildConts(share){var P=plotBox(),ny=F.years.length,K=F.contsUsed,order=F.contRank;
   var lists=F.years.map(function(){return K.map(function(){return [];});});
   DATED.forEach(function(k){var w=W[k];w.conts.forEach(function(ct){lists[w.yr-F.y0][K.indexOf(ct)].push(k);});});
-  var tot=lists.map(function(l){return l.reduce(function(s,a){return s+a.length;},0);}),mx=Math.max.apply(null,tot)||1,N=tot.reduce(function(s,v){return s+v;},0);
+  var tot=lists.map(function(l){return l.reduce(function(s,a){return s+a.length;},0);}),mx=Math.max(1,Math.max.apply(null,tot.concat([0]))),N=tot.reduce(function(s,v){return s+v;},0);
   // stacked bands per year, the largest continent at the bottom
   var bounds=lists.map(function(l,i){var y=P.y+P.h,b={};order.forEach(function(ct){var c=l[K.indexOf(ct)].length,h=share?(tot[i]?P.h*c/tot[i]:0):P.h*c/mx;b[ct]=[y-h,y];y-=h;});return b;});
   var dot=Math.max(1.2,Math.min(4.5,Math.sqrt(P.w*P.h/Math.max(1,N))*0.62));
   var f=Form(N);f.kind=share?'share':'area';f.land=0.04;var n=0;
   var SMALL=30;// in the share chart a year with fewer tallies than this is too small to read as a share
   lists.forEach(function(l,i){var fa=share&&tot[i]<SMALL?0.3:0.9;order.forEach(function(ct){var a=l[K.indexOf(ct)],m=a.length,col=C(CONT_VAR[ct]),qi=Q_CONT+K.indexOf(ct);
-    a.forEach(function(k,j){var u=i+(m>1?((j+0.5)/m-0.5)*0.84:0);if(u<0)u=-u;if(u>ny-1)u=2*(ny-1)-u;// the first and last years fold back inside the axis
+    a.forEach(function(k,j){var u=i+(m>1?((j+0.5)/m-0.5)*0.84:0);if(ny<2)u=m>1?(j+0.5)/m:0.5;else{if(u<0)u=-u;if(u>ny-1)u=2*(ny-1)-u;}// the first and last years fold back inside the axis; a single year fills it
       var i0=Math.max(0,Math.min(ny-2,Math.floor(u))),t=u-i0;
       var A=bounds[i0][ct],B=bounds[Math.min(ny-1,i0+1)][ct],top=A[0]+(B[0]-A[0])*t,bot=A[1]+(B[1]-A[1])*t;
       var v=(j*0.6180339887+((k*0.7548776662)%1)*0.37)%1;
-      f.ox[n]=P.x+u/Math.max(1,ny-1)*P.w;f.oy[n]=top+(0.05+0.9*v)*Math.max(0,bot-top);put(f,n,k,qi,col,fa,dot);n++;});});});
+      f.ox[n]=P.x+(ny<2?u:u/(ny-1))*P.w;f.oy[n]=top+(0.05+0.9*v)*Math.max(0,bot-top);put(f,n,k,qi,col,fa,dot);n++;});});});
   var i1=0;if(share)while(i1<ny-1&&tot[i1]<SMALL)i1++;
   f.over={kind:f.kind,P:P,bounds:bounds,order:order,ny:ny,mx:mx,share:share,i1:i1};return f;}
 
@@ -797,7 +773,7 @@ function go(B,animate){
   if(A){var aKey=new Map(),aPaper=new Map(),bPaper=new Map(),used=new Uint8Array(A.n);
     for(i=0;i<A.n;i++){aKey.set(A.key[i],i);if(A.a[i]>0.05&&!aPaper.has(A.k[i]))aPaper.set(A.k[i],i);}
     for(j=0;j<B.n;j++)if(!bPaper.has(B.k[j]))bPaper.set(B.k[j],j);
-    for(j=0;j<B.n;j++){i=aKey.get(B.key[j]);if(i!=null){used[i]=1;pairs.push(i,j,0);}else{i=aPaper.get(B.k[j]);pairs.push(i!=null?i:-1,j,i!=null?1:2);}}
+    for(j=0;j<B.n;j++){i=aKey.get(B.key[j]);if(i!=null){used[i]=1;pairs.push(i,j,0);}else{i=aPaper.get(B.k[j]);if(i!=null)used[i]=1;pairs.push(i!=null?i:-1,j,i!=null?1:2);}}   // a dot that splits does not also fade out
     for(i=0;i<A.n;i++)if(!used[i]&&A.a[i]>0.004){j=bPaper.get(A.k[i]);pairs.push(i,j!=null?j:-1,j!=null?3:4);}}
   else for(j=0;j<B.n;j++)pairs.push(-1,j,5);
   var n=pairs.length/3,L=Live(n);ensureBuf(n);
@@ -907,7 +883,7 @@ function place(f,i){var q=f.q[i],w=W[f.k[i]];
   if(f.kind==='area'||f.kind==='share')return F.contsUsed[q-Q_CONT];
   if(!w.ci.length)return 'No listed affiliation';var names=w.ci.slice(0,2).map(function(c){return CITIES[c].name;});return names.join(', ')+(w.ci.length>2?' and '+(w.ci.length-2)+' more':'');}
 function showTip(i){var f=LIVE.form,w=W[f.k[i]];sTip.textContent='';
-  sTip.appendChild(el('b',null,D.detailsLoaded?(w.raw.title||'Untitled'):'Loading title…'));
+  sTip.appendChild(el('b',null,D.detailsLoaded?(w.raw.title||'Untitled'):D.detailsFailed?'Title could not be loaded':'Loading title…'));
   sTip.appendChild(el('div','m',(w.yr!=null?w.yr:'Undated')+' · '+place(f,i)));
   if(w.gs.length)sTip.appendChild(el('div','m','Cites '+quoted(GROUPS[w.gs[0]].title)+(w.gs.length>1?' and '+(w.gs.length-1)+' more':'')));
   var x=BUF[i*7],y=BUF[i*7+1];sTip.style.left=Math.max(Math.min(150,SW/2),Math.min(SW-150,x))+'px';sTip.style.top=y+'px';sTip.classList.toggle('below',y<150);sTip.classList.add('on');}
@@ -920,7 +896,7 @@ dotC.addEventListener('pointerdown',function(e){tap=e.pointerType==='mouse'?null
 dotC.addEventListener('pointerup',function(e){var t=tap;tap=null;if(!t||!LIVE||LIVE.p<1)return;
   if(Math.abs(e.clientX-t.x)+Math.abs(e.clientY-t.y)>8||performance.now()-t.t>350)return;var r=dotC.getBoundingClientRect();setHover(nearest(e.clientX-r.left,e.clientY-r.top));});
 dotC.addEventListener('pointercancel',function(){tap=null;});
-window.addEventListener('citation-details',function(){if(hover>=0)showTip(hover);});
+['citation-details','citation-details-failed'].forEach(function(ev){window.addEventListener(ev,function(){if(hover>=0)showTip(hover);});});
 
 /* ---------- scrolly ---------- */
 var gTitle=$('gTitle'),gSub=$('gSub'),cur=-1;
@@ -941,9 +917,9 @@ function setupIO(){if(io)io.disconnect();var mobile=window.matchMedia('(max-widt
     var ks=Object.keys(vis).map(Number);if(ks.length)activate(Math.min.apply(null,ks),true);},{rootMargin:'-'+Math.round(gh+48)+'px 0px 0px 0px'});
   stepsEl.querySelectorAll('.step .card').forEach(function(e){io.observe(e);});}
 sizeCanvases();activate(0,false);setupIO();
-window.matchMedia('(max-width:860px)').addEventListener('change',setupIO);
 var ioT=0;window.addEventListener('resize',function(){clearTimeout(ioT);ioT=setTimeout(setupIO,200);});
-var rsT=0,lastSize='';new ResizeObserver(function(){var r=G.getBoundingClientRect(),sz=Math.round(r.width)+'x'+Math.round(r.height);if(sz===lastSize)return;lastSize=sz;
+function sizeKey(){var r=G.getBoundingClientRect();return Math.round(r.width)+'x'+Math.round(r.height);}
+var rsT=0,lastSize=sizeKey();new ResizeObserver(function(){var sz=sizeKey();if(sz===lastSize)return;lastSize=sz;
   clearTimeout(rsT);rsT=setTimeout(function(){sizeCanvases();rebuild();},120);}).observe(G);
 
 /* ---------- explore ---------- */
@@ -952,12 +928,13 @@ var exCounts=F.ALL,exGroup='',selCity=-1;
 (function(){var cited=GLIST.filter(function(G){return G.n>0;});
   cited.forEach(function(G){G.yearly=F.years.map(function(){return 0;});});
   W.forEach(function(w){if(w.yr==null)return;w.gs.forEach(function(g){var G=GROUPS[g];if(G.yearly)G.yearly[w.yr-F.y0]++;});});
-  PaperPicker({button:$('paperSel'),papers:cited,total:F.total,allLabel:'All '+cited.length+' cited papers',onSelect:function(k){exGroup=k;applyFilter();}});})();
+  var pk=PaperPicker({button:$('paperSel'),papers:cited,total:F.total,allLabel:'All '+cited.length+' cited papers',here:'story',onSelect:function(k){exGroup=k;applyFilter();}});
+  exGroup=pk.initial();if(exGroup)pk.set(exGroup);})();
 $('exDek').textContent='Circle area shows citing papers per city. The map covers '+fmt(F.placed)+' of '+fmt(F.total)+' citing papers; the other '+fmt(F.unplaced)+' list no affiliation.';
 function applyFilter(){exCounts=exGroup?counts(function(w){return w.gs.indexOf(exGroup)>=0;}):F.ALL;
   var keep=exMap.view&&exMap.userView?exMap.view:null;
-  exMap.set({counts:exCounts,bbox:VIEWS.world,highlight:[F.home],color:'--dot'},false);
-  if(keep){exMap.view=keep;exMap.userView=true;exMap.computeRadiiNow();exMap.draw();}
+  exMap.set({counts:exCounts,bbox:VIEWS.world,highlight:HOME_HL,color:'--dot'});
+  if(keep){exMap.view=keep;exMap.userView=true;exMap.computeRadii();exMap.draw();}
   if(selCity>=0&&!(exCounts[selCity]>0))selectCity(-1);else if(selCity>=0)renderDetail(selCity);
   renderList();}
 var search=$('citySearch'),listEl=$('cityList');
@@ -976,9 +953,10 @@ var detail=$('detail');
 function renderDetail(i){detail.textContent='';
   if(i<0){detail.appendChild(el('p','hint','Select a city on the map or in the list.'));return;}
   var c=CITIES[i],ws=CITY_WORKS[i].filter(function(w){return !exGroup||w.gs.indexOf(exGroup)>=0;});
-  ws.sort(function(a,b){return (b.date||String(b.yr||''))<(a.date||String(a.yr||''))?-1:1;});
+  function rk(w){return w.raw.yo&&w.yr!=null?w.yr+'-00':w.date||String(w.yr||'');}   // a year-only date sorts after that year's dated papers
+  ws.sort(function(a,b){var x=rk(a),y=rk(b);return x<y?1:x>y?-1:0;});
   detail.appendChild(el('h3',null,c.name));
-  detail.appendChild(el('p','meta',[c.region,country(c.country).name].filter(function(x){return x&&x!==c.name;}).join(', ')+' · '+fmt(ws.length)+' citing paper'+(ws.length===1?'':'s')+(i===F.home?' · home':'')));
+  detail.appendChild(el('p','meta',[c.region,country(c.country).name].filter(function(x){return x&&x!==c.name;}).join(', ')+' · '+fmt(ws.length)+' citing paper'+(ws.length===1?'':'s')+(i===F.home&&F.homeExact?' · home':'')));
   var here={};(c.institutions||[]).forEach(function(x){here[x]=0;});
   ws.forEach(function(w){w.inst.forEach(function(x){if(x in here)here[x]++;});});
   var il=Object.keys(here).filter(function(x){return here[x]>0;}).sort(function(a,b){return here[b]-here[a];});
@@ -986,7 +964,7 @@ function renderDetail(i){detail.textContent='';
     il.slice(0,8).forEach(function(x){var li=el('li');li.appendChild(el('span',null,(INST[x]&&INST[x].display_name)||x));li.appendChild(el('span',null,fmt(here[x])));ul.appendChild(li);});detail.appendChild(ul);
     if(il.length>8)detail.appendChild(el('p','meta','and '+fmt(il.length-8)+' more'));}
   detail.appendChild(el('h4',null,'Citing papers'));
-  if(!D.detailsLoaded){detail.appendChild(el('p','hint','Loading papers\u2026'));return;}
+  if(!D.detailsLoaded){detail.appendChild(el('p','hint',D.detailsFailed?'Titles could not be loaded':'Loading papers\u2026'));return;}
   var pl=el('ul','papers');detail.appendChild(pl);var shown=0;
   function more(){ws.slice(shown,shown+25).forEach(function(w){var li=el('li'),u=workUrl(w.raw),t=w.raw.title||'Untitled';
       if(u){var a=el('a',null,t);a.href=u;a.target='_blank';a.rel='noopener noreferrer';li.appendChild(a);}else li.appendChild(el('span',null,t));
@@ -994,6 +972,7 @@ function renderDetail(i){detail.textContent='';
     shown=Math.min(ws.length,shown+25);btn.hidden=shown>=ws.length;btn.textContent='Show more ('+fmt(ws.length-shown)+' left)';}
   var btn=el('button','more');btn.type='button';btn.addEventListener('click',more);detail.appendChild(btn);more();}
 function selectCity(i){selCity=i;exMap.sel=i;exMap.draw();renderDetail(i);
+  $('exLive').textContent=i<0?'':CITIES[i].name+', '+fmt(exCounts[i])+' citing paper'+(exCounts[i]===1?'':'s');
   listEl.querySelectorAll('button[data-i]').forEach(function(b){b.setAttribute('aria-pressed',String(+b.dataset.i===i));});}
 var exC=$('exCanvas'),tip=$('tip'),drag=null;
 /* touch: one finger scrolls the page at world view; once zoomed in it pans the map */
@@ -1014,9 +993,9 @@ exC.addEventListener('wheel',function(e){if(!(e.ctrlKey||e.metaKey))return;e.pre
 exC.addEventListener('dblclick',function(e){var r=exC.getBoundingClientRect();exMap.zoomAt(2,e.clientX-r.left,e.clientY-r.top);syncPan();});
 $('zIn').addEventListener('click',function(){exMap.zoomAt(1.6);syncPan();});
 $('zOut').addEventListener('click',function(){exMap.zoomAt(1/1.6);syncPan();});
-$('zReset').addEventListener('click',function(){exMap.userView=false;exMap.view=exMap.fit(VIEWS.world);exMap.computeRadiiNow();exMap.draw();syncPan();});
+$('zReset').addEventListener('click',function(){exMap.userView=false;exMap.view=exMap.fit(VIEWS.world);exMap.computeRadii();exMap.draw();syncPan();});
 applyFilter();renderDetail(-1);
-window.addEventListener('citation-details',function(){if(selCity>=0)renderDetail(selCity);});
+['citation-details','citation-details-failed'].forEach(function(ev){window.addEventListener(ev,function(){if(selCity>=0)renderDetail(selCity);});});
 
 /* ---------- about ---------- */
 (function(){var b=$('aboutBody');var ms=D.stats||{};
@@ -1028,12 +1007,12 @@ window.addEventListener('citation-details',function(){if(selCity>=0)renderDetail
 /* ---------- theme toggle ---------- */
 var root=document.documentElement,mq=window.matchMedia('(prefers-color-scheme: dark)');
 function effective(){var t=root.getAttribute('data-theme');return t||(mq.matches?'dark':'light');}
-function onTheme(){readColors();exMap.colNow=COL[exMap.colKey];if(exMap.t>=1)exMap.draw();rebuild();
-  $('themeBtn').setAttribute('aria-label',effective()==='dark'?'Switch to light theme':'Switch to dark theme');}
+function themeLabel(){$('themeBtn').setAttribute('aria-label',effective()==='dark'?'Switch to light theme':'Switch to dark theme');}
+function onTheme(){readColors();exMap.draw();rebuild();themeLabel();}
 $('themeBtn').addEventListener('click',function(){var n=effective()==='dark'?'light':'dark';root.setAttribute('data-theme',n);try{localStorage.setItem('theme',n);}catch(e){}onTheme();});
 mq.addEventListener('change',function(){if(!root.getAttribute('data-theme'))onTheme();});
 window.addEventListener('storage',function(e){if(e.key!=='theme')return;if(e.newValue==='light'||e.newValue==='dark')root.setAttribute('data-theme',e.newValue);else root.removeAttribute('data-theme');onTheme();});
-onTheme();
+themeLabel();
 })();
 /* While the pinned chart scrolls away at the end of the story, the fixed buttons would sit on its labels: hide them until it is gone. */
 (function(){var g=document.getElementById('graphic'),bs=document.querySelectorAll('.theme-btn'),raf=0;

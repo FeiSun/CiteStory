@@ -1,8 +1,8 @@
 """Data for the pages that are not maps: Constellation, Race, Regulars and Record.
 
 `transform` turns the page payload of build_citation_geo.py into one compact object,
-`window.CITATION_VIEWS` (output/views.js), and a list of titles aligned with its works,
-`window.CITATION_VIEW_DETAILS` (output/views-details.js, loaded on demand). Standard library only.
+`window.CITATION_VIEWS` (site/views.js), and a list of titles aligned with its works,
+`window.CITATION_VIEW_DETAILS` (site/views-details.js, loaded on demand). Standard library only.
 """
 import calendar
 from collections import Counter, defaultdict
@@ -11,10 +11,11 @@ import hashlib
 import json
 import math
 import random
+import re
 
-from fetch_citation_geo import name_match, normalized_title as normalized
+from fetch_citation_geo import name_match, normalized_title as normalized, short as short_id
 
-YEAR_ONLY, OWN = 2, 1     # bits of a work's flags
+YEAR_ONLY, OWN = 2, 1     # bits of a work's flags in views.js
 
 
 def year_only_day(work_id, year, snapshot):
@@ -45,9 +46,7 @@ def work_day(work, snapshot):
 
 
 def page_date(work, snapshot):
-    """The ISO date the map pages use: as work_day, but undated works stay undated."""
-    if not work.get('date'):
-        return None
+    """The ISO date the map pages use: as work_day, so the map pages and views.js place a work on the same day."""
     day, _ = work_day(work, snapshot)
     return day.isoformat() if day else None
 
@@ -62,7 +61,10 @@ def fractional_time(work, snapshot):
 
 
 def layout(papers, links, seed=7, steps=700):
-    """Deterministic force layout of the cited papers: co-cited papers attract. Node radius ~ sqrt(citations)."""
+    """Deterministic force layout of the cited papers: co-cited papers attract. Node radius ~ sqrt(citations).
+
+    Every pair repels, so the cost grows with the square of the papers: about 2 s for 100, 3 min for 1,000.
+    Cutting off distant pairs was tried and packed large records visibly worse."""
     rng = random.Random(seed)
     n = len(papers)
     radius = [0.9 * math.sqrt(max(p['n'], 1)) + 3 for p in papers]
@@ -109,8 +111,18 @@ def layout(papers, links, seed=7, steps=700):
             for i, p in enumerate(pos)]
 
 
+def paper_id(key):
+    """The short id a page puts in ?paper=: stable while the paper's (normalized) title stays the same."""
+    return hashlib.sha1(str(key).encode('utf-8')).hexdigest()[:8]
+
+
+def clean_name(name):
+    """A byline without the footnote marks some sources leave at its end ("Rui Wang*", "Qi Li¹")."""
+    return re.sub(r"[\s\d¹²³⁴-⁹⁰*†‡§¶✉]+$", "", name) or name
+
+
 def byline(authors):
-    names = [a.get('name') for a in authors or [] if a.get('name')]
+    names = [clean_name(a['name']) for a in authors or [] if a.get('name')]
     if not names:
         return ''
     return names[0] if len(names) == 1 else names[0] + ' et al.'
@@ -132,8 +144,12 @@ def transform(source, details, authors=None, owner_ids=(), coauthor_ids=(), cite
     for t in source['targets']:     # versions of one paper share a normalized title
         title = str(t.get('scholar_title') or t['title'])
         key = t.get('key') or normalized(title) or t['id']
-        g = groups.setdefault(key, {'title': title, 'link': t.get('doi') or f"https://openalex.org/{t['id']}",
-                                    'years': [], 'works': set()})
+        g = groups.setdefault(key, {'title': title, 'link': None, 'rank': None, 'years': [], 'works': set()})
+        # the link, as on Flow: a published (non-arXiv) DOI first, then the version with the most citations
+        doi = t.get('doi') or ''
+        rank = (bool(doi) and 'arxiv' not in doi.lower(), t.get('cited_by_count') or 0)
+        if g['rank'] is None or rank > g['rank']:
+            g['rank'], g['link'] = rank, doi or f"https://openalex.org/{t['id']}"
         if isinstance(t.get('publication_year'), int):
             g['years'].append(t['publication_year'])
         group_of[t['id']] = key
@@ -157,7 +173,7 @@ def transform(source, details, authors=None, owner_ids=(), coauthor_ids=(), cite
     first_year = min(dated) if dated else snapshot.year
     years = list(range(first_year, snapshot.year + 1))
 
-    papers = [{'t': groups[k]['title'], 'y': min(groups[k]['years']) if groups[k]['years'] else None,
+    papers = [{'id': paper_id(k), 't': groups[k]['title'], 'y': min(groups[k]['years']) if groups[k]['years'] else None,
                'n': len(groups[k]['works']), 'u': 0, 'yr': [0] * len(years), 'link': groups[k]['link']} for k in order]
 
     cities = {c['id']: c for c in source.get('cities', [])}
@@ -209,7 +225,7 @@ def transform(source, details, authors=None, owner_ids=(), coauthor_ids=(), cite
             if aid in owner_ids or (not a.get('id') and owner_names and name_match(a['name'], owner_names)):
                 continue
             author_works[aid].add(w['id'])
-            author_name.setdefault(aid, a['name'])
+            author_name.setdefault(aid, clean_name(a['name']))
             for inst in a.get('institutions') or []:
                 author_inst[aid][short_id(inst)] += 1
     own_authors = coauthor_ids & set(author_works)
@@ -239,10 +255,6 @@ def transform(source, details, authors=None, owner_ids=(), coauthor_ids=(), cite
         'places': places, 'citers': citers,
     }
     return views, view_details
-
-
-def short_id(oa_id):
-    return oa_id.rsplit('/', 1)[-1] if isinstance(oa_id, str) else oa_id
 
 
 def full_authors(raw_works):

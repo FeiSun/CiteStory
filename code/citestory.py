@@ -24,10 +24,18 @@ def load_profile(folder):
     path = folder / "profile.json"
     if not path.is_file():
         raise SystemExit(f"{path} not found. Create it with at least {{\"scholar_url\": \"https://scholar.google.com/citations?user=…\"}}.")
-    config = json.loads(path.read_text(encoding="utf-8"))
+    try:
+        config = json.loads(path.read_text(encoding="utf-8"))
+    except ValueError as e:
+        raise SystemExit(f"{path} is not valid JSON: {e}")
+    if not isinstance(config, dict):
+        raise SystemExit(f"{path} must hold a JSON object, such as {{\"scholar_url\": \"…\"}}.")
     unknown = set(config) - KNOWN
     if unknown:
         raise SystemExit(f"Unknown profile.json field(s): {', '.join(sorted(unknown))}. Known: {', '.join(sorted(KNOWN))}.")
+    for key in ("name", "scholar_url", "scholar_html", "home", "deploy_to"):
+        if config.get(key) is not None and not isinstance(config[key], str):
+            raise SystemExit(f"\"{key}\" in {path} must be a string.")
     for key in ("scholar_html", "deploy_to"):
         if config.get(key):
             config[key] = str((folder / Path(config[key]).expanduser()).resolve())

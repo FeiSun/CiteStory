@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="dark light">
+<meta name="color-scheme" content="light dark">
 <meta name="referrer" content="no-referrer">
 <title>Citation Geography</title>
 <script>{let c=null;try{c=localStorage.getItem('theme');}catch(e){}document.documentElement.dataset.theme=c==="light"||c==="dark"?c:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");}</script>
@@ -69,11 +69,12 @@ const D=window.CITATION_DATA,$=id=>document.getElementById(id),fmt=n=>new Intl.N
 const num=v=>{const s=document.createElement('span');s.className='num';s.textContent=fmt(v);return s;};
 const t=$('title'),em=document.createElement('em');em.textContent=D.owner;t.append('Where ',em,'’s work is read');
 $('lede').append(num(D.stats.citing_works),' papers have cited it, from ',num(D.stats.cities),' cities in ',num(D.stats.countries),' countries and regions. '+(['','One way','Two ways','Three ways','Four ways','Five ways','Six ways','Seven ways','Eight ways','Nine ways','Ten ways'][document.querySelectorAll('ol li').length]||'Several ways')+' to look at the same data.');
+if(D.owner&&document.title.indexOf(D.owner)<0)document.title+=' · '+D.owner;
 if(D.home)$('homeLabel').textContent=D.home;
 $('snap').textContent='Snapshot '+String(D.manifest.as_of||'').slice(0,10);
 const q=matchMedia('(prefers-color-scheme: dark)');let choice=null;try{choice=localStorage.getItem('theme');}catch(e){}
 function apply(m){document.documentElement.dataset.theme=m;const b=$('theme');b.dataset.mode=m;b.setAttribute('aria-label',m==='dark'?'Switch to light theme':'Switch to dark theme');}
-apply(choice==='light'||choice==='dark'?choice:(q.matches?'dark':'light'));
+apply(document.documentElement.dataset.theme);
 q.addEventListener?.('change',e=>{if(!choice)apply(e.matches?'dark':'light');});
 addEventListener('storage',e=>{if(e.key!=='theme')return;choice=e.newValue==='light'||e.newValue==='dark'?e.newValue:null;apply(choice||(q.matches?'dark':'light'));});
 $('theme').addEventListener('click',()=>{choice=document.documentElement.dataset.theme==='dark'?'light':'dark';try{localStorage.setItem('theme',choice);}catch(e){}apply(choice);});

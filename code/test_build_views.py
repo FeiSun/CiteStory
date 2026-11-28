@@ -72,6 +72,19 @@ class Transform(unittest.TestCase):
         self.assertEqual((alpha['t'], alpha['y'], alpha['n']), ('Alpha Paper', 2018, 3))
         self.assertEqual(self.v['stats'], {'papers': 2, 'works': 4, 'undated': 1, 'multi': 1})
 
+    def test_paper_ids_are_short_stable_and_shared_by_versions(self):
+        ids = [p['id'] for p in self.v['papers']]
+        self.assertEqual(len(set(ids)), 2)
+        self.assertEqual(ids[0], b.paper_id(b.normalized('Alpha Paper')))    # both versions of Alpha, one id
+        self.assertRegex(ids[0], r'^[0-9a-f]{8}$')
+
+    def test_a_paper_links_to_its_published_version(self):
+        src = source()
+        src['targets'][0]['doi'] = 'https://doi.org/10.48550/arXiv.1'
+        src['targets'][1].update(doi='https://doi.org/10.1/kdd', cited_by_count=0)
+        v, _ = b.transform(src, DETAILS, AUTHORS, OWNER, COAUTHORS)
+        self.assertEqual(v['papers'][0]['link'], 'https://doi.org/10.1/kdd')
+
     def test_per_year_counts_and_undated_add_up(self):
         for p in self.v['papers']:
             self.assertEqual(sum(p['yr']) + p['u'], p['n'])
@@ -104,6 +117,7 @@ class Transform(unittest.TestCase):
         first = self.d[0]
         self.assertEqual(first, ['First', 'Ann et al.', 'https://doi.org/w1'])
         self.assertIn(['Second', 'Dee et al.', 'https://openalex.org/W2'], self.d)    # first author has no affiliation
+        self.assertEqual(b.byline([{'name': 'Rui Wang*'}, {'name': 'Bo'}]), 'Rui Wang et al.')   # footnote marks are cut
 
     def test_authors_merge_by_id_and_point_at_works(self):
         ann = next(c for c in self.v['citers'] if c['name'] == 'Ann')

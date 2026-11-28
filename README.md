@@ -56,6 +56,9 @@ the map and back in time?
 Why each view takes the form it does, what was tried and dropped, and how Record's sound works are in
 [DESIGN.md](DESIGN.md).
 
+A paper chosen in Atlas, Reach, Story, Flow, Constellation, Race or Record is kept in the address (`?paper=`), and
+the "Open in" links under it open the same paper in the other views.
+
 ### Atlas: where in the world
 
 ![Atlas: every city with a citing paper, arcs drawn from home](docs/screenshots/atlas.webp)
@@ -79,7 +82,7 @@ city: every city sits at its true distance and true bearing, and the rim of the 
 point exactly opposite on the globe. Rings mark 2,000, 5,000, 10,000 and 15,000 km; a switch
 spreads out the crowded centre with a square-root scale. The histogram on the right
 answers "how far did the ideas travel?": the median distance, the share beyond 5,000 km, and the farthest
-city.
+city. A paper picker shows the reach of one paper.
 
 ### Story: how it spread
 
@@ -171,14 +174,16 @@ python3 code/citestory.py update profiles/me
 open profiles/me/site/index.html        # macOS; elsewhere, open the file in a browser
 ```
 
-The first run sends one OpenAlex search per paper on the profile, then pages through the citing works
+The first run matches the profile's papers to OpenAlex: once a few are found by title, it lists every work under
+the owner's OpenAlex author ids (one request per 200 works) and searches by title only the papers missing there.
+For a profile of 108 papers that took 59 requests instead of 108. It then pages through the citing works
 (about 60 requests for 11,000 citing papers), then looks up the institutions. Expect a few minutes.
 
 **Get a free OpenAlex API key first.** OpenAlex gives each user a daily budget that resets at midnight UTC:
 $0.10 without a key, shared by everyone on your IP address, and $1 with a free key. A title search costs $0.001
 and a page of results $0.0001. The first run for a profile of 100 papers and 11,000 citing papers costs about
-$0.12: 100 searches, then about 100 pages of citing works and institutions. Without a key, the daily budget
-runs out after about 95 searches; the run stops and resumes the next day. A monthly update costs about $0.02,
+about $0.07: fewer than 60 searches and lists, then about 100 pages of citing works and institutions. Without a
+key, the daily budget runs out after about 95 searches; the run stops and resumes the next day. A monthly update costs about $0.02,
 because only new titles are searched. With a free key, both fit well within the daily budget, so nothing is paid.
 
 Create an account at [openalex.org/signup](https://openalex.org/signup) and copy the key from
@@ -218,7 +223,7 @@ Only `scholar_url` (or `scholar_html`) is required.
 | `scholar_html` | a saved copy of the profile page, used when Google refuses the URL |
 | `name` | the owner's name, if it differs from the one on the Scholar profile |
 | `aliases` | other spellings that appear in bylines: a name in another script, a former name, "J. Smith" |
-| `openalex_author_ids` | OpenAlex author ids that are the owner, for bylines too unusual to match |
+| `openalex_author_ids` | OpenAlex author ids that are the owner, for bylines too unusual to match (`A5101467161` or the author's OpenAlex URL) |
 | `home` | the OpenAlex id of the owner's institution, when the automatic guess is wrong or missing ([search it here](https://openalex.org)) |
 | `deploy_to` | a folder the built pages are copied into after every build |
 
@@ -249,8 +254,8 @@ To refresh monthly, a crontab line is enough:
 
 ## Putting it on a website
 
-`profiles/<name>/site/` holds everything the pages need and nothing else: nine HTML files and four data files.
-Copy the folder to any static host, or set `deploy_to` to have it copied for you.
+`profiles/<name>/site/` holds everything the pages need and nothing else: nine HTML files (eight views and the index)
+and four data files. Copy the folder to any static host, or set `deploy_to` to have it copied for you.
 
 **The look follows [al-folio](https://github.com/alshedivat/al-folio)**, the Jekyll theme I use for my
 homepage:
@@ -259,8 +264,6 @@ homepage:
   switches the pages;
 - an embed mode, `atlas.html?embed`, that drops its own chrome, takes the site's background, and reports its
   height to the host page so an iframe can fit it.
-
-`al-folio/` contains a project page and step-by-step instructions for that setup.
 
 If your site looks different, you will want to adjust the design. The shared colours, type and chrome live in
 `code/templates/_shell.html` and at the top of each template. Run `build` after editing them.
@@ -325,8 +328,9 @@ refuses, a saved copy of the profile page works as well (see [Quick start](#quic
 - **Merged places.** OpenAlex sometimes gives one place two ids, or names a district instead of its city.
   Two places are merged when they have the same name in the same country within 25 km, or when the smaller
   lies within 8 km of a place with ten times its papers. Neighbouring towns of similar size stay apart.
-- **Home.** The owner's most frequent affiliation over their three most recent years, unless `home` says
-  otherwise.
+- **Home.** The owner's most frequent affiliation with a known city over their three most recent years, unless
+  `home` says otherwise. An umbrella body listed beside the institute (an academy, a national lab network) often has
+  no city and is passed over.
 - **Dates.** OpenAlex writes 1 January when it knows only the year. Those papers are spread over their year
   by a stable hash of their id, so the animations do not jump every January. Pages that show individual
   papers mark them as year-only.
@@ -341,7 +345,7 @@ code/
   fetch_citation_geo.py  Scholar list, OpenAlex matches, citing works, institutions
   build_citation_geo.py  aggregates cities, writes data.js, fills the templates
   build_views.py         papers, co-citation layout, authors: views.js
-  templates/             the eight pages and the index; _shell.html and _picker.html are shared parts
+  templates/             the eight pages and the index; _shell.html, _picker.html and _views.html are shared parts
   basemap/               Natural Earth 1:50m countries
   test_*.py              unit tests: python3 -m unittest discover -s code -p "test_*.py"
   DATA.md                data contracts
@@ -349,8 +353,8 @@ DESIGN.md                why the views look as they do
 profiles/
   example/profile.json   a profile to copy
   <name>/                yours: profile.json, data/ (snapshots), site/ (the pages); git-ignored
-al-folio/                project page and instructions for an al-folio site
 docs/screenshots/        the images in this README (animated WebP and PNG)
+promo/                   the scripts that record the promo video from a built site (see promo/README.md)
 ```
 
 ## Credits and inspirations

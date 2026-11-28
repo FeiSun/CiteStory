@@ -59,8 +59,7 @@ html[data-offline] :is(.find,.zoom,.modes,.timeline,.panel,.notes){display:none}
 .maplibregl-ctrl-attrib-button{filter:var(--attrib-icon,none)}
 html[data-theme=dark]{--attrib-icon:invert(1)}
 .maplibregl-canvas:focus-visible{outline:1.5px solid var(--amber);outline-offset:-2px}
-.map canvas.drag{cursor:grabbing}
-.map canvas.hit{cursor:pointer}
+.map-note{position:absolute;left:50%;top:58px;transform:translateX(-50%);max-width:calc(100% - 40px);padding:5px 12px;border-radius:999px;background:var(--glass);border:1px solid var(--hair);color:var(--ink-2);font-size:12.5px;text-align:center;pointer-events:none}
 .zoom{position:absolute;left:40px;bottom:14px;display:flex;flex-direction:column;gap:2px;padding:3px;border-radius:10px;background:var(--glass);border:1px solid var(--hair)}
 .icon{width:34px;height:34px;display:grid;place-items:center;border-radius:8px;color:var(--ink-2);transition:background .2s,color .2s}
 .icon:hover{background:var(--hover);color:var(--ink)}
@@ -76,6 +75,7 @@ html[data-theme=dark]{--attrib-icon:invert(1)}
 .feed li:nth-child(2){opacity:.55}.feed li:nth-child(3){opacity:.25}
 .feed b{display:block;font-weight:500;font-size:13px;color:var(--amber-hi);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .feed span{display:block;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.feed .via{color:var(--ink-2)}
 .feed p{font-size:12px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 @keyframes feed-in{from{opacity:0;transform:translateY(8px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
 .find{position:absolute;left:26px;top:10px;width:min(330px,calc(100% - 200px));z-index:3}
@@ -204,8 +204,7 @@ html[data-embed] .scroll{padding:0 20px 20px}
  .stage{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto;height:auto;min-height:0}
  .head{padding:26px 20px 4px;gap:12px}
  h1{font-size:clamp(26px,7vw,34px)}
- .map{grid-row:2;aspect-ratio:2.05/1;margin-top:8px}
- .map{margin-top:100px;aspect-ratio:1.35/1}
+ .map{grid-row:2;margin-top:100px;aspect-ratio:1.35/1}
  .zoom{left:20px;right:auto;top:-46px;bottom:auto;flex-direction:row;padding:1px}
  .modes{top:-44px;right:20px}
  .feed{display:none}
@@ -219,7 +218,7 @@ html[data-embed] .scroll{padding:0 20px 20px}
  .notes{grid-template-columns:1fr;gap:44px;padding:60px 20px 52px}
  .foot{padding:0 20px 32px}
 }
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}.feed li{animation:none}}
 </style>
 </head>
 <body>
@@ -285,9 +284,11 @@ __MAPLIBRE_JS__
 <script>
 "use strict";
 const D=window.CITATION_DATA;
+if(D&&D.owner&&document.title.indexOf(D.owner)<0)document.title+=' · '+D.owner;
 const $=id=>document.getElementById(id);
 const nf=new Intl.NumberFormat('en-US'),fmt=n=>nf.format(n);
-const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const RM=matchMedia('(prefers-reduced-motion: reduce)'),reduce=()=>RM.matches;   // read live: the setting can change while the page is open
+const TAU=Math.PI*2,R=Math.PI/180;
 const regionName=(()=>{let dn=null;try{dn=new Intl.DisplayNames(['en'],{type:'region'});}catch(e){}return c=>{if(!c)return 'Unknown';const k=D.countries&&D.countries[c];if(k&&k.name)return k.name;try{return dn?dn.of(c):c;}catch(e){return c;}};})();
 function el(tag,cls,text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=text;return n;}
 function num(v){return el('span','num',fmt(v));}
@@ -295,66 +296,68 @@ function safeHref(url){try{const u=new URL(url);return (u.protocol==='https:'||u
 function link(text,url){const a=el('a',null,text);const h=safeHref(url||'');if(h){a.href=h;a.target='_blank';a.rel='noopener noreferrer';}return a;}
 const normTitle=s=>(s||'').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu,'');
 
-/* ---------- Equal Earth, centred on 150°E so the Pacific is whole ---------- */
-const A1=1.340264,A2=-0.081106,A3=0.000893,A4=0.003796,M=Math.sqrt(3)/2,R=Math.PI/180,LON0=150;
-const wrap=l=>((l+540)%360)-180;
-function ee(lon,lat){const lam=wrap(lon-LON0)*R,th=Math.asin(M*Math.sin(lat*R)),t2=th*th,t6=t2*t2*t2;
- return [lam*Math.cos(th)/(M*(A1+3*A2*t2+t6*(7*A3+9*A4*t2))),th*(A1+A2*t2+t6*(A3+A4*t2))];}
-const XMAX=ee(LON0+179.9999,0)[0],LAT_T=84,LAT_B=-57,YT=ee(LON0,LAT_T)[1],YB=ee(LON0,LAT_B)[1];
-
 /* ---------- data ---------- */
 const cityById=new Map(D.cities.map(c=>[c.id,c]));
 const targetById=new Map(D.targets.map(t=>[t.id,t]));
-function fracDate(w){if(w.date){const d=Date.parse(w.date+'T00:00:00Z');if(!isNaN(d)){const y=new Date(d).getUTCFullYear();return y+(d-Date.UTC(y,0,1))/(366*864e5);}}return w.year?w.year+.5:null;}
+// fractional year of a UTC time, and back: the build dates every dated work, no later than the snapshot
+const yearLen=y=>Date.UTC(y+1,0,1)-Date.UTC(y,0,1);
+const frac=ms=>{const y=new Date(ms).getUTCFullYear();return y+(ms-Date.UTC(y,0,1))/yearLen(y);};
+const fracDate=w=>{const d=w.date?Date.parse(w.date+'T00:00:00Z'):NaN;return isNaN(d)?null:frac(d);};
 const works=D.works;for(const w of works)w.t=fracDate(w); // same objects: data-details.js later adds title/doi/authors
-// works dated after the snapshot (journals assign future issue dates) are placed at the snapshot
-const ASOF=(()=>{const d=Date.parse(D.manifest.as_of||'');if(isNaN(d))return Infinity;const y=new Date(d).getUTCFullYear();return y+(d-Date.UTC(y,0,1))/(366*864e5);})();
-for(const w of works)if(w.t!=null&&w.t>ASOF)w.t=ASOF;
+const ASOF=(()=>{const d=Date.parse(D.manifest.as_of||'');return isNaN(d)?Infinity:frac(d);})();
 const knownT=works.map(w=>w.t).filter(t=>t!=null);
-const Y0=Math.floor(Math.min(...knownT)),Y1=Math.floor(Math.max(...knownT)),TEND=Y1+1;
+let tMin=Infinity,tMax=-Infinity;for(const t of knownT){if(t<tMin)tMin=t;if(t>tMax)tMax=t;}   // a loop: spreading a long array into Math.min overflows the call stack
+if(!knownT.length)tMin=tMax=isFinite(ASOF)?ASOF:new Date().getUTCFullYear();
+const Y0=Math.floor(tMin),Y1=Math.floor(tMax),TEND=Y1+1,TLAST=Math.min(TEND,Math.max(tMax,isFinite(ASOF)?ASOF:TEND));   // a replay ends at the snapshot, then shows all years
 for(const w of works){w.undated=w.t==null;if(w.undated)w.t=TEND-1e-6;} // undated works join at the end
 const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const when=t=>{const y=Math.floor(t),m=Math.min(11,Math.floor((t-y)*12));return MONTHS[m]+' '+y;};
+// the calendar month a time falls in (months are not twelfths of a year)
+const when=t=>{const y=Math.floor(t),d=new Date(Date.UTC(y,0,1)+(t-y)*yearLen(y));return MONTHS[d.getUTCMonth()]+' '+d.getUTCFullYear();};
 const workById=new Map(works.map(w=>[w.id,w]));
-for(const c of D.cities){const b=ee(c.lon,c.lat);c.ux=b[0];c.uy=b[1];}
 const home=D.home&&isFinite(D.home.lat)?{...D.home}:null;
-if(home){const b=ee(home.lon,home.lat);home.ux=b[0];home.uy=b[1];
- let best=null,bd=.35;for(const c of D.cities){const d=Math.hypot(c.lat-home.lat,c.lon-home.lon);if(d<bd){bd=d;best=c;}}home.cityId=best?best.id:null;if(best)home.label=best.name;}
+if(home){const best=D.cities.find(c=>c.id===D.home.city);home.cityId=best?best.id:null;if(best)home.label=best.name;}   // the build names the home city; none when no citing paper comes from there
 
 /* paper groups: preprint and proceedings versions share one entry */
-const groups=[...D.targets.reduce((m,t)=>{const k=normTitle(t.title);const g=m.get(k)||{key:k,title:t.title,ids:new Set(),cites:0};g.ids.add(t.id);g.cites+=t.cited_by_count||0;m.set(k,g);return m;},new Map()).values()].sort((a,b)=>b.cites-a.cites);
+const groupKey=t=>t?t.key||normTitle(t.title)||t.id:'';   // the build's key, shared with the other pages
+const groups=[...D.targets.reduce((m,t)=>{const k=groupKey(t);const g=m.get(k)||{key:k,pid:t.pid,title:t.title,ids:new Set(),cites:0};g.ids.add(t.id);g.cites+=t.cited_by_count||0;m.set(k,g);return m;},new Map()).values()].sort((a,b)=>b.cites-a.cites);
 const groupByKey=new Map(groups.map(g=>[g.key,g]));
 
 /* institutions: name, kind and the city each belongs to (the map itself shows cities only) */
 const INST=D.institutions,instCity=new Map();for(const c of D.cities)for(const i of c.institutions)if(!instCity.has(i))instCity.set(i,c);
 const KINDS={u:'University',c:'Company',r:'Research and government',h:'Health and other'};
-const LIMIT0=document.documentElement.dataset.embed!==undefined?12:60;
-const S={filter:'',t:TEND,playing:false,mode:'city',query:'',hl:null,sel:null,stack:[],limit:document.documentElement.dataset.embed!==undefined?12:60};
+const EMBED=document.documentElement.dataset.embed!==undefined;
+const LIMIT0=EMBED?12:60;
+const S={filter:'',t:TEND,playing:false,mode:'city',query:'',hl:null,sel:null,stack:[],limit:LIMIT0};
 let V={};          // derived view of the data for the current paper filter
 function derive(){
  const g=S.filter?groupByKey.get(S.filter):null;
  const fw=g?works.filter(w=>w.targets.some(id=>g.ids.has(id))):works;
  const ids=new Set(fw.map(w=>w.id));
  const cities=[];
- for(const c of D.cities){const ws=c.works.filter(id=>ids.has(id)).map(id=>workById.get(id)).sort((a,b)=>a.t-b.t);if(ws.length)cities.push({c,ts:ws.map(w=>w.t),first:ws[0].t,firstWork:ws[0]});}
+ for(const c of D.cities){const ws=c.works.filter(id=>ids.has(id)).map(id=>workById.get(id)).sort((a,b)=>a.t-b.t);if(ws.length)cities.push({c,ts:ws.map(w=>w.t),first:ws[0].t,firstWork:ws[0],sure:Math.min(...ws.map(w=>w.undated?Infinity:w.yo?Math.floor(w.t)+1:w.t))});}
  const cmap=new Map();
  for(const w of fw){const cs=new Set(w.cities.map(id=>cityById.get(id).country||''));for(const k of cs){if(!cmap.has(k))cmap.set(k,[]);cmap.get(k).push(w.t);}}
  const countries=[...cmap].map(([code,ts])=>({code,ts:ts.sort((a,b)=>a-b)}));
- const allT=fw.map(w=>w.t).sort((a,b)=>a-b),mappedT=fw.filter(w=>w.cities.length).map(w=>w.t).sort((a,b)=>a-b),mapped=mappedT.length;
+ const allT=fw.map(w=>w.t).sort((a,b)=>a-b),mappedT=fw.filter(w=>w.cities.length).map(w=>w.t).sort((a,b)=>a-b);
  const perYear=[];for(let y=Y0;y<=Y1;y++)perYear.push(0);for(const w of fw){if(w.undated)continue;const y=Math.min(Y1,Math.floor(w.t));if(y>=Y0)perYear[y-Y0]++;}   // undated works have no year
- const byCode=new Map(countries.map(x=>[x.code,x])),events=cities.slice().sort((a,b)=>a.first-b.first);
+ const events=cities.slice().sort((a,b)=>a.first-b.first);
+ // a city's first citing paper may also have authors in cities already on the map: the feed names them
+ // a year-only date is spread over its year at build time: another city was certainly on the map before this paper
+ // when one of its papers ends (a year-only one at the end of its year) no later than this paper can start
+ const sureAt=new Map(cities.map(x=>[x.c.id,x.sure]));
+ for(const x of cities){const w=x.firstWork,lo=w.yo?Math.floor(w.t):w.t;x.via=w.undated?[]:[...new Set(w.cities.filter(id=>id!==x.c.id&&sureAt.get(id)<=lo&&sureAt.get(id)<x.first).map(id=>cityById.get(id).name))];}
  const im=new Map();for(const w of fw)for(const i of w.inst){if(!instCity.has(i)||!INST[i])continue;if(!im.has(i))im.set(i,[]);im.get(i).push(w.t);}
  const insts=[...im].map(([id,ts])=>({id,ts:ts.sort((a,b)=>a-b),x:INST[id],c:instCity.get(id)}));
- V={g,fw,ids,cities,countries,allT,mappedT,mapped,perYear,events,eventT:events.map(x=>x.first),insts,
-  landCountry:D.land.map(l=>l.iso?byCode.get(l.iso)||null:null),countryMax:Math.max(1,...countries.filter(x=>x.code).map(x=>x.ts.length)),max:Math.max(1,...cities.filter(x=>x.c.id!==home?.cityId).map(x=>x.ts.length))};
+ V={g,fw,ids,cities,countries,allT,mappedT,perYear,events,eventT:events.map(x=>x.first),insts,
+  max:Math.max(1,...cities.filter(x=>x.c.id!==home?.cityId).map(x=>x.ts.length))};
 }
+const newest=(a,b)=>(a.undated-b.undated)||Math.floor(b.t)-Math.floor(a.t)||(a.yo?1:0)-(b.yo?1:0)||b.t-a.t;   // a year-only date was spread over its year: it lists after that year's dated papers
+const replayStart=()=>V.allT.length?Math.max(Y0,Math.floor(V.allT[0])):Y0;   // a replay starts in the year of the first citation
 const upto=(ts,t)=>{let lo=0,hi=ts.length;while(lo<hi){const m=(lo+hi)>>1;if(ts[m]<=t)lo=m+1;else hi=m;}return lo;};
 
 /* ---------- map: MapLibre draws the basemap; our canvas overlay draws arcs and city lights ---------- */
 const box=$('mapbox'),cv=$('map'),ctx=cv.getContext('2d');
 let W=0,H=0,dpr=1,marks=[];
-const EMBED=document.documentElement.dataset.embed!==undefined;
-const mix=(a,b,t)=>a.map((v,i)=>v+(b[i]-v)*t);
 // overlay palettes tuned per basemap; TILES (set at build) names the provider and its light/dark styles
 const BASE={
  dark:{blend:'lighter',arc:'255,168,92',arcA:[.07,.05],arcHl:[.03,.02],comet:'rgba(255,200,140,.6)',ring:'255,200,140',hlArc:'rgba(255,205,150,.85)',core:'rgba(255,240,220,.92)',
@@ -380,9 +383,12 @@ themeQuery.addEventListener?.('change',e=>{if(!themeChoice)applyTheme(e.matches?
 addEventListener('storage',e=>{if(e.key!=='theme')return;themeChoice=e.newValue==='light'||e.newValue==='dark'?e.newValue:null;applyTheme(themeChoice||(themeQuery.matches?'dark':'light'));});
 $('theme').addEventListener('click',()=>{themeChoice=theme==='dark'?'light':'dark';try{localStorage.setItem('theme',themeChoice);}catch(e){}applyTheme(themeChoice);});
 
+// the flat map's home view: 15° east of home and at 24°N, which keeps the inhabited latitudes in frame at world zoom
 const HOME_VIEW=()=>({center:[home?home.lon+15:120,24],zoom:Math.max(.55,Math.log2(Math.max(320,W)/560))});
-if(typeof maplibregl==='undefined'){const n=el('p','offline');n.textContent='The map needs a network connection.';$('tiles').append(n);document.documentElement.dataset.offline='';throw new Error('MapLibre did not load (offline?)');}
-map=new maplibregl.Map({container:'tiles',style:TILES[theme],...HOME_VIEW(),minZoom:.3,maxZoom:13,attributionControl:false,dragRotate:false,pitchWithRotate:false,renderWorldCopies:true,cooperativeGestures:EMBED});
+function noMap(text,why){$('tiles').append(el('p','offline',text));document.documentElement.dataset.offline='';throw new Error(why);}
+if(typeof maplibregl==='undefined')noMap('The map needs a network connection.','MapLibre did not load (offline?)');
+try{map=new maplibregl.Map({container:'tiles',style:TILES[theme],...HOME_VIEW(),minZoom:.3,maxZoom:13,attributionControl:false,dragRotate:false,pitchWithRotate:false,renderWorldCopies:true,cooperativeGestures:EMBED});}
+catch(e){noMap('The map needs WebGL, which this browser has turned off.','MapLibre could not start: '+e.message);}
 map.touchZoomRotate.disableRotation();map.keyboard.disableRotation();
 /* globe (MapLibre 5): the projection is interpolated by zoom, so easing the zoom folds or unfolds the world */
 const GLOBE=!!TILES.globe,PROJ_MAP={type:'mercator'},PROJ_GLOBE={type:'globe'};
@@ -396,15 +402,18 @@ map.on('style.load',()=>{if(!GLOBE)return;setProj(projNow);try{map.setSky(SKY[th
 const globeView=()=>({center:[home?home.lon:110,home?Math.max(-30,Math.min(35,home.lat*.6)):20],zoom:Math.max(.3,Math.log2(.42*Math.max(160,Math.min(W,H))/63))});
 const easeIO=k=>k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;
 // the start projection holds at the current zoom and the end projection at the target zoom, in either zoom direction
+// a zoom or pan by the reader would end a fold's ease early and snap the projection midway: input waits for the fold
+const INPUT=['scrollZoom','dragPan','doubleClickZoom','touchZoomRotate','keyboard','boxZoom'];let held=[];
+function holdInput(on){if(on){held=INPUT.filter(h=>map[h]&&map[h].isEnabled());held.forEach(h=>map[h].disable());}else{held.forEach(h=>map[h].enable());held=[];}}
 function morph(toGlobe,dur=1800){if(!GLOBE||projBusy)return;projBusy=true;hideTip();
  const zc=map.getZoom(),v=toGlobe?globeView():HOME_VIEW();let target=v.zoom;
  if(Math.abs(target-zc)<.4)target=Math.max(.3,zc+(toGlobe?.5:-.5));
  const from=toGlobe?'mercator':'vertical-perspective',to=toGlobe?'vertical-perspective':'mercator';
  setProj({type:zc<target?['interpolate',['linear'],['zoom'],zc,from,target,to]:['interpolate',['linear'],['zoom'],target,to,zc,from]});
  projMode=toGlobe?'globe':'map';syncModes();
- const done=()=>{setProj(toGlobe?PROJ_GLOBE:PROJ_MAP);projBusy=false;syncModes();kick(80);runPending();};
- if(reduce){map.jumpTo({center:v.center,zoom:target});done();return;}
- map.once('moveend',done);map.easeTo({center:v.center,zoom:target,duration:dur,easing:easeIO});}
+ const done=()=>{holdInput(false);setProj(toGlobe?PROJ_GLOBE:PROJ_MAP);projBusy=false;syncModes();kick(80);runPending();};
+ if(reduce()){map.jumpTo({center:v.center,zoom:target});done();return;}
+ holdInput(true);map.once('moveend',done);map.easeTo({center:v.center,zoom:target,duration:dur,easing:easeIO});}
 // a place chosen while the map is folding is visited when the fold ends
 let pendingFocus=null;function runPending(){const f=pendingFocus;pendingFocus=null;if(f)f();}
 function syncModes(){const m=$('modes');if(!m)return;m.hidden=!GLOBE;for(const id of ['m-flat','m-globe'])$(id).setAttribute('aria-disabled',String(projBusy));$('m-flat').setAttribute('aria-pressed',String(projMode==='map'));$('m-globe').setAttribute('aria-pressed',String(projMode==='globe'));}
@@ -413,10 +422,20 @@ syncModes();
 map.addControl(new maplibregl.AttributionControl({compact:true}),'bottom-right');
 map.on('move',()=>{hideTip();kick(40);});
 map.on('styledata',()=>{for(const l of map.getStyle().layers||[]){if(l.type==='symbol'&&l['source-layer']==='place'&&!/country/.test(l.id))map.setLayoutProperty(l.id,'visibility','none');}kick(60);});
-map.once('load',()=>document.querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show'));
+// the basemap style failed (or never arrives): say so and show every year at once instead of waiting for it
+let mapLoaded=false,mapNote=null,mapGaveUp=false;   // gave up: the page went on without the map, and a late map does not restart the intro
+function mapFailed(){if(mapLoaded||mapNote)return;mapGaveUp=true;mapNote=el('p','map-note','The basemap could not be loaded; the cities are shown without it.');box.append(mapNote);
+ holdInput(false);projBusy=false;syncModes();setPlaying(false);S.t=TEND;syncTime();kick(400);}
+// fatal only when the style itself failed (its URL, or a network error with no URL before the style arrived):
+// a sprite, glyph or tile error names its own URL and is not
+map.on('error',e=>{const u=String(e&&e.error&&e.error.url||'').split('?')[0];
+ if(!mapLoaded&&(u===TILES.light||u===TILES.dark||(!u&&!map.isStyleLoaded())))mapFailed();});
+const mapWait=setTimeout(()=>{if(!mapLoaded)mapFailed();},20000);
+map.once('load',()=>{mapLoaded=true;clearTimeout(mapWait);if(mapNote){mapNote.remove();mapNote=null;}
+ document.querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show');});
 
 let sized=false;
-function resize(){const r=box.getBoundingClientRect();W=r.width;H=r.height;dpr=Math.min(devicePixelRatio||1,2);cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);map.resize();if(!sized&&W){sized=true;if(TILES.globe&&!reduce){projMode='globe';setProj(PROJ_GLOBE);const gv=globeView();map.jumpTo({center:[gv.center[0]-80,10],zoom:gv.zoom});syncModes();}else map.jumpTo(HOME_VIEW());}draw();}
+function resize(){const r=box.getBoundingClientRect();W=r.width;H=r.height;dpr=Math.min(devicePixelRatio||1,2);cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);map.resize();if(!sized&&W){sized=true;if(TILES.globe&&!reduce()){projMode='globe';setProj(PROJ_GLOBE);const gv=globeView();map.jumpTo({center:[gv.center[0]-80,10],zoom:gv.zoom});syncModes();}else map.jumpTo(HOME_VIEW());}draw();}
 // project a longitude/latitude, choosing the copy of the world nearest the current view
 function proj(lon,lat,ref){const c=ref==null?map.getCenter().lng:ref;let l=lon;while(l-c>180)l-=360;while(l-c<-180)l+=360;const p=map.project([l,lat]);return [p.x,p.y,l];}
 // great-circle points from home to a city, cached per city
@@ -429,21 +448,24 @@ function arcLL(c){let a=ARC.get(c.id);if(a)return a;a=[];
   let lo=Math.atan2(y,x)/R;while(lo-prev>180)lo-=360;while(lo-prev<-180)lo+=360;prev=lo;a.push([lo,Math.atan2(z,Math.hypot(x,y))/R]);}
  ARC.set(c.id,a);return a;}
 let arcCam='',arcPx=new Map();
-function arcScreen(c,ref){const cam=map.getCenter().lng.toFixed(5)+','+map.getCenter().lat.toFixed(5)+','+map.getZoom().toFixed(4)+','+W+'x'+H+JSON.stringify(projNow);
+function arcScreen(c,ref){const moving=map.isMoving();   // half the points while the camera moves: part of the key
+ const cam=map.getCenter().lng.toFixed(5)+','+map.getCenter().lat.toFixed(5)+','+map.getZoom().toFixed(4)+','+W+'x'+H+JSON.stringify(projNow)+(moving?',m':'');
  if(cam!==arcCam){arcCam=cam;arcPx=new Map();}let s=arcPx.get(c.id);if(s)return s;
- const a=arcLL(c),off=proj(home.lon,home.lat,ref)[2]-home.lon,moving=map.isMoving(),step=moving&&a.length>12?2:1;s=[];
+ const a=arcLL(c),off=proj(home.lon,home.lat,ref)[2]-home.lon,step=moving&&a.length>12?2:1;s=[];
  for(let i=0;i<a.length;i+=step){const p=map.project([a[i][0]+off,a[i][1]]);s.push([p.x,p.y]);}
  if((a.length-1)%step){const e=a[a.length-1],p=map.project([e[0]+off,e[1]]);s.push([p.x,p.y]);}
  arcPx.set(c.id,s);return s;}
 function along(pts,u){const f=u*(pts.length-1),i=Math.min(pts.length-2,Math.floor(f)),k=f-i;return [pts[i][0]+(pts[i+1][0]-pts[i][0])*k,pts[i][1]+(pts[i+1][1]-pts[i][1])*k];}
 function polyline(pts,u0=0,u1=1){const n=Math.max(2,Math.ceil((pts.length-1)*(u1-u0))+1);for(let i=0;i<=n;i++){const q=along(pts,u0+(u1-u0)*i/n);i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]);}}
 
+// in years of the timeline, not seconds: a newly cited city's arc is drawn out over LAUNCH, then a ring spreads for RING
 const LAUNCH=.55,RING=.5;
 let animUntil=0,timeUntil=0,tipId=null;const LABEL_FONT='500 11.5px '+getComputedStyle(document.body).fontFamily;
 function draw(now=performance.now(),fx=S.playing||now<animUntil){
- if(!W||!map)return;const launches=S.playing||now<timeUntil;
+ if(!W||!map)return;const launches=!reduce()&&(S.playing||now<timeUntil);   // reduced motion: no comets or rings
  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
  const t=S.t,z=map.getZoom(),ref=map.getCenter().lng,hlId=[S.hl,S.sel].map(id=>id&&INST[id]&&instCity.get(id)?instCity.get(id).id:id).find(id=>id&&id!==home?.cityId)||null,GS=Math.max(.55,Math.min(1.6,.75+.18*z));
+ // isLocationOccluded is internal to MapLibre: safe while the version stays pinned (build_citation_geo.MAPLIBRE)
  const onGlobe=GLOBE&&projNow!==PROJ_MAP,hidden=(lo,la)=>onGlobe&&map.transform.isLocationOccluded(new maplibregl.LngLat(lo,la));
  const homeHidden=home&&hidden(home.lon,home.lat),hp=home&&!homeHidden?proj(home.lon,home.lat,ref):null,off=hp?hp[2]-home.lon:0;
  marks=[];const live=[];
@@ -456,10 +478,10 @@ function draw(now=performance.now(),fx=S.playing||now<animUntil){
   buckets.forEach((cs,i)=>{if(!cs.length)return;ctx.beginPath();for(const c of cs)polyline(arcScreen(c,ref));const A=hlId?P.arcHl:P.arcA;ctx.strokeStyle=`rgba(${P.arc},${A[0]+i*A[1]})`;ctx.stroke();});
   if(launches)for(const m of live){const age=t-m.x.first;if(m.x.c.id===home.cityId||age<0||age>LAUNCH+RING)continue;
    if(age<LAUNCH){const u=1-Math.pow(1-age/LAUNCH,3),pts=arcScreen(m.x.c,ref);ctx.beginPath();polyline(pts,Math.max(0,u-.22),Math.min(1,u));ctx.strokeStyle=P.comet;ctx.lineWidth=1.2;ctx.stroke();const h=along(pts,u);ctx.drawImage(glowWarm,h[0]-7,h[1]-7,14,14);}
-   else{const r=(age-LAUNCH)/RING;ctx.beginPath();ctx.arc(m.p[0],m.p[1],3+14*r,0,7);ctx.strokeStyle=`rgba(${P.ring},${.5*(1-r)})`;ctx.lineWidth=1;ctx.stroke();}}
+   else{const r=(age-LAUNCH)/RING;ctx.beginPath();ctx.arc(m.p[0],m.p[1],3+14*r,0,TAU);ctx.strokeStyle=`rgba(${P.ring},${.5*(1-r)})`;ctx.lineWidth=1;ctx.stroke();}}
   const h=hlId&&live.find(m=>m.x.c.id===hlId);
   if(h){const pts=arcScreen(h.x.c,ref);ctx.beginPath();polyline(pts);ctx.strokeStyle=P.hlArc;ctx.lineWidth=1.5;ctx.stroke();
-   if(!reduce&&fx){const q=along(pts,(now/1600)%1);ctx.drawImage(glowWarm,q[0]-9,q[1]-9,18,18);}}}
+   if(!reduce()&&fx){const q=along(pts,(now/1600)%1);ctx.drawImage(glowWarm,q[0]-9,q[1]-9,18,18);}}}
  // home behind the globe: still show the visible stretch of the selected city's arc
  if(!hp&&homeHidden&&hlId){const h=live.find(m=>m.x.c.id===hlId);if(h){const a=arcLL(h.x.c);ctx.beginPath();let pen=false;
   for(const [lo,la] of a){if(hidden(lo,la)){pen=false;continue;}const q=map.project([lo,la]);pen?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y);pen=true;}
@@ -467,8 +489,8 @@ function draw(now=performance.now(),fx=S.playing||now<animUntil){
  for(const m of live){if(m.p[0]<-40||m.p[0]>W+40||m.p[1]<-40||m.p[1]>H+40)continue;const isH=hlId===m.x.c.id,r=(4+18*m.s)*(isH?1.35:1)*GS;
   ctx.globalAlpha=hlId&&!isH?.55:.6+.4*m.s;ctx.drawImage(glowWarm,m.p[0]-r,m.p[1]-r,r*2,r*2);}
  ctx.globalAlpha=1;ctx.fillStyle=P.core;
- for(const m of live){if(m.p[0]<-10||m.p[0]>W+10||m.p[1]<-10||m.p[1]>H+10)continue;ctx.beginPath();ctx.arc(m.p[0],m.p[1],(.8+1.9*m.s)*Math.min(1.3,GS),0,7);ctx.fill();}
- if(hp){const pulse=reduce||!fx?.35:(now/2400)%1;ctx.drawImage(glowCool,hp[0]-24,hp[1]-24,48,48);ctx.beginPath();ctx.arc(hp[0],hp[1],5+16*pulse,0,7);ctx.strokeStyle=`rgba(${P.homeRing},${.55*(1-pulse)})`;ctx.lineWidth=1;ctx.stroke();}
+ for(const m of live){if(m.p[0]<-10||m.p[0]>W+10||m.p[1]<-10||m.p[1]>H+10)continue;ctx.beginPath();ctx.arc(m.p[0],m.p[1],(.8+1.9*m.s)*Math.min(1.3,GS),0,TAU);ctx.fill();}
+ if(hp){const pulse=reduce()||!fx?.35:(now/2400)%1;ctx.drawImage(glowCool,hp[0]-24,hp[1]-24,48,48);ctx.beginPath();ctx.arc(hp[0],hp[1],5+16*pulse,0,TAU);ctx.strokeStyle=`rgba(${P.homeRing},${.55*(1-pulse)})`;ctx.lineWidth=1;ctx.stroke();}
  ctx.globalCompositeOperation='source-over';
  const occupied=[];ctx.font=LABEL_FONT;ctx.textBaseline='middle';
  const order=marks.slice().sort((a,b)=>b.n-a.n),perCountry=new Map(),top=[],limit=Math.round(Math.min(26,(W<700?5:10)*Math.max(1,z*.7)));
@@ -482,9 +504,12 @@ function draw(now=performance.now(),fx=S.playing||now<animUntil){
 }
 
 /* animation loop: runs only while something moves */
-let raf=0,clock=null;const SPEED=Math.max(1.2,(TEND-Y0)/9); // years per second, wall-clock based
+let raf=0,clock=null;const speed=()=>Math.max(.2,(TEND-replayStart())/9); // years per second, wall-clock based: a replay of the chosen paper's span takes about 9 s
 function loop(now){raf=0;
- if(S.playing){if(clock==null)clock={now,t:S.t};S.t=Math.min(TEND,clock.t+(now-clock.now)/1000*SPEED);if(S.t>=TEND){S.t=TEND;setPlaying(false);}syncTime();}
+ if(S.playing){if(clock==null)clock={now,t:S.t};
+  S.t=reduce()?Math.min(TEND,Math.floor(clock.t)+.999+Math.floor((now-clock.now)/800))   // reduced motion: through one more year every 0.8 s
+   :Math.min(TEND,clock.t+(now-clock.now)/1000*speed());
+  if(S.t>=TLAST){S.t=TEND;setPlaying(false);}syncTime();}
  const moving=S.playing||now<animUntil;draw(now,moving);
  if(moving&&!document.hidden)raf=requestAnimationFrame(loop);}
 document.addEventListener('visibilitychange',()=>{clock=null;if(!document.hidden)kick(100);});
@@ -516,8 +541,8 @@ const ICON_PLAY='<path d="M3 1.5v11l9.5-5.5z"/>',ICON_PAUSE='<path d="M3 1.5h3v1
 // any explicit play/pause (button, scrub, keys, search) cancels the autostart, even one not yet scheduled
 let autoOK=true;
 function setPlaying(on){autoOK=false;S.playing=on;clock=null;$('play-icon').innerHTML=on?ICON_PAUSE:ICON_PLAY;$('play').setAttribute('aria-label',on?'Pause':'Play');if(on)kick();}
-$('play').addEventListener('click',()=>{if(S.playing){setPlaying(false);return;}if(S.t>=TEND-1e-3)S.t=Y0;setPlaying(true);});
-function scrubTo(clientX){const r=$('track').getBoundingClientRect();const f=Math.max(0,Math.min(1,(clientX-r.left)/r.width));S.t=f>=.995?TEND:Y0+f*(TEND-Y0);syncTime();kick(1200,true);}
+$('play').addEventListener('click',()=>{if(S.playing){setPlaying(false);return;}if(S.t>=TEND-1e-3)S.t=replayStart();setPlaying(true);});
+function scrubTo(clientX){const r=$('track').getBoundingClientRect();const f=Math.max(0,Math.min(1,(clientX-r.left)/r.width));S.t=f>=.995?TEND:Y0+f*(TEND-Y0);if(S.t>TLAST)S.t=TEND;syncTime();kick(1200,true);}
 let scrubbing=false;
 $('track').addEventListener('pointerdown',e=>{scrubbing=true;setPlaying(false);$('track').setPointerCapture(e.pointerId);scrubTo(e.clientX);});
 $('track').addEventListener('pointermove',e=>{if(scrubbing)scrubTo(e.clientX);});
@@ -539,19 +564,24 @@ function rowButton(r,i,max){
  const b=el('button','row'+(r.id===S.hl?' hl':'')+(r.city&&r.id===home?.cityId?' home':''));b.dataset.id=r.id;b.append(el('span','rk',String(i+1)));const nm=el('span','nm',r.name);if(r.sub)nm.append(el('small',null,r.sub));b.append(nm,el('span','ct',fmt(r.n)));
  const bar=el('i'),fill=el('b');fill.style.transform=`scaleX(${Math.max(.01,Math.min(1,r.n/max))})`;bar.append(fill);b.append(bar);
  b.setAttribute('aria-label',`${r.name}${r.sub&&r.sub!==r.name?', '+r.sub:''}: ${r.n} citing papers`);
- if(r.city){b.addEventListener('mouseenter',()=>setHl(r.id));b.addEventListener('mouseleave',()=>setHl(null));b.addEventListener('focus',()=>setHl(r.id));b.addEventListener('blur',()=>setHl(null));b.addEventListener('click',()=>{rememberOpener(r.id);openCity(r.id,true);faceCity(r.city);});}
- else if(r.inst){b.addEventListener('mouseenter',()=>setHl(r.id));b.addEventListener('mouseleave',()=>setHl(null));b.addEventListener('focus',()=>setHl(r.id));b.addEventListener('blur',()=>setHl(null));b.addEventListener('click',()=>{rememberOpener(r.id);openInst(r.id,true);faceInst(r.id);});}
- else b.addEventListener('click',()=>{rememberOpener(r.id);openCountry(r.id,true);});
+ if(r.city||r.inst)for(const [type,id] of [['mouseenter',r.id],['mouseleave',null],['focus',r.id],['blur',null]])b.addEventListener(type,()=>setHl(id));   // a city or an institution lights its city
+ b.addEventListener('click',()=>{rememberOpener(r.id);
+  if(r.city){openCity(r.id,true);faceCity(r.city);}else if(r.inst){openInst(r.id,true);faceInst(r.id);}else{openCountry(r.id,true);focusCountry(r.id);}});
  return b;
 }
+// the panel control that has focus, as a selector, so that a re-render can give focus to its new copy
+function focusKey(){const a=document.activeElement;if(!a||!scroll.contains(a))return null;
+ if(a.dataset.id)return `[data-id="${CSS.escape(a.dataset.id)}"]`;if(a.dataset.w)return `a[data-w="${CSS.escape(a.dataset.w)}"]`;
+ return a.classList.contains('back')?'.back':a.classList.contains('more')?'.more':null;}
+function restoreFocus(k){if(k)scroll.querySelector(k)?.focus({preventScroll:true});}
 function renderList(){
  const list=rows().sort((a,b)=>b.n-a.n||a.name.localeCompare(b.name)),max=barMax(list),ol=el('ol');
  list.slice(0,S.limit).forEach((r,i)=>{const li=el('li');li.append(rowButton(r,i,max));ol.append(li);});
- const keep=scroll.scrollTop,focusId=document.activeElement?.closest?.('.row')?.dataset.id;scroll.classList.remove('detail');scroll.replaceChildren(ol);
- if(focusId)scroll.querySelector(`.row[data-id="${CSS.escape(focusId)}"]`)?.focus({preventScroll:true});
+ const keep=scroll.scrollTop,focus=focusKey();scroll.classList.remove('detail');delete scroll.dataset.key;scroll.replaceChildren(ol);
  if(!list.length)scroll.append(el('p','empty',S.query?'Nothing matches.':'No citations yet at this point in time.'));
- if(list.length>S.limit){const m=el('button','more',`Show ${Math.min(60,list.length-S.limit)} more · ${fmt(list.length)} in all`);m.addEventListener('click',()=>{S.limit+=60;renderList();});scroll.append(m);}
- scroll.scrollTop=keep;
+ if(list.length>S.limit){const m=el('button','more',`Show ${Math.min(60,list.length-S.limit)} more · ${fmt(list.length)} in all`);
+  m.addEventListener('click',()=>{const first=S.limit;S.limit+=60;renderList();scroll.querySelectorAll('.row')[first]?.focus({preventScroll:true});});scroll.append(m);}   // focus goes to the first new row
+ restoreFocus(focus);scroll.scrollTop=keep;
 }
 const barMax=list=>list.find(r=>!(r.city&&r.id===home?.cityId))?.n||list[0]?.n||1;
 function rememberOpener(id){const top=S.stack[S.stack.length-1];if(top)top.opener=id;else listOpener={id,scroll:scroll.scrollTop};}
@@ -561,68 +591,71 @@ function backButton(){const b=el('button','back');b.innerHTML='<svg viewBox="0 0
 function goBack(){S.stack.pop();const top=S.stack[S.stack.length-1];S.sel=null;
  if(!top){$('panel-top').hidden=false;renderList();if(listOpener){scroll.scrollTop=listOpener.scroll;focusRow(listOpener.id);listOpener=null;}kick(400);return;}
  openTop(top,false);if(top.opener)focusRow(top.opener);}
-function focusRow(id){const b=scroll.querySelector(`.row[data-id="${CSS.escape(id)}"],.inst button[data-id="${CSS.escape(id)}"]`);if(b)b.focus({preventScroll:!scroll.contains(b)});}
+function focusRow(id){scroll.querySelector(`.row[data-id="${CSS.escape(id)}"],.inst button[data-id="${CSS.escape(id)}"]`)?.focus();}
+// put a detail into the panel: a refresh (the time moved) keeps the scroll position and the focused control, else it starts at the top
+function showDetail(wrap,key,push,refresh){const keep=scroll.scrollTop,focus=refresh?focusKey():null;
+ scroll.classList.add('detail');scroll.dataset.key=key;scroll.replaceChildren(wrap);
+ if(refresh){scroll.scrollTop=keep;restoreFocus(focus);}else{scroll.scrollTop=0;if(push)wrap.querySelector('.back').focus({preventScroll:true});}kick(400);}
 function openCountry(code,push,refresh){
- if(push)S.stack.push({kind:'country',id:code});S.sel=null;$('panel-top').hidden=true;const keep=scroll.scrollTop;
+ if(push)S.stack.push({kind:'country',id:code});S.sel=null;$('panel-top').hidden=true;
  const t=S.t,list=V.cities.filter(x=>x.c.country===code).map(x=>({id:x.c.id,name:x.c.name,sub:x.c.region&&x.c.region!==x.c.name?x.c.region:'',n:upto(x.ts,t),city:x.c})).filter(r=>r.n).sort((a,b)=>b.n-a.n);
  const c=V.countries.find(x=>x.code===code),n=c?upto(c.ts,t):0;
  const wrap=el('div');wrap.append(backButton(),el('h2','d-name',regionName(code)));const cnt=el('p','d-count');cnt.append(num(n),n===1?' citing paper · ':' citing papers · ',fmt(list.length),list.length===1?' city':' cities');wrap.append(cnt,el('h3',null,'Cities'));
  const ol=el('ol');list.forEach((r,i)=>{const li=el('li');li.append(rowButton(r,i,barMax(list)));ol.append(li);});wrap.append(ol);
- const focusId=document.activeElement?.closest?.('.row')?.dataset.id;scroll.classList.add('detail');scroll.replaceChildren(wrap);
- if(refresh){scroll.scrollTop=keep;if(focusId)focusRow(focusId);}else{scroll.scrollTop=0;if(push)wrap.querySelector('.back').focus({preventScroll:true});}kick(400);
+ showDetail(wrap,'country:'+code,push,refresh);
+}
+const detailsState=()=>D.detailsLoaded?'ready':D.detailsFailed?'failed':'loading';
+// the detail of a city or an institution: its head, then its citing papers; a refresh rebuilds it only when its papers changed
+function openPapers(key,ws,instSet,push,refresh,head){
+ const same=refresh&&scroll.dataset.key===key,stamp=ws.length+'|'+detailsState();
+ if(same&&scroll.dataset.n===stamp){kick(400);return;}
+ const want=Math.max(30,same?scroll.querySelectorAll('.paper:not(.loading)').length:0);   // keep as many papers open as the reader had expanded
+ const wrap=el('div');wrap.append(backButton());head(wrap);
+ wrap.append(el('h3',null,'Citing papers'),...paperList(ws,instSet,want));
+ scroll.dataset.n=stamp;showDetail(wrap,key,push,refresh);
 }
 function openCity(id,push,refresh){
- const x=V.cities.find(x=>x.c.id===id);if(!x)return;const c=x.c;const keep=scroll.scrollTop;
+ const x=V.cities.find(x=>x.c.id===id);if(!x)return;const c=x.c;
  if(push)S.stack.push({kind:'city',id});S.sel=id;$('panel-top').hidden=true;
- const t=S.t,ws=c.works.filter(w=>V.ids.has(w)).map(w=>workById.get(w)).filter(w=>w.t<=t).sort((a,b)=>(a.undated-b.undated)||b.t-a.t);
- const inst=new Map(),cityInst=new Set(c.institutions);
- for(const w of ws){for(const i of w.inst)if(cityInst.has(i))inst.set(i,(inst.get(i)||0)+1);}
- const wrap=el('div');wrap.append(backButton(),el('h2','d-name',c.name),el('p','d-meta',[c.region!==c.name?c.region:'',regionName(c.country)].filter(x=>x&&x!==c.name).join(' · ')));
- const cnt=el('p','d-count');cnt.append(num(ws.length),ws.length===1?' citing paper · ':' citing papers · ',fmt(inst.size),inst.size===1?' institution':' institutions');wrap.append(cnt);
- if(inst.size){wrap.append(el('h3',null,'Institutions'));const ul=el('ul');[...inst].sort((a,b)=>b[1]-a[1]).forEach(([i,n],k)=>{const li=el('li','inst'),b=el('button',null,D.institutions[i]?.display_name||i);b.type='button';b.dataset.id=i;b.addEventListener('click',()=>{rememberOpener(i);openInst(i,true);faceInst(i);});li.append(b,num(n));li.hidden=k>=8;ul.append(li);});
-  if(inst.size>8){const li=el('li','inst more-inst'),b=el('button',null,`Show all ${fmt(inst.size)}`);b.type='button';b.addEventListener('click',()=>{ul.querySelectorAll('li[hidden]').forEach(n=>n.hidden=false);li.remove();});li.append(b);ul.append(li);}wrap.append(ul);}
- // on refresh keep as many papers open as the reader had expanded
- const prev=refresh&&scroll.querySelector('.d-name')?.textContent===c.name?scroll.querySelectorAll('.paper:not(.loading)').length:0,want=Math.max(30,prev);
- wrap.append(el('h3',null,'Citing papers'));wrap.append(...paperList(ws,cityInst,want));
- if(refresh&&scroll.querySelector('.d-name')?.textContent===c.name&&scroll.querySelectorAll('.paper:not(.loading)').length===Math.min(want,ws.length)&&scroll.dataset.n===String(ws.length)){kick(400);return;}
- scroll.dataset.n=ws.length;const hadFocus=scroll.contains(document.activeElement);scroll.classList.add('detail');scroll.replaceChildren(wrap);
- if(refresh){scroll.scrollTop=keep;if(hadFocus)wrap.querySelector('.back').focus({preventScroll:true});}else{scroll.scrollTop=0;if(push)wrap.querySelector('.back').focus({preventScroll:true});}kick(400);
+ const t=S.t,ws=c.works.filter(w=>V.ids.has(w)).map(w=>workById.get(w)).filter(w=>w.t<=t).sort(newest),cityInst=new Set(c.institutions);
+ openPapers('city:'+id,ws,cityInst,push,refresh,wrap=>{
+  const inst=new Map();for(const w of ws){for(const i of w.inst)if(cityInst.has(i))inst.set(i,(inst.get(i)||0)+1);}
+  wrap.append(el('h2','d-name',c.name),el('p','d-meta',[c.region!==c.name?c.region:'',regionName(c.country)].filter(x=>x&&x!==c.name).join(' · ')));
+  const cnt=el('p','d-count');cnt.append(num(ws.length),ws.length===1?' citing paper · ':' citing papers · ',fmt(inst.size),inst.size===1?' institution':' institutions');wrap.append(cnt);
+  if(inst.size){wrap.append(el('h3',null,'Institutions'));const ul=el('ul');[...inst].sort((a,b)=>b[1]-a[1]).forEach(([i,n],k)=>{const li=el('li','inst'),b=el('button',null,D.institutions[i]?.display_name||i);b.type='button';b.dataset.id=i;b.addEventListener('click',()=>{rememberOpener(i);openInst(i,true);faceInst(i);});li.append(b,num(n));li.hidden=k>=8;ul.append(li);});
+   if(inst.size>8){const li=el('li','inst more-inst'),b=el('button',null,`Show all ${fmt(inst.size)}`);b.type='button';b.addEventListener('click',()=>{ul.querySelectorAll('li[hidden]').forEach(n=>n.hidden=false);li.remove();});li.append(b);ul.append(li);}wrap.append(ul);}});
 }
 // newest first; authors listed are the ones at the given institutions
 function paperList(ws,instSet,want){const ul=el('ul');let shown=0;
  const more=el('button','more');
- const add=(k=30)=>{if(!D.detailsLoaded){ul.replaceChildren(el('li','paper loading','Loading papers…'));more.hidden=true;return;}for(const w of ws.slice(shown,shown+k)){const li=el('li','paper');li.append(link(w.title||'(untitled)',w.doi||'https://openalex.org/'+w.id));
+ const add=(k=30)=>{if(!D.detailsLoaded){ul.replaceChildren(el('li','paper loading',D.detailsFailed?'Paper titles could not be loaded.':'Loading papers…'));more.hidden=true;return;}
+  for(const w of ws.slice(shown,shown+k)){const li=el('li','paper'),a=link(w.title||'(untitled)',w.doi||'https://openalex.org/'+w.id);a.dataset.w=w.id;li.append(a);
    const local=(w.authors||[]).filter(a=>a.institutions.some(i=>instSet.has(i))).map(a=>a.name).filter(Boolean);
-   const p=el('p');p.append(el('span','yr',w.undated?'Undated':String(Math.floor(w.t))),el('span','cites','Cites '+[...new Set(w.targets.map(id=>targetById.get(id)?.title).filter(Boolean))].map(x=>'\u201c'+x+'\u201d').join('; ')));li.append(p);
+   const p=el('p');p.append(el('span','yr',w.undated?'Undated':String(Math.floor(w.t))),el('span','cites','Cites '+[...new Set(w.targets.map(id=>targetById.get(id)?.title).filter(Boolean))].map(x=>'“'+x+'”').join('; ')));li.append(p);
    if(local.length)li.append(el('p',null,local.slice(0,6).join(' · ')+(local.length>6?` +${local.length-6} more`:'')));ul.append(li);}
   shown+=k;more.hidden=shown>=ws.length;more.textContent=`Show ${Math.min(30,ws.length-shown)} more`;};
  add(want);more.addEventListener('click',()=>add());return [ul,more];}
 function openInst(id,push,refresh){
- const x=INST[id],c=instCity.get(id);if(!x||!c)return;const keep=scroll.scrollTop;
+ const x=INST[id],c=instCity.get(id);if(!x||!c)return;
  if(push)S.stack.push({kind:'inst',id});S.sel=id;$('panel-top').hidden=true;
- const t=S.t,ws=V.fw.filter(w=>w.t<=t&&w.inst.includes(id)).sort((a,b)=>(a.undated-b.undated)||b.t-a.t);
- const wrap=el('div'),name=x.display_name||id;wrap.append(backButton(),el('h2','d-name',name));
- const meta=el('p','d-meta',[KINDS[x.k],c.name,regionName(c.country)].filter(Boolean).join(' · '));
- wrap.append(meta);
- const cnt=el('p','d-count');cnt.append(num(ws.length),ws.length===1?' citing paper':' citing papers');wrap.append(cnt);
- const prev=refresh&&scroll.querySelector('.d-name')?.textContent===name?scroll.querySelectorAll('.paper:not(.loading)').length:0,want=Math.max(30,prev);
- wrap.append(el('h3',null,'Citing papers'));wrap.append(...paperList(ws,new Set([id]),want));
- if(refresh&&scroll.querySelector('.d-name')?.textContent===name&&scroll.querySelectorAll('.paper:not(.loading)').length===Math.min(want,ws.length)&&scroll.dataset.n===String(ws.length)){kick(400);return;}
- scroll.dataset.n=ws.length;const hadFocus=scroll.contains(document.activeElement);scroll.classList.add('detail');scroll.replaceChildren(wrap);
- if(refresh){scroll.scrollTop=keep;if(hadFocus)wrap.querySelector('.back').focus({preventScroll:true});}else{scroll.scrollTop=0;if(push)wrap.querySelector('.back').focus({preventScroll:true});}kick(400);
+ const t=S.t,ws=V.fw.filter(w=>w.t<=t&&w.inst.includes(id)).sort(newest);
+ openPapers('inst:'+id,ws,new Set([id]),push,refresh,wrap=>{
+  wrap.append(el('h2','d-name',x.display_name||id),el('p','d-meta',[KINDS[x.k],c.name,regionName(c.country)].filter(Boolean).join(' · ')));
+  const cnt=el('p','d-count');cnt.append(num(ws.length),ws.length===1?' citing paper':' citing papers');wrap.append(cnt);});
 }
 const MODES=['city','inst','country'],TAB={city:'tab-city',inst:'tab-inst',country:'tab-country'};
 function setMode(m){S.mode=m;S.limit=LIMIT0;for(const k of MODES){const on=k===m;$(TAB[k]).setAttribute('aria-selected',on);$(TAB[k]).tabIndex=on?0:-1;}scroll.setAttribute('aria-labelledby',TAB[m]);renderList();}
 document.querySelector('.seg').addEventListener('keydown',e=>{if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;e.preventDefault();const m=MODES[(MODES.indexOf(S.mode)+(e.key==='ArrowRight'?1:2))%3];setMode(m);$(TAB[m]).focus();});
 for(const k of MODES)$(TAB[k]).addEventListener('click',()=>setMode(k));
-$('search').addEventListener('input',e=>{S.query=e.target.value;S.limit=60;renderList();});
+$('search').addEventListener('input',e=>{S.query=e.target.value;S.limit=LIMIT0;renderList();});
 // the paper picker: ranked papers with their citations per year
 {for(const g of groups){g.n=0;g.yearly=new Array(Y1-Y0+1).fill(0);g.year=null;}
- for(const t of D.targets){const g=groupByKey.get(normTitle(t.title));if(g&&t.publication_year&&(!g.year||t.publication_year<g.year))g.year=t.publication_year;}
- for(const w of works){const seen=new Set();for(const id of w.targets){const g=groupByKey.get(normTitle(targetById.get(id)?.title||''));if(!g||seen.has(g))continue;seen.add(g);g.n++;const y=Math.floor(w.t);if(y>=Y0&&y<=Y1)g.yearly[y-Y0]++;}}}
+ for(const t of D.targets){const g=groupByKey.get(groupKey(t));if(g&&t.publication_year&&(!g.year||t.publication_year<g.year))g.year=t.publication_year;}
+ for(const w of works){const seen=new Set();for(const id of w.targets){const g=groupByKey.get(groupKey(targetById.get(id)));if(!g||seen.has(g))continue;seen.add(g);g.n++;if(w.undated)continue;const y=Math.floor(w.t);if(y>=Y0&&y<=Y1)g.yearly[y-Y0]++;}}}
 const cited=groups.filter(g=>g.n).sort((a,b)=>b.n-a.n);
-const picker=PaperPicker({button:$('paper'),papers:cited,total:works.length,allLabel:`All ${cited.length} cited papers`,onSelect:k=>setFilter(k)});
-function setFilter(k){S.filter=k;picker.set(k);S.stack=[];S.sel=null;listOpener=null;$('panel-top').hidden=false;derive();buildTimeline();lastHead='';syncTime();renderList();kick(400);}
+const setFull=k=>{const id=k&&groupByKey.get(k)?.pid;document.querySelector('.full').href='atlas.html'+(id?'?paper='+id:'');};   // the embed's full page opens on the same paper
+const picker=PaperPicker({button:$('paper'),papers:cited,total:works.length,allLabel:`All ${cited.length} cited papers`,onSelect:k=>setFilter(k),here:'atlas'});
+function setFilter(k){S.filter=k;picker.set(k);setFull(k);clock=null;S.stack=[];S.sel=null;listOpener=null;$('panel-top').hidden=false;derive();buildTimeline();lastHead='';syncTime();renderList();kick(400);}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.stack.length&&!e.target.closest?.('select,input'))goBack();});
 
 /* ---------- map interaction: MapLibre pans and zooms; hover and click hit our city lights ---------- */
@@ -631,26 +664,24 @@ const tip=$('tip');
 function faceInst(id){const c=instCity.get(id);if(c)faceCity(c);}
 function nearest(x,y){let best=null,bd=16;for(const m of marks){const d=Math.hypot(m.p[0]-x,m.p[1]-y)-Math.sqrt(m.n)*.15;if(d<bd){bd=d;best=m;}}return best;}
 function hideTip(){if(tipId)kick(60);tip.classList.remove('on');tipId=null;}
-function faceCity(c){if(projBusy){pendingFocus=()=>faceCity(c);return;}map.easeTo({center:[proj(c.lon,c.lat)[2],c.lat],zoom:projMode==='globe'?Math.max(map.getZoom(),2.2):Math.max(map.getZoom(),3.2),duration:reduce?0:900});}
-$('zin').onclick=()=>map.zoomIn();$('zout').onclick=()=>map.zoomOut();
-$('zreset').onclick=()=>{hideTip();if(projBusy)return;map.easeTo({...(projMode==='globe'?globeView():HOME_VIEW()),duration:reduce?0:900});};
+function faceCity(c){if(projBusy){pendingFocus=()=>faceCity(c);return;}map.easeTo({center:[proj(c.lon,c.lat)[2],c.lat],zoom:projMode==='globe'?Math.max(map.getZoom(),2.2):Math.max(map.getZoom(),3.2),duration:reduce()?0:900});}
+$('zin').onclick=()=>{if(!projBusy)map.zoomIn();};$('zout').onclick=()=>{if(!projBusy)map.zoomOut();};
+$('zreset').onclick=()=>{hideTip();if(projBusy)return;map.easeTo({...(projMode==='globe'?globeView():HOME_VIEW()),duration:reduce()?0:900});};
 map.on('mousemove',e=>{const hit=nearest(e.point.x,e.point.y);map.getCanvas().style.cursor=hit?'pointer':'';
  if(!hit){if(tipId)hideTip();if(S.hl&&!scroll.querySelector('.row:hover'))setHl(null);return;}
  tipId=hit.c.id;setHl(hit.c.id);tip.replaceChildren(el('b',null,hit.c.name),el('span',null,regionName(hit.c.country)+' · '),num(hit.n),el('span',null,hit.n===1?' paper':' papers'));
  tip.classList.add('on');const tw=tip.offsetWidth;tip.style.left=Math.min(W-tw-8,Math.max(8,e.point.x+14))+'px';tip.style.top=Math.max(8,e.point.y-54)+'px';});
 map.on('mouseout',()=>{hideTip();setHl(null);});
-map.on('click',e=>{const hit=nearest(e.point.x,e.point.y);if(!hit)return;listOpener=null;S.stack=[{kind:'city',id:hit.c.id}];openCity(hit.c.id,false);scroll.querySelector('.back')?.focus({preventScroll:true});if(innerWidth<=760)$('scroll').scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});});
+map.on('click',e=>{const hit=nearest(e.point.x,e.point.y);if(!hit)return;listOpener=null;S.stack=[{kind:'city',id:hit.c.id}];openCity(hit.c.id,false);scroll.querySelector('.back')?.focus({preventScroll:true});if(innerWidth<=760)$('scroll').scrollIntoView({behavior:reduce()?'auto':'smooth',block:'start'});});
 
-function focusCity(c){faceCity(c);}
 function focusCountry(code){const cs=D.cities.filter(c=>c.country===code).sort((a,b)=>b.count-a.count);if(!cs.length)return;if(projBusy){pendingFocus=()=>focusCountry(code);return;}
  if(projMode==='globe'){faceCity(cs[0]);return;}
  const ref=cs[0].lon;let b=null;for(const c of cs){let l=c.lon;while(l-ref>180)l-=360;while(l-ref<-180)l+=360;b=b?[[Math.min(b[0][0],l),Math.min(b[0][1],c.lat)],[Math.max(b[1][0],l),Math.max(b[1][1],c.lat)]]:[[l,c.lat],[l,c.lat]];}
- map.fitBounds(b,{padding:70,maxZoom:5.5,duration:reduce?0:900});}
+ map.fitBounds(b,{padding:70,maxZoom:5.5,duration:reduce()?0:900});}
 /* ---------- search: cities, countries and institutions; choosing one moves the map and opens its detail ---------- */
 const FIND=(()=>{
  const fold=s=>(s||'').normalize('NFKD').replace(/[̀-ͯ]/g,'').toLowerCase();
- const instCity=new Map(),instN=new Map(),countryN=new Map();
- for(const c of D.cities)for(const i of c.institutions)if(!instCity.has(i))instCity.set(i,c);
+ const instN=new Map(),countryN=new Map();
  for(const i of instCity.keys())if(D.institutions[i]?.n)instN.set(i,D.institutions[i].n);
  for(const w of D.works){
   for(const k of new Set(w.cities.map(id=>cityById.get(id)?.country).filter(Boolean)))countryN.set(k,(countryN.get(k)||0)+1);}
@@ -683,7 +714,7 @@ function findPick(i){const it=findHits[i];if(!it)return;findInput.value=it.label
  listOpener=null;
  if(it.kind==='Country'){S.stack=[{kind:'country',id:it.code}];openCountry(it.code,false);focusCountry(it.code);}
  else if(it.kind==='Institution'){S.stack=[{kind:'inst',id:it.id}];openInst(it.id,false);faceInst(it.id);}
- else{S.stack=[{kind:'city',id:it.city.id}];openCity(it.city.id,false);focusCity(it.city);}
+ else{S.stack=[{kind:'city',id:it.city.id}];openCity(it.city.id,false);faceCity(it.city);}
  kick(1200);}
 findInput.addEventListener('input',findRender);
 findInput.addEventListener('focus',()=>{if(findInput.value.trim())findRender();});
@@ -694,7 +725,9 @@ findInput.addEventListener('keydown',e=>{
  else if(e.key==='Enter'){e.preventDefault();findPick(findAt>=0?findAt:0);}
  else if(e.key==='Escape'){if(!findList.hidden){e.preventDefault();e.stopPropagation();findClose();}}});
 
-addEventListener('citation-details',()=>{const top=S.stack[S.stack.length-1];if(top&&top.kind!=='country')openTop(top,true);});
+// titles arrive (or fail to) after first paint: an open detail shows them, or says they could not be loaded
+const detailsArrived=()=>{const top=S.stack[S.stack.length-1];if(top&&top.kind!=='country')openTop(top,true);};
+addEventListener('citation-details',detailsArrived);addEventListener('citation-details-failed',detailsArrived);
 /* ---------- live feed: the paper behind each city that lights up ---------- */
 const feed=$('feed');let feedLast=null,feedAt=0,feedTimer=0;
 function syncFeed(){
@@ -702,31 +735,35 @@ function syncFeed(){
  const now=performance.now();if(now-feedAt<420)return;
  const i=upto(V.eventT,S.t)-1;if(i<0)return;const x=V.events[i];if(x===feedLast)return;feedLast=x;feedAt=now;
  const w=x.firstWork,inst=new Set(x.c.institutions),here=w?w.inst.filter(id=>inst.has(id)):[];
- const li=el('li');li.append(el('b',null,D.institutions[here[0]]?.display_name||x.c.name),el('span',null,x.c.name+' · '+regionName(x.c.country)+' · '+Math.floor(x.first)),el('p',null,w?.title||''));
+ const li=el('li');li.append(el('b',null,D.institutions[here[0]]?.display_name||x.c.name),el('span',null,x.c.name+' · '+regionName(x.c.country)+' · '+(w?.undated?'undated':Math.floor(x.first))));if(x.via.length)li.append(el('span','via','with co-authors in '+x.via.slice(0,2).join(', ')+(x.via.length>2?' +'+(x.via.length-2):'')));if(w?.title)li.append(el('p',null,w.title));
  feed.prepend(li);while(feed.children.length>3)feed.lastChild.remove();
  clearTimeout(feedTimer);feedTimer=setTimeout(()=>feed.replaceChildren(),2600);
 }
 
 /* ---------- notes ---------- */
 (function notes(){
- const s=D.stats,m=$('method'),c=$('coverage'),P=(...parts)=>{const p=el('p');p.append(...parts);return p;};
- m.append(P(`Starting from the ${D.scholar_count} papers listed on ${D.owner}'s Google Scholar profile, each title was matched in OpenAlex and kept only when the byline includes ${D.owner}: ${groups.length} papers (${D.targets.length} records, preprint and published versions kept separately). Every paper citing them was then collected and de-duplicated by OpenAlex ID.`),
-  P('Each citing paper is placed at the cities of its authors\' institutions at the time. A paper counts once per city; a collaboration across cities counts in each, so city totals add up to more than the number of papers. Self-citations are included.'),
-  P('Light and arc intensity follow the square root of a city\'s count. Arcs follow great circles from ',D.home?.name||'the author\'s institution',' and show a connection, not a route. Basemap: ',TILES.credit,'.'));
+ const s=D.stats,m=$('method'),c=$('coverage'),para=(...parts)=>{const p=el('p');p.append(...parts);return p;};
+ m.append(para(`Starting from the ${D.scholar_count} papers listed on ${D.owner}'s Google Scholar profile, each title was matched in OpenAlex and kept only when the byline includes ${D.owner}: ${groups.length} papers (${D.targets.length} records, preprint and published versions kept separately). Every paper citing them was then collected and de-duplicated by OpenAlex ID.`),
+  para('Each citing paper is placed at the cities of its authors\' institutions at the time. A paper counts once per city; a collaboration across cities counts in each, so city totals add up to more than the number of papers. Self-citations are included.'),
+  para('Light and arc intensity follow the square root of a city\'s count. Arcs follow great circles from ',D.home?.name||'the author\'s institution',' and show a connection, not a route. Basemap: ',TILES.credit,'.'));
  const pct=v=>(100*v/Math.max(1,s.citing_works)).toFixed(1)+'%';
- c.append(P('Of ',num(s.citing_works),' citing papers, ',num(s.mapped_works),` (${pct(s.mapped_works)}) can be placed in a city; `,num(s.no_affiliation_works),' have no affiliation and cannot be placed.'),
-  P(D.manifest.complete?'All citing papers and institutions were retrieved.':'Retrieval is incomplete; the page shows what was collected.'));
+ c.append(para('Of ',num(s.citing_works),' citing papers, ',num(s.mapped_works),` (${pct(s.mapped_works)}) can be placed in a city; `,num(s.no_affiliation_works),' have no affiliation and cannot be placed.'),
+  para(D.manifest.complete?'All citing papers and institutions were retrieved.':'Retrieval is incomplete; the page shows what was collected.'));
  const ul=el('ul');['Institution coordinates are usually the headquarters or main campus.','OpenAlex may truncate author lists at 100 names ('+fmt(s.possibly_truncated_works)+(s.possibly_truncated_works===1?' paper':' papers')+' affected).','OpenAlex citation links differ from Google Scholar\'s; totals are usually lower.'].forEach(t=>ul.append(el('li',null,t)));c.append(ul);
  if(D.unmatched.length){const d=el('details');d.append(el('summary',null,`${D.unmatched.length} Scholar papers not found in OpenAlex`));const u=el('ul');D.unmatched.forEach(r=>u.append(el('li',null,`${r.title} (${r.citations} Scholar citations)`)));d.append(u);c.append(d);}
  $('foot-left').textContent='Snapshot '+String(D.manifest.as_of||'').slice(0,10);$('credit').textContent=TILES.credit;
 })();
 
 /* ---------- start ---------- */
+{const k=picker.initial();if(k){S.filter=k;picker.set(k);setFull(k);}}   // ?paper= from another view
 derive();
 new ResizeObserver(()=>{resize();buildTimeline();syncTime();}).observe(box);
 renderList();
-if(!reduce){S.t=Y0;syncTime();map.once('load',()=>{
-  if(GLOBE){projBusy=true;map.easeTo({...globeView(),duration:1500,easing:t=>1-Math.pow(1-t,3)});map.once('moveend',()=>{projBusy=false;if(pendingFocus){syncModes();runPending();}else morph(false,2200);});setTimeout(()=>{if(autoOK)setPlaying(true);},900);}
+if(!reduce()){S.t=replayStart();syncTime();
+ if(GLOBE){projBusy=true;syncModes();}   // the intro spins the globe, then folds it flat: Map and Globe wait for it
+ map.once('load',()=>{
+  if(mapGaveUp)return;
+  if(GLOBE){holdInput(true);map.easeTo({...globeView(),duration:1500,easing:t=>1-Math.pow(1-t,3)});map.once('moveend',()=>{holdInput(false);projBusy=false;if(pendingFocus){syncModes();runPending();}else morph(false,2200);});setTimeout(()=>{if(autoOK)setPlaying(true);},900);}
   else setTimeout(()=>{if(autoOK)setPlaying(true);},400);});}
 else{S.t=TEND;syncTime();}
 themeReady=true;kick(800);

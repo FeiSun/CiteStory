@@ -1,7 +1,7 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>CiteStory promo stage</title>
-<!-- ?mode=intro | outro | frame&name=Atlas&tag=Where in the world&i=0&n=8
+<!-- ?mode=intro | outro&repo=github.com/owner/repo | frame&name=Atlas&tag=Where in the world&i=0&n=8
      "frame" is the 1920x1080 surround for a view: backdrop, caption strip, and a transparent 1664x936 window. -->
 <style>
 :root{--bg:#f5f2ec;--stage:#e6dfd2;--ink:#1d1b17;--ink-2:#4b473f;--muted:#6c675d;--hair:#cfc6b5;--accent:#b5560f;
@@ -52,8 +52,11 @@ if (mode === 'frame') {
     h('p', 'mark in', 'Cite<em>Story</em>', 0),
     h('h2', 'in', 'One Google Scholar link.<br><em>Eight</em> ways to see who cites you.', .1),
     h('div', 'rule grow', '', .6),
-    h('p', 'names in', 'Atlas &nbsp;·&nbsp; Reach &nbsp;·&nbsp; Story &nbsp;·&nbsp; Flow &nbsp;·&nbsp; Constellation &nbsp;·&nbsp; Race &nbsp;·&nbsp; Regulars &nbsp;·&nbsp; Record', .8),
-    h('p', 'url in', 'Open source &nbsp;·&nbsp; github.com/FeiSun/CiteStory', 1.1));
+    h('p', 'names in', 'Atlas &nbsp;·&nbsp; Reach &nbsp;·&nbsp; Story &nbsp;·&nbsp; Flow &nbsp;·&nbsp; Constellation &nbsp;·&nbsp; Race &nbsp;·&nbsp; Regulars &nbsp;·&nbsp; Record', .8));
+  if (mode !== 'intro') {
+    const url = h('p', 'url in', '', 1.1); url.textContent = 'Open source' + (q.get('repo') ? '\u00a0 · \u00a0' + q.get('repo') : '');
+    card.append(url);
+  }
   document.body.append(card);
 }
 </script>

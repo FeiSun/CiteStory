@@ -6,6 +6,7 @@
 <title>Citation Reach</title>
 <script>try{var c=localStorage.getItem("theme");if(c==="light"||c==="dark")document.documentElement.setAttribute("data-theme",c);}catch(e){}</script>
 <meta name="color-scheme" content="light dark">
+<meta name="referrer" content="no-referrer">
 <style>
 :root {
   --font-display: "Iowan Old Style", "New York", "Palatino Linotype", Palatino, Georgia, serif;
@@ -150,7 +151,7 @@ h1 {
 
 .timeline {
   width: 100%; max-width: 760px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center; gap: 12px; margin-top: 6px;
+  align-items: center; gap: 12px; margin-top: 6px; margin-bottom: 12px;
 }
 .play {
   width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--ink); color: var(--bg);
@@ -159,7 +160,6 @@ h1 {
 .play svg { width: 14px; height: 14px; }
 .track { position: relative; height: 40px; }
 .years { position: absolute; left: 0; right: 0; bottom: -14px; display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-3); pointer-events: none; padding: 0 1px; }
-.timeline { margin-bottom: 12px; }
 .more-list { margin-top: 8px; }
 #hist:focus-visible { outline-offset: 3px; }
 #spark { position: absolute; left: 0; right: 0; top: 0; width: 100%; height: 26px; pointer-events: none; }
@@ -187,8 +187,11 @@ h1 {
 .fig .k { font-size: 12px; color: var(--ink-3); }
 .fig .v { font: 500 28px/1.1 var(--font-display); letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fig .v .u { font-size: 15px; color: var(--ink-2); margin-left: 2px; }
-.fig .s { font-size: 12px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fig.wide { grid-column: span 2; }
+:root { --pk-bg: var(--surface); --pk-ink: var(--ink); --pk-muted: var(--ink-3); --pk-line: var(--rule-strong);
+  --pk-hover: var(--accent-soft); --pk-accent: var(--accent); --pk-shade: rgba(10, 10, 12, 0.45); }
+.field .pk-trigger { border: 1px solid var(--rule-strong); background: transparent; border-radius: 8px; padding: 8px 10px; font-size: 13.5px; color: var(--ink); }
+.field .pk-trigger:hover { border-color: var(--ink-3); }
 
 h2 { margin: 0 0 8px; font: 500 18px/1.2 var(--font-display); }
 .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
@@ -265,6 +268,7 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
   * { scroll-behavior: auto !important; transition: none !important; }
 }
 </style>
+<!--PAPER_PICKER-->
 </head>
 <body>
 <header class="top">
@@ -296,11 +300,12 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
         <input type="range" id="year" aria-label="Citations through date">
         <div class="years" aria-hidden="true"><span id="yStart"></span><span id="yEnd"></span></div>
       </div>
-      <div class="when" id="when" aria-live="polite"></div>
+      <div class="when" id="when"></div>
     </div>
   </section>
 
   <aside class="side">
+    <div class="field"><button type="button" id="paperBtn"></button></div>
     <div class="figures" id="figures">
       <div class="fig"><div class="k">Median distance</div><div class="v" id="fMedian"></div></div>
       <div class="fig"><div class="k">Beyond 5,000 km</div><div class="v" id="fBeyond"></div></div>
@@ -311,7 +316,7 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
 
     <section aria-labelledby="distH">
       <h2 id="distH">Distance</h2>
-      <canvas id="hist" tabindex="0" role="slider" aria-label="Distance band" aria-valuemin="0" aria-valuemax="39" aria-valuenow="0"></canvas>
+      <canvas id="hist" tabindex="0" role="slider" aria-label="Distance band" aria-valuemin="0" aria-valuenow="0"></canvas>
       <p class="readout" id="readout" aria-live="polite"></p>
     </section>
 
@@ -365,6 +370,7 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
   "use strict";
   var D = window.CITATION_DATA;
   if (!D) { document.getElementById("lede").textContent = "Data file data.js could not be loaded."; return; }
+  if (D.owner && document.title.indexOf(D.owner) < 0) document.title += " \u00b7 " + D.owner;
 
   // ---------- helpers ----------
   var NF = new Intl.NumberFormat("en-US");
@@ -404,17 +410,17 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
   function finv(u) { return scaleMode === "sqrt" ? u * u : u; }
 
   // ---------- asOf / time ----------
-  var asOfDate = new Date(D.manifest && D.manifest.as_of ? D.manifest.as_of : Date.now());
-  function fracYear(y, m, d) { return y + (Date.UTC(y, m, d) - Date.UTC(y, 0, 1)) / (365.25 * 864e5); }
+  var asOfDate = new Date(String(D.manifest && D.manifest.as_of || "").replace(/(\.\d{3})\d+/, "$1"));
+  if (isNaN(asOfDate)) asOfDate = new Date();
+  // time in years, with each month exactly a twelfth: the slider steps by month, so month k of year y is [y + k/12, y + (k+1)/12)
+  function fracYear(y, m, d) { return y + (m + (d - 1) / new Date(Date.UTC(y, m + 1, 0)).getUTCDate()) / 12; }
   var T_ASOF = fracYear(asOfDate.getUTCFullYear(), asOfDate.getUTCMonth(), asOfDate.getUTCDate());
-  function workTime(w) {
-    if (w.date) {
-      var p = w.date.split("-").map(Number);
-      if (p.length === 3 && p.every(isFinite)) return Math.min(fracYear(p[0], p[1] - 1, p[2]), T_ASOF);
-    }
-    if (w.year != null) return Math.min(w.year + 0.5, T_ASOF);
-    return Infinity;
+  function workTime(w) {     // the build dates every dated work, no later than the snapshot; undated works come last
+    var p = w.date ? w.date.split("-").map(Number) : [];
+    return p.length === 3 && p.every(isFinite) ? Math.min(fracYear(p[0], p[1] - 1, p[2]), T_ASOF) : Infinity;
   }
+  // what the map shows at time t: works before t, and at "All years" (t = Infinity) every work, undated ones too
+  function shownAt(o, t) { return t === Infinity || o.t < t; }
 
   // ---------- cities ----------
   var cities = D.cities;
@@ -434,26 +440,31 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
     if (ci === undefined) { ci = countryIds.length; countryIds.push(c.country); countryIdx[c.country] = ci; }
     cCountry[i] = ci;
   });
-  var maxFinalCount = 1;
-  cities.forEach(function (c) { if (c.count > maxFinalCount) maxFinalCount = c.count; });
   function bearingDeg(i) { return ((cTh[i] / RAD) % 360 + 360) % 360; }
   var COMPASS = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
   function compass(deg) { return COMPASS[Math.round(deg / 22.5) % 16]; }
   function countryName(iso) { return (D.countries[iso] && D.countries[iso].name) || iso; }
+  // the home city (the build names it; none when no citing paper comes from there), and the distance under which a
+  // city sits on the home dot: too close to the centre for a ray, a bearing or a label of its own
+  var homeIdx = home.city != null && cityIndex[home.city] !== undefined ? cityIndex[home.city] : -1;
+  var CENTRE_KM = 30;
+  function atCentre(i) { return i === homeIdx || cKm[i] < CENTRE_KM; }
 
   // ---------- works ----------
   var workById = {};
-  var works = D.works.map(function (w) {
+  var allWorks = D.works.map(function (w) {
     var ci = [];
     (w.cities || []).forEach(function (id) { var k = cityIndex[id]; if (k !== undefined) ci.push(k); });
     var near = -1;
     ci.forEach(function (k) { if (near < 0 || cKm[k] < near) near = cKm[k]; });
-    var o = { w: w, t: workTime(w), ci: ci, near: near };
+    var o = { w: w, t: workTime(w), ci: ci, near: near, keys: [] };
     workById[w.id] = o;
     return o;
   });
-  works.sort(function (a, b) { return a.t - b.t; });
-  works.forEach(function (o) { o.ci.forEach(function (k) { if (o.t < cFirst[k]) cFirst[k] = o.t; }); });
+  allWorks.sort(function (a, b) { return a.t - b.t; });
+  var works = allWorks;      // the works of the chosen paper (all papers when none is chosen)
+  var paperKey = null;       // the chosen paper
+  function inPaper(o) { return !paperKey || o.keys.indexOf(paperKey) >= 0; }
   var T_MIN = Math.floor(works.length ? works[0].t : 2012);
   if (!isFinite(T_MIN)) T_MIN = 2012;
 
@@ -465,8 +476,14 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
     targetKey[t.id] = t.key || t.id;      // versions of one paper share a key
   });
   var paperGroups = {};
-  (D.targets || []).forEach(function (t) { paperGroups[targetKey[t.id]] = 1; });
+  (D.targets || []).forEach(function (t) {
+    var g = paperGroups[targetKey[t.id]] || (paperGroups[targetKey[t.id]] = { key: targetKey[t.id], pid: t.pid, title: targetName[t.id], year: null, n: 0 });
+    if (t.publication_year && (!g.year || t.publication_year < g.year)) g.year = t.publication_year;
+  });
   var nOwnerPapers = Object.keys(paperGroups).length;
+  allWorks.forEach(function (o) {
+    (o.w.targets || []).forEach(function (id) { var k = targetKey[id]; if (k && o.keys.indexOf(k) < 0) { o.keys.push(k); paperGroups[k].n++; } });
+  });
 
   // ---------- state over time ----------
   var KM_BINS = Math.ceil(HALF) + 1; // 1 km bins of nearest-author distance
@@ -482,7 +499,7 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
     var placed = 0;
     for (var i = 0; i < works.length; i++) {
       var o = works[i];
-      if (o.t > t) break;
+      if (!shownAt(o, t)) break;
       if (o.near < 0) continue;
       placed++;
       fine[Math.min(KM_BINS - 1, Math.floor(o.near))]++;
@@ -502,13 +519,21 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
     return cum[k];
   }
   function kmAtShare(q) {
-    if (!S.placed && !cum[KM_BINS]) return 0;
+    if (!cum[KM_BINS]) return 0;
     var target = cum[KM_BINS] * q;
     for (var k = 0; k < KM_BINS; k++) if (cum[k + 1] >= target) return k + 0.5;
     return HALF;
   }
-  computeAt(Infinity);
-  finalCity.set(cityCount);
+  var maxFinalCount = 1;
+  function settle() { // the totals that do not move with the clock: first citation and final count of each city
+    cFirst.fill(Infinity);
+    works.forEach(function (o) { o.ci.forEach(function (k) { if (o.t < cFirst[k]) cFirst[k] = o.t; }); });
+    computeAt(Infinity);
+    finalCity.set(cityCount);
+    maxFinalCount = 1;
+    for (var i = 0; i < NC; i++) if (finalCity[i] > maxFinalCount) maxFinalCount = finalCity[i];
+  }
+  settle();
   var finalPlaced = S.placed;
 
   // ---------- land ----------
@@ -576,10 +601,7 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
   var staticLayer = document.createElement("canvas"), sl = staticLayer.getContext("2d");
 
   // ---------- theme ----------
-  var THEME_KEY = "theme";
-  var storedTheme = null;
-  try { storedTheme = localStorage.getItem(THEME_KEY); } catch (e) { storedTheme = null; }
-  if (storedTheme === "light" || storedTheme === "dark") document.documentElement.setAttribute("data-theme", storedTheme);
+  var THEME_KEY = "theme";     // the stored choice was applied by the script in <head>
   var darkMQ = window.matchMedia("(prefers-color-scheme: dark)");
   function activeTheme() {
     var a = document.documentElement.getAttribute("data-theme");
@@ -588,9 +610,11 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
   var C = {};
   function readColors() {
     var cs = getComputedStyle(document.documentElement);
-    ["bg","surface","disc","land","ink","ink-2","ink-3","rule","rule-strong","ring","dot","ray","accent","probe","bar","bar-on"].forEach(function (k) {
+    ["disc","land","ink","ink-2","ink-3","rule","rule-strong","ring","dot","ray","accent","probe","bar","bar-on"].forEach(function (k) {
       C[k] = cs.getPropertyValue("--" + k).trim();
     });
+    C.display = cs.getPropertyValue("--font-display").trim();
+    C.ui = getComputedStyle(document.body).fontFamily;
   }
   function updateThemeBtn() {
     var dark = activeTheme() === "dark";
@@ -706,7 +730,7 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
     }
     // cardinal letters inside the rim
     c.fillStyle = C["ink-3"];
-    c.font = "600 " + (L.size < 420 ? 9.5 : 11) + "px " + getComputedStyle(document.body).fontFamily;
+    c.font = "600 " + (L.size < 420 ? 9.5 : 11) + "px " + C.ui;
     c.textAlign = "center"; c.textBaseline = "middle";
     [["N", 0], ["E", 90], ["S", 180], ["W", 270]].forEach(function (p) {
       var a = p[1] * RAD, rr = L.R - (L.size < 420 ? 15 : 19);
@@ -719,15 +743,16 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
       c.fillStyle = C["ink-2"]; c.fillText(o.txt, o.x, o.y);
     });
   }
-  // ring labels along bearing 118 deg (open Pacific); also used as collision boxes for city labels
+  // ring labels along the emptiest bearing of the whole record, the antipode label along the emptiest one at least
+  // 60 deg away (labelBearings); the labels are also collision boxes for the city labels
   function ringLabels(c) {
     var fs = L.size < 420 ? 10 : 12;
-    c.font = "italic " + fs + "px " + cssVar("--font-display");
+    c.font = "italic " + fs + "px " + C.display;
     c.textAlign = "center"; c.textBaseline = "middle";
     var out = [];
     ringSet().concat([20000]).forEach(function (km) {
       var rr = km === 20000 ? L.R - (L.size < 420 ? 12 : 14) : kmToR(km);
-      var ang = km === 20000 ? 198 * RAD : 118 * RAD;
+      var ang = (km === 20000 ? LABEL_BEARING[1] : LABEL_BEARING[0]) * RAD;
       if (rr < 44) return;
       var x = L.cx + rr * Math.sin(ang), y = L.cy - rr * Math.cos(ang);
       var txt = km >= 20000 ? "antipode" : fmt(km) + " km";
@@ -736,14 +761,25 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
     });
     return out;
   }
-  function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  var LABEL_BEARING = (function labelBearings() {      // centres of the 10 deg sectors with the fewest citations, in deg
+    var load = new Float64Array(36);
+    for (var i = 0; i < NC; i++) if (!atCentre(i)) load[Math.floor(bearingDeg(i) / 10) % 36] += finalCity[i];
+    var offAxis = function (k) { return Math.abs((k * 10 + 5) % 90 - 45); };    // among equals, keep clear of N, E, S, W
+    var order = Array.from({ length: 36 }, function (_, k) { return k; }).sort(function (a, b) { return load[a] - load[b] || offAxis(a) - offAxis(b) || a - b; });
+    var first = order[0], apart = function (k) { var d = Math.abs(k - first) % 36; return Math.min(d, 36 - d) >= 6; };
+    return [first * 10 + 5, order.filter(apart)[0] * 10 + 5];
+  })();
 
   // ---------- interaction state ----------
   var hoverCity = -1, hoverKm = null, selCity = -1, focusOrder = null, focusPos = -1;
 
   // ---------- main draw ----------
-  var drawOrder = Array.from({ length: NC }, function (_, i) { return i; }).sort(function (a, b) { return finalCity[b] - finalCity[a]; });
-  var labelCandidates = drawOrder.slice(0, 40);
+  var drawOrder, labelCandidates;
+  function rank() {
+    drawOrder = Array.from({ length: NC }, function (_, i) { return i; }).sort(function (a, b) { return finalCity[b] - finalCity[a]; });
+    labelCandidates = drawOrder.slice(0, 40);
+  }
+  rank();
   function dotR(n) { return n ? Math.max(1.3, Math.sqrt(n / maxFinalCount) * L.R * 0.06) : 0; }
 
   function drawDisc() {
@@ -754,11 +790,11 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
     c.setTransform(L.dpr, 0, 0, L.dpr, 0, 0);
     var tNow = isFinite(S.t) ? S.t : T_ASOF;
 
-    // bearing rose outside the rim: city citations per 10 degrees (home city excluded)
+    // bearing rose outside the rim: city citations per 10 degrees (home city left out)
     var rose = new Float64Array(36), rmax = 0, i, n;
     for (i = 0; i < NC; i++) {
       n = cityCount[i];
-      if (!n || cKm[i] < 100) continue;
+      if (!n || i === homeIdx) continue;
       rose[Math.floor(bearingDeg(i) / 10) % 36] += n;
     }
     var finalRoseMax = roseMaxFinal();
@@ -783,7 +819,7 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
       c.beginPath();
       for (var k = 0; k < NC; k++) {
         var v = cityCount[k];
-        if (v < b[0] || v >= b[1] || cKm[k] < 30) continue;
+        if (v < b[0] || v >= b[1] || atCentre(k)) continue;
         c.moveTo(L.cx, L.cy); c.lineTo(cX[k], cY[k]);
       }
       c.stroke();
@@ -816,7 +852,7 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
       n = cityCount[i];
       if (!n) continue;
       var r = dotR(n);
-      var fresh = cFirst[i] > tNow - 1;
+      var fresh = isFinite(cFirst[i]) && cFirst[i] > tNow - 1;     // first cited in the last 12 months
       c.beginPath(); c.arc(cX[i], cY[i], r, 0, Math.PI * 2);
       c.globalAlpha = fresh ? 0.95 : 0.6;
       c.fillStyle = fresh ? C.accent : C.dot;
@@ -846,7 +882,7 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
       if (k < 0) return;
       var r2 = Math.max(dotR(cityCount[k]), 2.5) + 3;
       c.strokeStyle = C.accent; c.lineWidth = idx === 0 ? 1.8 : 1.2;
-      if (cKm[k] >= 30) {
+      if (!atCentre(k)) {
         c.beginPath(); c.moveTo(L.cx, L.cy); c.lineTo(cX[k], cY[k]); c.stroke();
       }
       c.beginPath(); c.arc(cX[k], cY[k], r2, 0, Math.PI * 2); c.stroke();
@@ -861,19 +897,19 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
   function roseMaxFinal() {
     if (_roseMax) return _roseMax;
     var rose = new Float64Array(36);
-    for (var i = 0; i < NC; i++) if (finalCity[i] && cKm[i] >= 100) rose[Math.floor(bearingDeg(i) / 10) % 36] += finalCity[i];
+    for (var i = 0; i < NC; i++) if (finalCity[i] && i !== homeIdx) rose[Math.floor(bearingDeg(i) / 10) % 36] += finalCity[i];
     for (var j = 0; j < 36; j++) _roseMax = Math.max(_roseMax, rose[j]);
     return _roseMax || 1;
   }
   function drawLabels(c) {
     var boxes = ringLabels(c).map(function (o) { return o.box; });
     var fs = L.size < 420 ? 11 : 12.5;
-    c.font = fs + "px " + cssVar("--font-display");
+    c.font = fs + "px " + C.display;
     c.textBaseline = "middle"; c.textAlign = "left"; c.lineJoin = "round";
     function free(b) { return !boxes.some(function (o) { return b[0] < o[0] + o[2] && b[0] + b[2] > o[0] && b[1] < o[1] + o[3] && b[1] + b[3] > o[1]; }); }
     // home label, below the home dot
     var homeR = 3;
-    for (var h = 0; h < NC; h++) if (cKm[h] < 30) homeR = Math.max(homeR, dotR(cityCount[h]));
+    for (var h = 0; h < NC; h++) if (atCentre(h)) homeR = Math.max(homeR, dotR(cityCount[h]));
     var homeTxt = home.label;
     var hw = c.measureText(homeTxt).width;
     var hy = L.cy + homeR + 4 + fs / 2;
@@ -889,7 +925,7 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
     for (var q = 0; q < cand.length && placed < maxLabels; q++) {
       var i = cand[q], isSel = i === selCity;
       if (q > 0 && i === selCity) continue;
-      if (cKm[i] < 30) continue;
+      if (atCentre(i)) continue;
       if (!isSel && (!cityCount[i] || Math.hypot(cX[i] - L.cx, cY[i] - L.cy) < L.R * 0.16)) continue;
       var r = Math.max(dotR(cityCount[i]), 2.5);
       var txt = cities[i].name;
@@ -898,17 +934,11 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
         [cX[i] + r + 4, cY[i]], [cX[i] - r - 4 - w, cY[i]],
         [cX[i] - w / 2, cY[i] - r - 3 - fs / 2], [cX[i] - w / 2, cY[i] + r + 3 + fs / 2]
       ];
-      var chosen = null;
-      for (var s2 = 0; s2 < spots.length; s2++) {
+      var chosen = null, tries = isSel ? spots.length : 2;    // ordinary labels only try right, then left
+      for (var s2 = 0; s2 < tries && !chosen; s2++) {
         var x = spots[s2][0], y = spots[s2][1];
-        if (x < 2 || x + w > L.size - 2) continue;
         var b = [x - 2, y - fs / 2 - 1, w + 4, fs + 2];
-        if (free(b)) { chosen = [x, y, b]; break; }
-        if (!isSel) break; // ordinary labels only try right, then left
-      }
-      if (!chosen && !isSel) {
-        var lx = spots[1][0], lb = [lx - 2, cY[i] - fs / 2 - 1, w + 4, fs + 2];
-        if (lx >= 2 && free(lb)) chosen = [lx, cY[i], lb];
+        if (x >= 2 && x + w <= L.size - 2 && free(b)) chosen = [x, y, b];
       }
       if (!chosen) { if (!isSel) continue; chosen = [spots[0][0], spots[0][1], [spots[0][0] - 2, cY[i] - fs / 2 - 1, w + 4, fs + 2]]; }
       boxes.push(chosen[2]); placed++;
@@ -921,6 +951,7 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
 
   // ---------- histogram ----------
   var NB = 40, hoverBand = null;
+  hist.setAttribute("aria-valuemax", String(NB - 1));
   function bandEdges(b) { return [finv(b / NB) * HALF, finv((b + 1) / NB) * HALF]; }
   function bandCount(b) { var e = bandEdges(b); return within(e[1]) - (b ? within(e[0]) : 0); }
   function drawHist() {
@@ -950,14 +981,13 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
       if (x === 0) c.moveTo(x, y); else c.lineTo(x, y);
     }
     c.strokeStyle = C.ink; c.lineWidth = 1.2; c.stroke();
-    c.fillStyle = C["ink-3"]; c.font = "11px " + getComputedStyle(document.body).fontFamily;
+    c.fillStyle = C["ink-3"]; c.font = "11px " + C.ui;
     c.textAlign = "right"; c.textBaseline = "alphabetic";
     c.fillText("cumulative, 100%", W, 11);
     // axis
     c.strokeStyle = C["rule-strong"]; c.lineWidth = 1;
     c.beginPath(); c.moveTo(0, bottom + 0.5); c.lineTo(W, bottom + 0.5); c.stroke();
     c.fillStyle = C["ink-3"];
-    c.font = "11px " + getComputedStyle(document.body).fontFamily;
     c.textBaseline = "top";
     var ticks = scaleMode === "sqrt" ? [0, 1000, 5000, 10000, 20000] : [0, 5000, 10000, 15000, 20000];
     ticks.forEach(function (km, ti) {
@@ -980,12 +1010,15 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
   }
 
   // ---------- spark under the slider ----------
-  var yearCounts = {}, Y0 = T_MIN, Y1 = Math.floor(T_ASOF);
-  works.forEach(function (o) { if (isFinite(o.t)) { var y = Math.floor(o.t); yearCounts[y] = (yearCounts[y] || 0) + 1; } });
-  var yMax = 1;
-  for (var yy = Y0; yy <= Y1; yy++) yMax = Math.max(yMax, yearCounts[yy] || 0);
+  var yearCounts = {}, Y0 = T_MIN, Y1 = Math.floor(T_ASOF), yMax = 1;
+  function countYears() {
+    yearCounts = {}; yMax = 1;
+    works.forEach(function (o) { if (isFinite(o.t)) { var y = Math.floor(o.t); yearCounts[y] = (yearCounts[y] || 0) + 1; } });
+    for (var yy = Y0; yy <= Y1; yy++) yMax = Math.max(yMax, yearCounts[yy] || 0);
+  }
+  countYears();
   var THUMB = 14;
-  function tToX(t, W) { return THUMB / 2 + (t - sMin()) / (sMax() - sMin()) * (W - THUMB); }
+  function tToX(t, W) { return THUMB / 2 + (t - sMin()) / (sMax() - sMin() || 1) * (W - THUMB); }
   function drawSpark() {
     var c = sctx, W = spark._w, H = spark._h;
     if (!W) return;
@@ -1008,11 +1041,19 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
   slider.value = slider.max;
   $("yStart").textContent = String(sMin());
   $("yEnd").textContent = String(asOfDate.getUTCFullYear());
-  function sliderToT(v) { return v >= sMax() - 1e-6 ? Infinity : v; }
+  // a stop's value is a float near y + k/12, on either side: snap it onto the month grid so that it holds exactly the
+  // months before it (fracYear gives the first of a month the same float, y + k/12)
+  function sliderToT(v) {
+    if (v >= sMax() - 1e-6) return Infinity;
+    var m = Math.round(v * 12), y = Math.floor(m / 12);
+    return Math.abs(v * 12 - m) < 1e-6 ? y + (m - y * 12) / 12 : v;
+  }
   function whenText(t) {
     if (!isFinite(t)) return ["All years", "to " + asOfDate.getUTCDate() + " " + MONTHS[asOfDate.getUTCMonth()] + " " + asOfDate.getUTCFullYear()];
-    var y = Math.floor(t), m = Math.min(11, Math.floor((t - y) * 12));
-    return [MONTHS[m] + " " + y, fmt(S.placed) + " placed"];
+    // the map holds the works before t: through the month t falls in, or through the month before when t starts a
+    // month (a slider stop, see sliderToT)
+    var mi = Math.ceil(t * 12 - 1e-6) - 1, y = Math.floor(mi / 12);
+    return [MONTHS[mi - y * 12] + " " + y, fmt(S.placed) + " placed"];
   }
 
   // ---------- DOM text updates ----------
@@ -1048,7 +1089,14 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
       document.createTextNode(" · " + fmt(n) + " of " + fmt(total) + " papers · " + (total ? Math.round(n / total * 100) : 0) + "%"));
   }
   var listLimit = 10;
-  function updateList() {
+  // a list or detail rebuilt while the clock runs gives focus back to the new copy of the focused control
+  function keepFocus(root, attr, build) {
+    var a = document.activeElement, key = root.contains(a) ? a.getAttribute(attr) : null;
+    build();
+    if (key != null) { var b = root.querySelector("[" + attr + '="' + CSS.escape(key) + '"]'); if (b) b.focus({ preventScroll: true }); }
+  }
+  function updateList() { keepFocus($("cityList"), "data-k", buildList); }
+  function buildList() {
     var ol = $("cityList"); ol.innerHTML = "";
     var idx = [];
     for (var i = 0; i < NC; i++) if (cityCount[i]) idx.push(i);
@@ -1059,7 +1107,7 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
     lm.textContent = "Show more (" + fmt(idx.length - listLimit) + ")";
     idx.slice(0, listLimit).forEach(function (k, n) {
       var li = el("li"), b = el("button", "city-btn");
-      b.type = "button";
+      b.type = "button"; b.setAttribute("data-k", String(k));
       var nm = el("span", "nm", cities[k].name);
       var cn = countryName(cities[k].country);
       if (cn !== cities[k].name) nm.append(el("span", null, cn));
@@ -1075,18 +1123,20 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
   function select(k, fromList) {
     selCity = k;
     if (k < 0) {
+      var inside = $("detail").contains(document.activeElement);
       $("detail").hidden = true; $("listSec").hidden = false;
+      if (inside) disc.focus({ preventScroll: true });      // focus was in the section just hidden
       drawAll(); return;
     }
     renderDetail();
     $("listSec").hidden = true; $("detail").hidden = false;
     drawAll();
-    var beh = "auto"; // instant: smooth scrolling is unreliable in some embedded views
+    // instant ("auto"): smooth scrolling is unreliable in some embedded views
     if (window.innerWidth <= 820) {
-      $("detail").scrollIntoView({ block: "start", behavior: beh });
+      $("detail").scrollIntoView({ block: "start", behavior: "auto" });
     } else {
       var side = document.querySelector(".side");
-      side.scrollTo({ top: Math.max(0, $("detail").offsetTop - side.offsetTop - 6), behavior: beh });
+      side.scrollTo({ top: Math.max(0, $("detail").offsetTop - side.offsetTop - 6), behavior: "auto" });
     }
     if (fromList) $("dClose").focus({ preventScroll: true });
   }
@@ -1097,12 +1147,14 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
     $("dName").textContent = c.name;
     $("dSub").textContent = [c.region, countryName(c.country)].filter(Boolean).join(", ");
     var t = S.t;
-    detailList = c.works.map(function (id) { return workById[id]; }).filter(function (o) { return o && o.t <= t; });
+    detailList = c.works.map(function (id) { return workById[id]; }).filter(function (o) { return o && inPaper(o) && shownAt(o, t); });
     var key = function (o) { return isFinite(o.t) ? o.t : -Infinity; };
-    detailList.sort(function (a, b) { return key(b) - key(a); });
+    detailList.sort(function (a, b) {          // a year-only date was spread over its year: it lists after that year's dated papers
+      return Math.floor(key(b)) - Math.floor(key(a)) || (a.w.yo ? 1 : 0) - (b.w.yo ? 1 : 0) || key(b) - key(a);
+    });
     var none = detailList.length === 0;
     var live = c.name + ", " + (none ? "not yet cited at this date" : fmt(detailList.length) + (detailList.length === 1 ? " citing paper" : " citing papers"));
-    if ($("dLive").textContent !== live) $("dLive").textContent = live;
+    if (!playing && $("dLive").textContent !== live) $("dLive").textContent = live;     // announced once the clock stops
     $("dEmpty").hidden = !none;
     $("dEmpty").textContent = none ? "Not yet cited at this date" + (isFinite(cFirst[k]) ? "; first cited in " + Math.floor(cFirst[k]) + "." : ".") : "";
     $("dInstH").hidden = none; $("dInst").hidden = none; $("dPapH").hidden = none;
@@ -1128,8 +1180,7 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
     });
     if (insts.length > 8) ul.append(el("li", null, "and " + (insts.length - 8) + " more"));
     if (!insts.length) ul.append(el("li", null, "None in this period"));
-    detailShown = 0; $("dPapers").innerHTML = "";
-    morePapers(keepN);
+    keepFocus($("dPapers"), "data-w", function () { detailShown = 0; $("dPapers").innerHTML = ""; morePapers(keepN); });
   }
   var detailsState = D.detailsLoaded ? "ready" : "loading";
   function morePapers(n) {
@@ -1145,7 +1196,7 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
       var w = o.w, li = el("li");
       var href = safeUrl(w.doi) || safeUrl("https://openalex.org/" + String(w.id).replace(/[^A-Za-z0-9]/g, ""));
       var a = el("a", null, w.title || "Untitled");
-      a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer";
+      a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; a.setAttribute("data-w", String(w.id));
       var m = el("div", "m", (isFinite(o.t) ? Math.floor(o.t) : "Undated") + " · cites ");
       var names = [], seenN = {};
       (w.targets || []).forEach(function (id) {
@@ -1167,17 +1218,16 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
     detailsState = "ready";
     if (selCity >= 0) renderDetail(true);
   }
+  function onDetailsFailed() {
+    if (detailsState !== "loading") return;
+    detailsState = "failed";
+    if (selCity >= 0) renderDetail(true);
+  }
   window.addEventListener("citation-details", onDetails);
-  window.addEventListener("load", function () {
-    if (D.detailsLoaded) { onDetails(); return; }
-    if (typeof window.loadCitationDetails === "function") {
-      window.loadCitationDetails().then(onDetails, function () {
-        if (detailsState !== "ready") { detailsState = "failed"; if (selCity >= 0) renderDetail(true); }
-      });
-    }
-  });
+  window.addEventListener("citation-details-failed", onDetailsFailed);
+  if (D.detailsFailed) detailsState = "failed";
   $("listMore").addEventListener("click", function () { listLimit += 10; updateList(); });
-  $("dClose").addEventListener("click", function () { select(-1); disc.focus({ preventScroll: true }); });
+  $("dClose").addEventListener("click", function () { select(-1); });
 
   // ---------- redraw scheduling ----------
   var raf = 0;
@@ -1189,6 +1239,7 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
     var now = performance.now();
     if (force || now - lastDom > 180) {
       lastDom = now; updateFigures(); updateList();
+      var wt = whenText(S.t); slider.setAttribute("aria-valuetext", wt[0] + ", " + wt[1]);
       if (selCity >= 0) renderDetail(true);
     }
     drawAll();
@@ -1196,16 +1247,19 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
 
   // ---------- playback ----------
   var playing = false, playRaf = 0, lastTs = 0, playT = 0, stepTimer = 0;
-  var SPEED = 1.15; // years per second
+  var SPEED = 1.15, speed = SPEED; // years per second; a short replay (one recent paper) slows to last about 9 s
   function setPlayIcon() {
     playBtn.innerHTML = playing ? ICON_PAUSE : ICON_PLAY;
     playBtn.setAttribute("aria-label", playing ? "Pause" : "Play");
+    $("readout").setAttribute("aria-live", playing ? "off" : "polite");    // no running commentary while the clock runs
   }
   function play() {
     if (playing) return;
     playing = true; setPlayIcon();
     var v = Number(slider.value);
-    playT = v >= sMax() - 1e-6 ? sMin() : v;
+    // from the end, a replay starts in the year of the first citation (of the chosen paper)
+    playT = v >= sMax() - 1e-6 ? (works.length && isFinite(works[0].t) ? Math.max(sMin(), Math.floor(works[0].t)) : sMin()) : v;
+    speed = Math.min(SPEED, Math.max(0.2, (sMax() - playT) / 9));
     if (reduceMotion.matches) {
       playT = Math.floor(playT) + 1 > sMax() ? sMax() : Math.floor(playT);
       var step = function () {
@@ -1222,7 +1276,7 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
     lastTs = 0;
     var tick = function (ts) {
       if (!playing) return;
-      if (lastTs) playT += (ts - lastTs) / 1000 * SPEED;
+      if (lastTs) playT += Math.min(0.1, (ts - lastTs) / 1000) * speed;     // a long frame (a stall) does not skip years
       lastTs = ts;
       if (playT >= sMax()) {
         slider.value = slider.max; setTime(Infinity, true); stop(); return;
@@ -1238,6 +1292,7 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
     setTime(sliderToT(Number(slider.value)), true);
   }
   playBtn.addEventListener("click", function () { if (playing) stop(); else play(); });
+  document.addEventListener("visibilitychange", function () { if (document.hidden && playing) stop(); });
   slider.addEventListener("input", function () {
     if (playing) { playing = false; cancelAnimationFrame(playRaf); clearTimeout(stepTimer); setPlayIcon(); }
     setTime(sliderToT(Number(slider.value)), false);
@@ -1309,9 +1364,9 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
         focusOrder.sort(function (a, b) { return cKm[a] - cKm[b]; });
         focusPos = selCity >= 0 ? focusOrder.indexOf(selCity) : -1;
       }
-      if (!focusOrder.length) return;
-      focusPos = (focusPos + keys[e.key] + focusOrder.length) % focusOrder.length;
-      if (focusPos < 0) focusPos = 0;
+      var len = focusOrder.length, d = keys[e.key];
+      if (!len) return;
+      focusPos = focusPos < 0 ? (d > 0 ? 0 : len - 1) : (focusPos + d + len) % len;    // from none: the nearest, or the farthest
       select(focusOrder[focusPos]);
       showTip(focusOrder[focusPos], cX[focusOrder[focusPos]], cY[focusOrder[focusPos]]);
     } else if (e.key === "Escape") {
@@ -1393,20 +1448,46 @@ dialog .close { position: absolute; top: 14px; right: 14px; }
   about.addEventListener("click", function (e) { if (e.target === about) about.close(); });
 
   // ---------- lede ----------
-  (function () {
+  function lede() {
     var l = $("lede"); l.innerHTML = "";
-    l.append(el("b", null, fmt(D.works.length)), document.createTextNode(" papers citing " + D.owner + ", measured from " + home.label));
-  })();
+    l.append(el("b", null, fmt(works.length)), document.createTextNode(" papers citing " + (works === allWorks ? D.owner : "this paper") + ", measured from " + home.label));
+  }
+  lede();
+
+  // ---------- paper ----------
+  function setPaper(k) {
+    if (playing) stop();
+    paperKey = k || null;
+    works = paperKey ? allWorks.filter(inPaper) : allWorks;
+    settle(); rank(); countYears(); _roseMax = 0; lede();
+    if (selCity >= 0 && !finalCity[selCity]) select(-1);
+    setTime(sliderToT(Number(slider.value)), true);
+  }
+  var cited = Object.keys(paperGroups).map(function (k) { return paperGroups[k]; }).filter(function (g) { return g.n > 0; })
+    .sort(function (a, b) { return b.n - a.n || a.title.localeCompare(b.title); });
+  cited.forEach(function (g) { g.yearly = []; for (var y = Y0; y <= Y1; y++) g.yearly.push(0); });
+  allWorks.forEach(function (o) {
+    if (!isFinite(o.t)) return;
+    var y = Math.floor(o.t);
+    if (y >= Y0 && y <= Y1) o.keys.forEach(function (k) { if (paperGroups[k].yearly) paperGroups[k].yearly[y - Y0]++; });
+  });
+  var picker = PaperPicker({ button: $("paperBtn"), papers: cited, total: allWorks.length, allLabel: "All " + cited.length + " cited papers",
+    onSelect: setPaper, here: "reach" });
 
   // ---------- init ----------
   readColors(); updateThemeBtn(); setPlayIcon();
   layout();
-  setTime(Infinity, true);
+  if (picker.initial()) { picker.set(picker.initial()); setPaper(picker.initial()); }
+  else setTime(Infinity, true);
   var resizeT = 0;
-  window.addEventListener("resize", function () {
-    clearTimeout(resizeT);
-    resizeT = setTimeout(function () { layout(); drawAll(); }, 80);
-  });
+  function relayout() { clearTimeout(resizeT); resizeT = setTimeout(function () { layout(); drawAll(); }, 80); }
+  window.addEventListener("resize", relayout);
+  // the histogram and the spark can change width without a window resize (a scrollbar appears in the side column)
+  var canvasRO = new ResizeObserver(function () { sizeCanvas(hist, hctx); sizeCanvas(spark, sctx); drawAll(); });
+  canvasRO.observe(hist); canvasRO.observe(spark);
+  (function watchDpr() {      // moved to a screen of another pixel density
+    matchMedia("(resolution: " + (window.devicePixelRatio || 1) + "dppx)").addEventListener("change", function () { relayout(); watchDpr(); }, { once: true });
+  })();
 })();
 </script>
 </body>

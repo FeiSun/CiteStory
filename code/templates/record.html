@@ -46,7 +46,7 @@
   <section class="stage" aria-label="Record">
     <div class="plate" id="plate">
       <div class="platter">
-        <canvas id="disc" tabindex="0" role="img" aria-label="A record whose groove is a spiral, one revolution per calendar year. Every citing paper is a cut in the groove. Space plays or pauses, the left and right arrow keys step one citing paper at a time."></canvas>
+        <canvas id="disc" tabindex="0" role="application" aria-roledescription="record" aria-label="A record whose groove is a spiral, one revolution per calendar year. Every citing paper is a cut in the groove. Space plays or pauses, the left and right arrow keys step one citing paper at a time."></canvas>
         <canvas id="hud" aria-hidden="true"></canvas>
         <p class="nogl" id="noGl" hidden>The record needs WebGL2, which this browser does not provide.</p>
       </div>
@@ -96,33 +96,28 @@
   "use strict";
   var S = window.Shell, V = S.V, P = V.papers, W = V.works, C = S.C, $ = S.$, fmt = S.fmt, el = S.el;
   var plate = $("plate"), disc = $("disc"), hud = $("hud");
-  var TAU = Math.PI * 2, NEEDLE = -Math.PI / 3;            // the needle sits at two o'clock
-  var SPIN = 1;                                             // 1: the record turns clockwise as time advances
-  var R_IN = 0.165, R_OUT = 0.945;                          // groove band, as fractions of the record's radius
+  var TAU = Math.PI * 2, NEEDLE = -Math.PI / 3;            // the needle sits at two o'clock; the record turns clockwise as time advances
+  var R_IN = 0.165, R_OUT = 0.945;                          // groove band, as fractions of the record's radius (the shaders read these too)
+  var glsl = function (v) { return v.toFixed(4); };         // a float literal for a shader
   var t0 = V.years[0], lastYear = V.years[V.years.length - 1], tEnd = S.tEnd, span = Math.max(1, tEnd - t0);
   var clamp01 = function (v) { return Math.max(0, Math.min(1, v)); };
 
   // ---------- where each citing paper is cut ----------
-  /* Papers that share a date sit side by side. Papers known only by year are spread evenly around
-     that year's revolution (golden-ratio steps) instead of piling up on one mid-year spoke. */
+  /* Papers that share a date sit side by side. A paper known only by year already sits on a stable day of that
+     year, spread by the build (build_views.year_only_day), so those do not pile up on one spoke. */
   var shown = new Float64Array(W.length), sameDate = new Map(), seen = new Map(), yearOnly = 0;
-  W.forEach(function (w) { if (w[0] != null && !(w[3] & 2)) sameDate.set(w[0], (sameDate.get(w[0]) || 0) + 1); });
+  W.forEach(function (w) { if (w[0] != null) sameDate.set(w[0], (sameDate.get(w[0]) || 0) + 1); if (w[3] & 2) yearOnly++; });
   W.forEach(function (w, i) {
     var t = w[0];
     if (t == null) { shown[i] = NaN; return; }
-    if (w[3] & 2) {
-      var y = Math.floor(t), room = Math.min(y + 1, tEnd) - y; yearOnly++;
-      shown[i] = y + (0.03 + 0.94 * ((yearOnly * 0.61803398875) % 1)) * room;
-    } else {
-      var k = seen.get(t) || 0; seen.set(t, k + 1);
-      shown[i] = Math.min(tEnd, t + k / sameDate.get(t) * 0.00085);
-    }
+    var k = seen.get(t) || 0; seen.set(t, k + 1);
+    shown[i] = Math.min(tEnd, t + k / sameDate.get(t) * 0.00085);
   });
   var dated = [];
   W.forEach(function (w, i) { if (w[0] != null) dated.push(i); });
   dated.sort(function (a, b) { return shown[a] - shown[b]; });
   var radius = function (i) { return clamp01((shown[i] - t0) / span); };
-  var angle = function (i) { return NEEDLE - SPIN * (shown[i] - tEnd) * TAU; };     // on the record, before it turns
+  var angle = function (i) { return NEEDLE - (shown[i] - tEnd) * TAU; };     // on the record, before it turns
 
   // ---------- state ----------
   var filter = -1, events = dated, undated = V.stats.undated;   // events: work indices in the order the needle meets them
@@ -135,9 +130,9 @@
     while (lo < hi) { var m = (lo + hi) >> 1; if (shown[events[m]] <= t + 1e-7) lo = m + 1; else hi = m; }
     return lo - 1;
   }
-  var rotation = function () { return S.reduce ? 0 : SPIN * (cursor - tEnd) * TAU; };
+  var rotation = function () { return S.reduce ? 0 : (cursor - tEnd) * TAU; };
   function needle() {
-    var r = (R_IN + clamp01((cursor - t0) / span) * (R_OUT - R_IN)) * R, a = S.reduce ? NEEDLE - SPIN * (cursor - tEnd) * TAU : NEEDLE;
+    var r = (R_IN + clamp01((cursor - t0) / span) * (R_OUT - R_IN)) * R, a = S.reduce ? NEEDLE - (cursor - tEnd) * TAU : NEEDLE;
     return { x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r, a: a };
   }
 
@@ -157,7 +152,7 @@
   }
 
   // ---------- WebGL2: the record, then the cuts as instances ----------
-  var gl = null, discProg = null, cutProg = null, discU = null, cutU = null, quadVAO = null, cutVAO = null, cutVBO = null, cutCount = 0;
+  var gl = null, glLost = false, discProg = null, cutProg = null, discU = null, cutU = null, quadVAO = null, cutVAO = null, cutVBO = null, cutCount = 0;
   try { gl = disc.getContext("webgl2", { antialias: true, alpha: true, premultipliedAlpha: false }); } catch (e) { gl = null; }
   function program(vs, fs) {
     var p = gl.createProgram();
@@ -172,7 +167,7 @@
   }
   function uniforms(p, names) { var u = {}; names.forEach(function (n) { u[n] = gl.getUniformLocation(p, n); }); return u; }
 
-  if (gl) try {
+  function initGL() {
     discProg = program(`#version 300 es
       layout(location=0) in vec2 aQuad;
       uniform vec2 uCenterPx;
@@ -188,7 +183,6 @@
       in vec2 vLocal;
       uniform float uRot;
       uniform float uSpan;
-      uniform float uSpin;
       uniform float uPhase;
       uniform vec2 uLightShift;
       uniform float uPulseR;
@@ -199,6 +193,8 @@
       out vec4 outColor;
 
       const float TAU = 6.28318530718;
+      const float R_IN = ${glsl(R_IN)};
+      const float R_OUT = ${glsl(R_OUT)};
 
       float hash11(float p) {
         p = fract(p * 0.1031);
@@ -238,9 +234,9 @@
         vec3 base = vec3(0.070, 0.068, 0.074);
 
         // the spiral groove: one turn per year
-        float uNorm = clamp((r - 0.165) / (0.945 - 0.165), 0.0, 1.0);
-        float inGrooveBand = smoothstep(0.155, 0.168, r) * smoothstep(0.962, 0.945, r);
-        float spiralTurns = uNorm * uSpan + uSpin * diskAng / TAU + uPhase;
+        float uNorm = clamp((r - R_IN) / (R_OUT - R_IN), 0.0, 1.0);
+        float inGrooveBand = smoothstep(R_IN - 0.01, R_IN + 0.003, r) * smoothstep(R_OUT + 0.017, R_OUT, r);
+        float spiralTurns = uNorm * uSpan + diskAng / TAU + uPhase;
         float mainGroove = sin(spiralTurns * TAU);
         float micro = sin((r * 290.0 + diskAng / TAU) * TAU) * 0.5 + 0.5;
         float ringVar = hash11(floor(r * 220.0));
@@ -265,7 +261,7 @@
 
         // ripple when a note sounds
         if (uPulseAge < 1.0 && uPulseR > 0.0) {
-          float waveR = 0.165 + uPulseR * (0.945 - 0.165);
+          float waveR = R_IN + uPulseR * (R_OUT - R_IN);
           float dist = abs(r - waveR - uPulseAge * 0.08);
           col += uPulseCol * exp(-dist * 110.0) * (1.0 - uPulseAge) * 0.28;
         }
@@ -279,7 +275,7 @@
 
         outColor = vec4(col, smoothstep(1.0, 0.996, r));
       }`);
-    discU = uniforms(discProg, ["uCenterPx", "uRadiusPx", "uViewport", "uRot", "uSpan", "uSpin", "uPhase", "uLightShift", "uPulseR", "uPulseAge", "uPulseCol", "uLabel", "uInk"]);
+    discU = uniforms(discProg, ["uCenterPx", "uRadiusPx", "uViewport", "uRot", "uSpan", "uPhase", "uLightShift", "uPulseR", "uPulseAge", "uPulseCol", "uLabel", "uInk"]);
 
     /* per instance: aCutGeo = (radius 0..1, angle on the record, half length / record radius, width px),
        aCutKind = (cites several, year known only) */
@@ -297,8 +293,10 @@
       out vec2 vKind;
       out float vGlow;
       out float vPlayed;
+      const float R_IN = ${glsl(R_IN)};
+      const float R_OUT = ${glsl(R_OUT)};
       void main() {
-        float rMid = 0.165 + aCutGeo.x * (0.945 - 0.165);
+        float rMid = R_IN + aCutGeo.x * (R_OUT - R_IN);
         float worldAng = aCutGeo.y + uRot;
 
         // cuts brighten as they pass under the needle
@@ -348,11 +346,18 @@
     gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 4, gl.FLOAT, false, 24, 0); gl.vertexAttribDivisor(1, 1);
     gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 24, 16); gl.vertexAttribDivisor(2, 1);
     gl.bindVertexArray(null);
-  } catch (e) { console.error(e); gl = null; }
+  }
+  if (gl) try { initGL(); } catch (e) { console.error(e); gl = null; }
   if (!gl) { $("noGl").hidden = false; disc.hidden = hud.hidden = true; }
+  else {
+    disc.addEventListener("webglcontextlost", function (e) { e.preventDefault(); glLost = true; });
+    disc.addEventListener("webglcontextrestored", function () {
+      try { initGL(); glLost = false; uploadCuts(); tick(); } catch (e) { console.error(e); }
+    });
+  }
 
   function uploadCuts() {
-    if (!gl) return;
+    if (!gl || glLost) return;
     var buf = new Float32Array(events.length * 6);
     events.forEach(function (i, k) {
       var n = W[i][1].length, faint = W[i][3] & 2 ? 1 : 0, o = k * 6;
@@ -366,7 +371,7 @@
   }
 
   function drawDisc() {
-    if (!gl || !width) return;
+    if (!gl || glLost || !width) return;
     var rot = rotation(), u = clamp01((cursor - t0) / span);
     gl.viewport(0, 0, disc.width, disc.height);
     gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
@@ -375,8 +380,8 @@
     gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     gl.useProgram(discProg);
     gl.uniform2f(discU.uCenterPx, cx * dpr, cy * dpr); gl.uniform1f(discU.uRadiusPx, R * dpr); gl.uniform2f(discU.uViewport, disc.width, disc.height);
-    gl.uniform1f(discU.uRot, rot); gl.uniform1f(discU.uSpan, span); gl.uniform1f(discU.uSpin, SPIN);
-    gl.uniform1f(discU.uPhase, 0.75 - span - SPIN * NEEDLE / TAU);        // puts every cut in the dark of the groove
+    gl.uniform1f(discU.uRot, rot); gl.uniform1f(discU.uSpan, span);
+    gl.uniform1f(discU.uPhase, 0.75 - span - NEEDLE / TAU);        // puts every cut in the dark of the groove
     gl.uniform2f(discU.uLightShift, lightX, lightY);
     gl.uniform1f(discU.uPulseR, pulseR); gl.uniform1f(discU.uPulseAge, pulseAge); gl.uniform3fv(discU.uPulseCol, col.one.map(function (v, c) { return v + (col.several[c] - v) * pulseMix; }));
     gl.uniform3fv(discU.uLabel, col.label); gl.uniform3fv(discU.uInk, col.ink);
@@ -474,7 +479,7 @@
     if (!AC) return false;
     try {
       if (!audio || audio.state === "closed") { audio = new AC(); master = null; plucked = {}; }
-      if (audio.state === "suspended") audio.resume();
+      if (audio.state !== "running") audio.resume();
       if (!master) {
         var limiter = audio.createDynamicsCompressor();
         limiter.threshold.value = -6; limiter.knee.value = 10; limiter.ratio.value = 6; limiter.attack.value = 0.003; limiter.release.value = 0.16;
@@ -511,7 +516,7 @@
   }
   function passed(was, k, pitch) {                          // the needle moved from cut `was` to cut `k`
     if (!soundOn || !audio || !dry) return;
-    if (audio.state === "suspended") audio.resume();
+    if (audio.state !== "running") audio.resume();
     if (was < 0 || Math.abs(k - was) > 400) collect(events[k], pitch);          // a jump: only the cut it lands on
     else if (k > was) for (var a = was + 1; a <= k; a++) collect(events[a], pitch);
     else for (var b = was - 1; b >= k; b--) collect(events[b], pitch);
@@ -569,7 +574,8 @@
     pulseR = radius(last); pulseAge = 0; pulseMix = share; tick();
   }
   function swell(year) {                                    // a low note as playback crosses into a new year
-    if (!soundOn || !audio || audio.state !== "running" || year === lastSwell) return;
+    if (!soundOn || !audio || year === lastSwell) return;
+    if (audio.state !== "running") { audio.resume(); return; }
     lastSwell = year;
     var now = audio.currentTime, env = audio.createGain(), lp = audio.createBiquadFilter();
     lp.type = "lowpass"; lp.frequency.setValueAtTime(520, now);
@@ -580,12 +586,15 @@
     });
     lp.connect(env); env.connect(reverb);
   }
+  var suspendTimer = 0;
   if (!AC) $("soundBtn").hidden = true;
   $("soundBtn").addEventListener("click", function () {
     soundOn = !soundOn && startAudio();
     this.setAttribute("aria-pressed", String(soundOn));
     if (master) master.gain.setTargetAtTime(soundOn ? 0.95 : 0, audio.currentTime, 0.03);
     if (soundOn) chord();
+    clearTimeout(suspendTimer);
+    if (!soundOn && audio) suspendTimer = setTimeout(function () { if (!soundOn && audio.state === "running") audio.suspend(); }, 400);   // after the fade: release the audio thread
   });
 
   // ---------- the paper under the needle ----------
@@ -596,7 +605,8 @@
     $("now").hidden = i < 0;
     if (i < 0) return;
     var w = W[i], d = det && det[i], title = det === false ? "Titles could not be loaded" : det ? d && d[0] || "Untitled" : "Loading…";
-    if (d && d[2] && /^https?:\/\//i.test(d[2])) { var a = el("a", null, title); a.href = d[2]; a.target = "_blank"; a.rel = "noopener noreferrer"; $("nTitle").replaceChildren(a); }
+    var href = d ? S.safeLink(d[2]) : "#";
+    if (href !== "#") { var a = el("a", null, title); a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; $("nTitle").replaceChildren(a); }
     else $("nTitle").textContent = title;
     $("nBy").textContent = d && d[1] || ""; $("nBy").hidden = !(d && d[1]);
     $("nDate").textContent = S.workDate(w);
@@ -619,7 +629,12 @@
     active = k; cursor = shown[events[k]]; angVel = 0;
     player.set(cursor, true); readout(); passed(-1, k, 1); tick();
   }
-  function step(d) { if (!events.length) return; player.stop(); jump(Math.max(0, Math.min(events.length - 1, active + d))); }
+  function step(d) {
+    if (!events.length) return;
+    player.stop(); jump(Math.max(0, Math.min(events.length - 1, active + d)));
+    var i = events[active], d0 = det && det[i];
+    S.announce(S.workDate(W[i]) + (d0 && d0[0] ? ", " + d0[0] : "") + ", " + (active + 1) + " of " + fmt(events.length));
+  }
 
   var raf = 0, lastFrame = 0;
   function frame(now) {
@@ -634,7 +649,7 @@
     } else if (!turning) angVel = 0;
     if (pulseAge < 1) { pulseAge += dt * 1.45; busy = true; }
     drawDisc(); drawHud();
-    if (busy && !document.hidden) raf = requestAnimationFrame(frame); else lastFrame = 0;
+    if (busy && !document.hidden) tick(); else lastFrame = 0;
   }
   function tick() { if (!raf) raf = requestAnimationFrame(frame); }
 
@@ -658,17 +673,18 @@
   var player = S.player(opts);
   S.seg($("speedSeg"), "speed", function (v) { opts.seconds = 40 / +v; });
 
-  var paperPicker = S.picker($("paperBtn"), function (j) {
+  var paperPicker = S.picker($("paperBtn"), pickPaper, "record");
+  function pickPaper(j) {
     player.stop(); angVel = 0;
     filter = j; paperPicker.set(j < 0 ? "" : String(j));
     events = j < 0 ? dated : dated.filter(function (i) { return W[i][1].indexOf(j) >= 0; });
     undated = j < 0 ? V.stats.undated : P[j].u;
     uploadCuts();
     cursor = tEnd; active = indexAt(cursor); opts.bars = yearBars();
-    opts.start = j >= 0 && events.length ? Math.floor(shown[events[0]]) : null;     // a replay starts at the paper's first citation
+    player.setStart(j >= 0 && events.length ? Math.floor(shown[events[0]]) : null);     // a replay starts at the paper's first citation
     player.set(tEnd, true); readout(); tick();
     S.announce((j < 0 ? "All papers" : P[j].t) + ", " + fmt(events.length + undated) + " citing papers");
-  });
+  }
 
   // ---------- pointer and keys ----------
   /* Drag the record to turn it, drag the needle along its arm to cross years, click a cut to hear it.
@@ -694,12 +710,12 @@
       var d = ang - ptr.ang, now = performance.now(), dt = Math.max(0.004, (now - ptr.at) / 1000);
       while (d > Math.PI) d -= TAU;
       while (d < -Math.PI) d += TAU;
-      var moved = SPIN * d / TAU;                           // the record follows the hand
+      var moved = d / TAU;                                  // the record follows the hand
       angVel = 0.7 * angVel + 0.3 * moved / dt; ptr.ang = ang; ptr.at = now;
       moveTo(cursor + moved, Math.max(0.7, Math.min(1.5, 0.9 + Math.abs(angVel) * 0.2)));   // a faster hand plays higher
     } else {
       var t = t0 + clamp01((Math.hypot(x - cx, y - cy) / R - R_IN) / (R_OUT - R_IN)) * span;
-      if (ptr.mode === "place") { var turn = tEnd - SPIN * (ang - NEEDLE) / TAU; t = turn + Math.round(t - turn); }   // the point of the spiral nearest the pointer
+      if (ptr.mode === "place") { var turn = tEnd - (ang - NEEDLE) / TAU; t = turn + Math.round(t - turn); }   // the point of the spiral nearest the pointer
       moveTo(t, 1);
     }
     player.set(cursor, true);
@@ -734,8 +750,8 @@
   $("aboutBody").append(
     el("p", null, "The groove is a spiral that starts in " + t0 + " next to the label and ends at the rim on the day of the snapshot. One revolution is one calendar year, so each ring is a year and the same time of year always lies in the same direction from the centre."),
     el("p", null, "Every paper that cites one of " + V.owner + "’s " + P.length + " papers is a cut across the groove at the date it was published. A cut has one colour when the paper cites one of these papers, and the accent colour and a longer stroke when it cites several, as " + fmt(V.stats.multi) + " of the " + fmt(V.stats.works) + " do. Cuts the needle has not reached yet are dimmed. Choosing a paper keeps only the cuts that cite it."),
-    el("p", null, "Papers published on the same date sit side by side. " + fmt(yearOnly) + " papers are known only by year: they are spread evenly around that year’s revolution, in no particular order, and drawn fainter, so their place within the year means nothing. " + V.stats.undated + " papers have no date. They are not on the record and are counted only when the needle is at the end."),
-    el("p", null, "Play turns the record under the needle. You can also drag the record round by hand and let it coast, drag the needle along its arm to cross years, or click a cut to bring it to the needle. With the record focused, Space plays and the left and right arrow keys step one citing paper at a time. If your system asks for reduced motion, Play shows the whole record at once, the record does not turn, and dragging moves the needle to the pointer instead."),
+    el("p", null, "Papers published on the same date sit side by side. " + fmt(yearOnly) + " papers are known only by year: they are spread over that year’s revolution, in no particular order, and drawn fainter, so their place within the year means nothing. " + V.stats.undated + " papers have no date. They are not on the record and are counted only when the needle is at the end."),
+    el("p", null, "Play turns the record under the needle. You can also drag the record round by hand and let it coast, drag the needle along its arm to cross years, or click a cut to bring it to the needle. With the record focused, Space plays and the left and right arrow keys step one citing paper at a time. If your system asks for reduced motion, Play moves the needle a year at a time, the record does not turn, and dragging moves the needle to the pointer instead."),
     el("p", null, "Sound is off until you switch it on. Each cited paper has a fixed pitch from a D Lydian scale, handed out so that the papers heard most agree with each other: the three most cited papers play D, A and F sharp, a major chord, the next two add E and B, and C sharp and G sharp follow. The next nine papers repeat that order an octave higher, and every paper after the sixteenth shares those upper notes and plays more quietly."),
     el("p", null, "Cuts that pass the needle within an eighth of a second sound together. A cut on its own plays the notes of the papers it cites, three at most (with a paper chosen, only that paper’s note): a bell if it cites one, plucked strings if it cites several. When many cuts pass at once you hear the papers cited most in that moment, again three at most: bells for the papers cited alone, strings for the papers cited together, and the larger the share of cuts that cite several, the more the strings take over. The more cuts in the moment, the louder and brighter it sounds, so busy years sound full instead of fast. The first cut after a silence sounds the instant it passes."),
     el("p", null, "The sound is panned left or right by the longitude of the first city the citing authors are located in, averaged over the cuts that sound together, and sits in the middle when no place is known. A low note marks each new year during playback, and turning the record faster by hand raises the pitch."),
@@ -745,6 +761,7 @@
   S.onTheme(colours);
   new ResizeObserver(resize).observe(hud);
   colours(); uploadCuts(); resize(); player.set(tEnd, true); readout();
+  if (paperPicker.initial() >= 0) pickPaper(paperPicker.initial());
 })();
 </script>
 </body>

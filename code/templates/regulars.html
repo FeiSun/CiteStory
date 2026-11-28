@@ -29,7 +29,7 @@
 .key i { border-radius: 1.5px; }
 .stage .key { margin: 0 0 10px; }
 .more { margin-top: 12px; }
-.insts { list-style: none; margin: 0; padding: 0; }
+a.row-btn { text-decoration: none; }
 </style>
 </head>
 <body>
@@ -97,8 +97,17 @@
   "use strict";
   var S = window.Shell, V = S.V, P = V.papers, W = V.works, A = V.citers, $ = S.$, fmt = S.fmt, el = S.el;
   var chart = $("chart"), tip = S.tip(chart), NS = "http://www.w3.org/2000/svg", U = 7, tEnd = S.tEnd;
-  var sort = "n", own = false, selected = -1, expanded = false, inst = "", det = null, shownPapers = 12;
+  var sort = "n", own = false, selected = -1, expanded = false, inst = "", shownPapers = 12;
+  var det = null, detState = "", hot = null;     // titles of the citing works: "", "loading", "ok" or "failed"; hot: the square under the pointer
+  function wantDetails() {               // asked once; what waits on them is shown again when they arrive or fail
+    if (detState) return;
+    detState = "loading";
+    S.details().then(function (d) { det = d; detState = "ok"; }, function () { detState = "failed"; })
+      .then(function () { if (hot) unitTip(hot); if (selected >= 0) papers(); });
+  }
   A.forEach(function (a) { a.dated = a.w.filter(function (i) { return W[i][0] != null; }); a.first = a.dated.length ? W[a.dated[0]][0] : Infinity; a.last = a.dated.length ? W[a.dated[a.dated.length - 1]][0] : -Infinity; });
+  var meas = document.createElement("canvas").getContext("2d");
+  function fit(text, font, max) { meas.font = font; return S.fitText(meas, text, max); }
   function s(tag, attrs, text) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; }
   function pool() { return A.map(function (_, i) { return i; }).filter(function (i) { return own || !A[i].own; }); }
   function rows() {
@@ -110,7 +119,9 @@
     return keep;
   }
 
+  var drawnFor = "";
   function render() {
+    drawnFor = layoutKey();
     var width = chart.clientWidth, narrow = width < 640, labelW = narrow ? 0 : Math.min(300, width * 0.36), list = rows();
     // the axis starts where the bulk of the squares start; the few earlier ones wait in a gutter on the left
     var all = []; list.forEach(function (i) { A[i].dated.forEach(function (w) { all.push(W[w][0]); }); }); all.sort(function (a, b) { return a - b; });
@@ -125,7 +136,7 @@
       per.forEach(function (ws, q) { tallest = Math.max(tallest, Math.ceil(ws.length / (q < 0 ? 2 : cols))); });
       var h = Math.max(narrow ? 44 : 32, tallest * U + (narrow ? 30 : 14)), o = { i: i, y: y, h: h, per: per }; y += h; return o;
     });
-    var svg = s("svg", { viewBox: "0 0 " + width + " " + (y + 4), height: y + 4, role: "list", "aria-label": "Authors who cite these papers most often" });
+    var svg = s("svg", { viewBox: "0 0 " + width + " " + (y + 4), height: y + 4, role: "group", "aria-label": "Authors who cite these papers most often" });
     var grid = s("g", { "class": "grid" }), every = qw * 4 < 30 ? 2 : 1;
     for (var yr = tA; yr <= Math.floor(tEnd); yr++) {
       var gx = Math.round(x0 + (yr - tA) * 4 * qw) + 0.5;
@@ -140,12 +151,12 @@
         "aria-label": a.name + ", " + a.w.length + " citing papers" + (a.inst ? ", " + a.inst : "") + (a.dated.length ? ", " + Math.floor(a.first) + " to " + Math.floor(a.last) : "") });
       g.appendChild(s("rect", { "class": "bg", x: 0, y: o.y + 1, width: width, height: o.h - 2, rx: 4 }));
       if (narrow) {
-        g.appendChild(s("text", { "class": "name", x: 4, y: o.y + 18 }, a.name));
+        g.appendChild(s("text", { "class": "name", x: 4, y: o.y + 18 }, fit(a.name, "500 15px " + S.C.display, width - 56)));
         g.appendChild(s("text", { "class": "n", x: width - 4, y: o.y + 18, "text-anchor": "end" }, String(a.w.length)));
       } else {
-        var name = s("text", { "class": "name", x: 6, y: base - 3 }, a.name); g.appendChild(name);
-        var room = Math.floor((labelW - 16 - a.name.length * 8.2) / 6.2);
-        if (a.inst && room > 8) name.appendChild(s("tspan", { "class": "inst", dx: 9 }, a.inst.length > room ? a.inst.slice(0, room - 1).trimEnd() + "…" : a.inst));
+        var label = fit(a.name, "500 15px " + S.C.display, labelW - 16), name = s("text", { "class": "name", x: 6, y: base - 3 }, label); g.appendChild(name);
+        var room = labelW - 16 - meas.measureText(label).width - 9;      // measured, so wide (e.g. CJK) names leave the right room
+        if (a.inst && room > 50) name.appendChild(s("tspan", { "class": "inst", dx: 9 }, fit(a.inst, "12px " + S.C.ui, room)));
         g.appendChild(s("text", { "class": "n", x: width - 4, y: base - 3, "text-anchor": "end" }, String(a.w.length)));
       }
       if (a.dated.length) g.appendChild(s("line", { "class": "base", x1: a.first < tA ? x0 - gutter : x0 + quarter(a.first) * qw, x2: Math.min(x1, x0 + (quarter(a.last) + 1) * qw), y1: base + 0.5, y2: base + 0.5 }));
@@ -167,13 +178,17 @@
   chart.addEventListener("click", function (e) { var g = e.target.closest("g.row"); if (g) choose(+g.dataset.i === selected ? -1 : +g.dataset.i); });
   chart.addEventListener("keydown", function (e) { var g = e.target.closest("g.row"); if (g && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); choose(+g.dataset.i === selected ? -1 : +g.dataset.i); } });
   chart.addEventListener("pointermove", function (e) {
-    var u = e.target.closest ? e.target.closest("rect.u") : null; if (!u) { tip.hide(); return; }
-    var wi = +u.dataset.w, w = W[wi], r = chart.getBoundingClientRect();
-    if (!det) S.details().then(function (d) { det = d; }).catch(function () {});
-    tip.show(e.clientX - r.left, e.clientY - r.top, [el("div", "t-name", det ? det[wi][0] || "Untitled" : "Loading…"), el("div", "t-meta", S.workDate(w)),
-      el("div", "t-meta", "Cites " + w[1].slice(0, 3).map(function (q) { return S.shortName(P[q].t, 26); }).join(", ") + (w[1].length > 3 ? " +" + (w[1].length - 3) : ""))]);
+    var u = e.target.closest ? e.target.closest("rect.u") : null; if (!u) { hot = null; tip.hide(); return; }
+    var r = chart.getBoundingClientRect();
+    hot = { w: +u.dataset.w, x: e.clientX - r.left, y: e.clientY - r.top }; unitTip(hot);
   });
-  chart.addEventListener("pointerleave", function () { tip.hide(); });
+  function unitTip(h) {
+    var wi = h.w, w = W[wi];
+    if (!det) wantDetails();
+    tip.show(h.x, h.y, [el("div", "t-name", det ? det[wi][0] || "Untitled" : detState === "failed" ? "Title unavailable" : "Loading…"), el("div", "t-meta", S.workDate(w)),
+      el("div", "t-meta", "Cites " + w[1].slice(0, 3).map(function (q) { return S.shortName(P[q].t, 26); }).join(", ") + (w[1].length > 3 ? " +" + (w[1].length - 3) : ""))]);
+  }
+  chart.addEventListener("pointerleave", function () { hot = null; tip.hide(); });
 
   // ---------- side panel ----------
   function choose(i) { selected = i; shownPapers = 12; inst = ""; render(); panel(); if (i >= 0) S.announce(A[i].name + ", " + A[i].w.length + " citing papers"); }
@@ -198,24 +213,24 @@
     var a = A[selected];
     $("dName").textContent = a.name;
     $("dSub").textContent = [a.inst, a.own ? "co-author" : ""].filter(Boolean).join(" · ");
-    function chip(v, k) { var c = el("div", "chip"); c.append(el("b", null, v), el("span", null, k)); return c; }
     var several = a.w.filter(function (w) { return W[w][1].length > 1; }).length;
-    $("dChips").replaceChildren(chip(String(a.w.length), "citing papers"), chip(a.dated.length ? Math.floor(a.first) + "–" + Math.floor(a.last) : "–", "first to latest"), chip(String(several), "cite several"));
+    $("dChips").replaceChildren(S.chip(String(a.w.length), "citing papers"), S.chip(a.dated.length ? Math.floor(a.first) + "–" + Math.floor(a.last) : "–", "first to latest"), S.chip(String(several), "cite several"));
     var per = new Map(); a.w.forEach(function (w) { W[w][1].forEach(function (j) { per.set(j, (per.get(j) || 0) + 1); }); });
     $("dCites").replaceChildren.apply($("dCites"), Array.from(per).sort(function (x, y) { return y[1] - x[1] || x[0] - y[0]; }).slice(0, 8).map(function (x) {
-      var li = el("li"), b = el("button", "row-btn"); b.type = "button"; b.append(el("span", "nm", P[x[0]].t), el("span", "ct", x[1]));
-      b.title = P[x[0]].t;
+      var li = el("li"), b = el("a", "row-btn"); b.append(el("span", "nm", P[x[0]].t), el("span", "ct", x[1]));     // opens the paper
+      b.href = S.safeLink(P[x[0]].link); b.target = "_blank"; b.rel = "noopener noreferrer"; b.title = P[x[0]].t;
       b.addEventListener("pointerenter", function () { mark(x[0]); }); b.addEventListener("pointerleave", function () { mark(-1); });
       b.addEventListener("focus", function () { mark(x[0]); }); b.addEventListener("blur", function () { mark(-1); });
-      b.addEventListener("click", function () { window.open(S.safeLink(P[x[0]].link), "_blank", "noopener"); });
       li.append(b); return li;
     }));
     papers();
   }
   function papers() {
     var a = A[selected], ul = $("dPapers");
-    if (!det) { ul.replaceChildren(el("li", "m", "Loading papers…")); S.details().then(function (d) { det = d; if (selected >= 0) papers(); }).catch(function () { ul.replaceChildren(el("li", "m", "The paper titles could not be loaded.")); }); $("dMore").hidden = true; return; }
-    var list = a.w.slice().reverse();
+    if (!det) { ul.replaceChildren(el("li", "m", detState === "failed" ? "The paper titles could not be loaded." : "Loading papers…")); wantDetails(); $("dMore").hidden = true; return; }
+    // newest first; a year-only date lists after that year's dated papers, undated papers last
+    var key = function (w) { var t = W[w][0]; return t == null ? -Infinity : (W[w][3] & 2) ? Math.floor(t) - 1e-6 : t; };
+    var list = a.w.slice().sort(function (x, y) { return key(y) - key(x); });
     ul.replaceChildren.apply(ul, list.slice(0, shownPapers).map(function (w) {
       var li = el("li"), link = el("a", null, det[w][0] || "Untitled"); link.href = S.safeLink(det[w][2]); link.target = "_blank"; link.rel = "noopener noreferrer";
       li.append(link, el("div", "m", S.workDate(W[w]) + " · cites " + W[w][1].map(function (q) { return S.shortName(P[q].t, 24); }).join(", "))); return li;
@@ -234,7 +249,13 @@
     el("p", null, "The time axis starts where almost all of the squares start; the few older papers are stacked under “earlier”, and their dates are in the tooltip. A hollow square is a paper known only by its year; it is placed on a fixed day in that year. Undated papers are counted in an author’s total but have no square. Institution is the one an author most often signs with. The owner is never listed; an author with no OpenAlex id is also left out when the name matches the owner's, which can hide a namesake. Snapshot " + V.snapshot.slice(0, 10) + ", from OpenAlex."));
   S.about($("aboutBtn"), $("about"));
   S.onEscape(function () { if (selected >= 0) choose(-1); });
-  var raf = 0; new ResizeObserver(function () { cancelAnimationFrame(raf); raf = requestAnimationFrame(render); }).observe(chart);
+  /* names are truncated by measured width: draw again when the width, the display font or its loading changed
+     (the shell calls onTheme at load, on a theme switch and once the fonts are in; most of those change nothing) */
+  function layoutKey() { return chart.clientWidth + "|" + S.C.display + "|" + (document.fonts ? document.fonts.status : ""); }
+  var raf = 0;
+  function relayout() { cancelAnimationFrame(raf); raf = requestAnimationFrame(function () { if (layoutKey() !== drawnFor) render(); }); }
+  S.onTheme(relayout);
+  new ResizeObserver(relayout).observe(chart);
   render(); panel();
 })();
 </script>

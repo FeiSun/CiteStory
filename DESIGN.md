@@ -75,6 +75,11 @@ The pages with a play button that share `_shell.html` (Constellation, Race, Reco
 clock that is 35% linear and 65% by citation density, so the busy recent years get more of the playback time
 than the sparse early ones. Race's "Since publication" clock is linear.
 
+**One paper across views.** Atlas, Reach, Story, Flow, Constellation, Race and Record can each focus on one paper.
+Choosing it writes `?paper=` to the address, so the page can be bookmarked or shared, and an "Open in" row
+under the paper links to the same paper in the other views. The id is a hash of the paper's normalized
+title, so it survives rebuilds and new snapshots while the title on the profile stays the same.
+
 **Look.** The pages were made to sit inside an [al-folio](https://github.com/alshedivat/al-folio) homepage:
 serif headings (Iowan Old Style, then Palatino and Georgia), a warm paper background in the light theme and
 dark navy in the dark one, hairline rules, pill-shaped segmented buttons and a side column of 340–380 px.
@@ -95,7 +100,7 @@ Explanations live in each page's "About the data" panel, where readers go lookin
 uses the standard library only. Data ships as `<script src>` files so the pages open from disk. The shared
 parts are inlined at build time, so each page is one file. Paper titles, DOIs and authors are in a second
 data file that loads after the page appears. Animations run only while something moves, and with reduced
-motion each page shows its end state.
+motion each page shows its end state, and play steps through the years one at a time.
 
 ## Atlas
 
@@ -112,10 +117,13 @@ because they let you zoom to street level and read city names.
 - A city's glow and arc strength follow the square root of its count, against the largest city other than
   home. Arcs fall into six strength buckets.
 - When a city first appears, a short comet runs along its arc and lands with a ring. A small feed names the
-  paper behind each new light, so every light can be traced to a real paper.
+  paper behind each new light, so every light can be traced to a real paper. When that paper also had
+  authors in a city that was already lit, the feed names that city ("with co-authors in …"). It states who
+  wrote the paper, not how the work reached the new city.
 - Playback takes about nine seconds of wall-clock time (less for a history under eleven years), whatever
   the frame rate. The page autoplays once,
-  unless the reader prefers reduced motion; any press of play or pause takes over.
+  unless the reader prefers reduced motion; any press of play or pause takes over. With reduced motion, play
+  steps through the years one at a time instead of animating.
 - Lights add up (`lighter` blending) on the dark map and darken (`multiply`) on the light one.
 - Search finds cities, countries and institutions, ignoring accents.
 - `?embed` drops the page's chrome, takes the host site's colours, zooms only with Ctrl/⌘ + scroll so the
@@ -144,6 +152,7 @@ are the true shortest routes.
 - A rose of 36 ten-degree bins outside the rim shows the directions the work went in.
 - A dashed ring marks the median distance. Cities first reached in the year before the date shown are drawn
   in the accent colour, so playback shows the frontier moving.
+- A paper picker narrows everything to one paper; dot sizes are then scaled to that paper's largest city.
 - The histogram on the right uses the disc's own radius scale, in 40 bands, with a cumulative curve. For the
   distance figures each paper counts once, at its author city nearest to home, so a paper with one local
   author and one distant one does not count as travelling far.
@@ -219,6 +228,9 @@ readership build up (the rings), and which papers are read together (the distanc
   attract. The layout is reproducible, and the browser does no physics.
 - Lines are the maximum spanning forest of the pairs cited together at least three times, so the strongest
   links show without a web of every pair. They appear as time reaches them.
+- Each line is a shallow arc between the two star centres that stops 6 px short of both halos. Where it passes
+  under another star it fades, so it never seems to end at a third star. Stars whose halos touch get no line:
+  the closeness already says it.
 - Canvas labels are shortened to 22 characters (44 when the halo is large or the star is selected or
   hovered), and tooltips and list rows to 24–46. The panel heading and the picker show full titles.
 
